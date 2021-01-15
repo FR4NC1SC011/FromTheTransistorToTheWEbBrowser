@@ -1,0 +1,13 @@
+# DESCRIPTION: Verilator output: Timestamp data for --skip-identical.  Delete at will.
+C "-Wall -cc thruwire.v --exe --build thruwire.cpp"
+S   8158392  6830585  1610739451   290953800  1607455047           0 "/usr/bin/verilator_bin"
+T      3811 10617121  1610743349   586888265  1610743349   586888265 "obj_dir/Vthruwire.cpp"
+T      2520 10617119  1610743349   586888265  1610743349   586888265 "obj_dir/Vthruwire.h"
+T      1793 10617123  1610743349   586888265  1610743349   586888265 "obj_dir/Vthruwire.mk"
+T      1723 10617120  1610743349   586888265  1610743349   586888265 "obj_dir/Vthruwire__Slow.cpp"
+T       554 10617117  1610743349   586888265  1610743349   586888265 "obj_dir/Vthruwire__Syms.cpp"
+T       810 10617118  1610743349   586888265  1610743349   586888265 "obj_dir/Vthruwire__Syms.h"
+T       260 10617124  1610743349   586888265  1610743349   586888265 "obj_dir/Vthruwire__ver.d"
+T         0        0  1610743349   586888265  1610743349   586888265 "obj_dir/Vthruwire__verFiles.dat"
+T      1600 10617122  1610743349   586888265  1610743349   586888265 "obj_dir/Vthruwire_classes.mk"
+S       105 10617115  1610742577   994708363  1610742577   994708363 "thruwire.v"

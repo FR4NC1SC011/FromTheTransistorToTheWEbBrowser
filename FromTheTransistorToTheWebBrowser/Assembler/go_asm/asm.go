@@ -1,21 +1,56 @@
 package main
 
-import (
-	"bufio"
-	"fmt"
-	"os"
+type Token int
+
+const (
+	ILLEGAL Token = iota
+	EOF
+	COMMENT
+	LABEL
+	A_INSTRUCTION
+	C_INSTRUCTION
 )
 
-func Asm(asm_file string) {
-	asm, err := os.Open(asm_file)
-	Check(err)
+type Scanner struct {
+	src      []byte
+	ch       rune
+	offset   int
+	rdOffset int
+}
 
-	sc := bufio.NewScanner(asm)
+const bom = 0xFEFF
 
-	for sc.Scan() {
-		fmt.Println(sc.Text())
+func (s *Scanner) Init(src []byte) {
+	s.src = src
+	s.ch = ' '
+	s.offset = 0
+	s.rdOffset = 0
+
+	s.next()
+	if s.ch == bom {
+		s.next()
 	}
+}
 
+func (s *Scanner) Scan() (tok Token, lit string) {
+	return
+}
+
+func (s *Scanner) next() {
+	if s.rdOffset < len(s.src) {
+		s.offset = s.rdOffset
+		s.ch = rune(s.src[s.rdOffset])
+		s.rdOffset += 1
+	} else {
+		s.offset = len(s.src)
+		s.ch = -1
+	}
+}
+
+func (s *Scanner) skipWhiteSpace() {
+	for s.ch == ' ' || s.ch == '\t' || s.ch == '\n' || s.ch == '\r' {
+		s.next()
+	}
 }
 
 func Check(e error) {

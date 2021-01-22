@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"strconv"
 	"strings"
 )
 
@@ -39,6 +40,7 @@ func ReadFile(hack_file string) []string {
 
 func Parse(instructions []string) {
 	MakeLTable(instructions)
+	MakeATable(instructions)
 
 }
 
@@ -48,21 +50,33 @@ func MakeLTable(instructions []string) {
 	for _, i := range instructions {
 		x++
 		if IsLabel(i) {
-			fmt.Println("LABELLLLLLLLLLLL", i)
 			x--
-			fmt.Println("Label:", i[1:len(i)-1], "Binary:", ToBinary(x))
+			fmt.Println(i[1:len(i)-1], ToBinary(x))
 			ltable[i[1:len(i)]] = ToBinary(x)
 		}
 	}
 }
 
 func MakeATable(instructions []string) {
-	//start := 16
+	start := 16
 
 	for _, i := range instructions {
 		if IsAInstruction(i) {
 			val := i[1:]
-			_ = val
+			if _, err := TryParseInt(val, 10); err == nil {
+				val_int, err := strconv.Atoi(val)
+				Check(err)
+				atable[i] = ToBinary(val_int)
+			} else if _, ok := predef_table[val]; ok {
+				atable[i] = ToBinary(predef_table[val])
+			} else if _, ok := ltable[val]; ok {
+				atable[i] = ltable[val]
+			} else if _, ok := atable[i]; ok {
+				continue
+			} else {
+				atable[i] = ToBinary(start)
+				start++
+			}
 		}
 	}
 }

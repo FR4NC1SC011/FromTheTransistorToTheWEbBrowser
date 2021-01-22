@@ -5,6 +5,14 @@ import (
 	"strings"
 )
 
+func TryParseInt(s string, base int) (int64, error) {
+	i, err := strconv.ParseInt(s, base, 64)
+	if err != nil {
+		return 0, err
+	}
+	return i, nil
+}
+
 func IsLabel(instruction string) bool {
 	if strings.HasPrefix(instruction, "(") {
 		if strings.HasSuffix(instruction, ")") {

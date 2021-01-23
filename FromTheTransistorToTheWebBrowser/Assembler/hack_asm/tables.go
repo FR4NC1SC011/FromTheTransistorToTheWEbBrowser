@@ -1,6 +1,6 @@
 package main
 
-var dest = map[string]string{
+var dest_table = map[string]string{
 	"null": "000",
 	"M":    "001",
 	"D":    "010",
@@ -11,7 +11,7 @@ var dest = map[string]string{
 	"AMD":  "111",
 }
 
-var comp = map[string]string{
+var comp_table = map[string]string{
 	"0":   "101010",
 	"1":   "111111",
 	"-1":  "111010",
@@ -54,7 +54,7 @@ var comp = map[string]string{
 	"M|D": "010101",
 }
 
-var jump = map[string]string{
+var jump_table = map[string]string{
 	"null": "000",
 	"JGT":  "001",
 	"JEQ":  "010",

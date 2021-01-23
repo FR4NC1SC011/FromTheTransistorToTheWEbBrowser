@@ -81,6 +81,25 @@ func MakeATable(instructions []string) {
 	}
 }
 
+func MakeCTable(instructions []string) {
+	for _, i := range instructions {
+		if IsCInstruction(i) {
+			semi := strings.IndexByte(i, ';')
+			equa := strings.IndexByte(i, '=')
+
+			if equa != -1 && semi != -1 { // dest = comp; jump
+				dest := i[:equa]
+				comp := i[equa+1 : semi]
+				jump := i[semi+1:]
+				abit := SetABit(comp)
+				ctable[i] = first + abit + comp_table[comp] + dest_table[dest] + jump_table[jump]
+
+			}
+		}
+
+	}
+}
+
 func readComment() {
 
 }

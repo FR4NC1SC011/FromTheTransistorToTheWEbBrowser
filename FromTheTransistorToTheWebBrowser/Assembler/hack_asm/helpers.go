@@ -29,6 +29,22 @@ func IsAInstruction(instruction string) bool {
 	return false
 }
 
+func IsCInstruction(instruction string) bool {
+	if strings.HasPrefix(instruction, "@") && strings.HasPrefix(instruction, "(") {
+		return true
+	}
+	return false
+}
+
+func SetABit(comp string) string {
+	if ok := strings.IndexByte(comp, 'M'); ok != -1 {
+		return "1"
+	} else {
+		return "0"
+	}
+
+}
+
 func ToBinary(x int) string {
 	n := int64(x)
 	num := strconv.FormatInt(n, 2)

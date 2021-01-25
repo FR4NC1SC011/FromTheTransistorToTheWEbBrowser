@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -41,6 +42,9 @@ func ReadFile(hack_file string) []string {
 func Parse(instructions []string) {
 	MakeLTable(instructions)
 	MakeATable(instructions)
+	MakeCTable(instructions)
+	results := Translate(instructions)
+	WriteFile(results)
 
 }
 
@@ -82,22 +86,60 @@ func MakeATable(instructions []string) {
 }
 
 func MakeCTable(instructions []string) {
+	first := "111"
+
+	var dest, comp, jump, abit string
+
 	for _, i := range instructions {
 		if IsCInstruction(i) {
 			semi := strings.IndexByte(i, ';')
 			equa := strings.IndexByte(i, '=')
 
 			if equa != -1 && semi != -1 { // dest = comp; jump
-				dest := i[:equa]
-				comp := i[equa+1 : semi]
-				jump := i[semi+1:]
-				abit := SetABit(comp)
+				dest = i[:equa]
+				comp = i[equa+1 : semi]
+				jump = i[semi+1:]
+				abit = SetABit(comp)
 				ctable[i] = first + abit + comp_table[comp] + dest_table[dest] + jump_table[jump]
 
+			} else if equa == -1 && semi != -1 { // comp; jump
+				comp = i[:semi]
+				jump = i[semi+1:]
+				abit = SetABit(comp)
+				ctable[i] = first + abit + comp_table[comp] + dest_table["null"] + jump_table[jump]
+
+			} else if equa != -1 && semi == -1 {
+				dest = i[:equa]
+				comp = i[equa+1:]
+				abit = SetABit(comp)
+				ctable[i] = first + abit + comp_table[comp] + dest_table[dest] + jump_table["null"]
 			}
 		}
-
 	}
+}
+
+func Translate(instructions []string) []string {
+	f := make([]string, 0)
+	for _, i := range instructions {
+		if IsAInstruction(i) {
+			f = append(f, atable[i])
+		} else if IsCInstruction(i) {
+			f = append(f, atable[i])
+		}
+	}
+	return f
+}
+
+func WriteFile(instructions []string) {
+	f, err := os.Create("ouput.hack")
+	Check(err)
+	defer f.Close()
+
+	for _, instruction := range instructions {
+		_, err := f.WriteString(instruction + "\n")
+		Check(err)
+	}
+	fmt.Println("Done")
 }
 
 func readComment() {

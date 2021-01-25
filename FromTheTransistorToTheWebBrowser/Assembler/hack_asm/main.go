@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 )
 
 func main() {
@@ -10,10 +9,6 @@ func main() {
 	flag.Parse()
 
 	instructions := ReadFile(*hack_file)
-
-	for n, inst := range instructions {
-		fmt.Println(n, inst)
-	}
 
 	Parse(instructions)
 

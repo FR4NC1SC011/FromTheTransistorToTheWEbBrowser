@@ -30,6 +30,12 @@ struct Mem {
     // Assert here Address is < MAX_MEM
     return Data[Address];
   }
+
+  void WriteWord(Word Value, u32 Address, u32& Cycles) {
+    Data[Address] = Value & 0xFF;
+    Data[Address + 1] = (Value >> 8);
+    Cycles -= 2;
+  }
 };
 
 struct CPU {
@@ -55,10 +61,23 @@ struct CPU {
     memory.Initialise();
   }
 
-  Byte FetchByte(u32 Cycles, Mem& memory) {
+  Byte FetchByte(u32& Cycles, Mem& memory) {
     Byte Data = memory[PC];
     PC++;
     Cycles--;
+    return Data;
+  }
+
+  Word FetchWord(u32& Cycles, Mem& memory) {
+    // 6502 is little endian
+    Word Data = memory[PC];
+    PC++;
+
+    Data |= (memory[PC] << 8);
+    PC++;
+
+    Cycles += 2;
+
     return Data;
   }
 
@@ -71,7 +90,9 @@ struct CPU {
 
   static constexpr Byte
     INS_LDA_IM = 0xA9,
-    INS_LDA_ZP = 0xA5;
+    INS_LDA_ZP = 0xA5,
+    INS_LDA_ZPX = 0xB5,
+    INS_JSR = 0x20;
 
 
     void LDASetStatus() {
@@ -95,6 +116,24 @@ struct CPU {
             A = ReadByte(Cycles, ZPAddress, memory);
             LDASetStatus();
           } break;
+
+        case INS_LDA_ZPX:
+          {
+            Byte ZPXAddress = FetchByte(Cycles, memory);
+            ZPXAddress += X;
+            Cycles--;
+            A = ReadByte(Cycles, ZPXAddress, memory);
+            LDASetStatus();
+          } break;
+
+        case INS_JSR: 
+          {
+            Word SubAddr = FetchWord(Cycles, memory);
+            memory.WriteWord(PC - 1, SP, Cycles);
+            PC = SubAddr;
+            Cycles--;
+          } break;
+
         default:
           {
             printf("Instruction not handled %d", Ins);
@@ -113,7 +152,8 @@ int main() {
   cpu.Reset(mem);
   mem[0xFFFC] = CPU::INS_LDA_ZP;
   mem[0xFFFD] = 0x42;
-  cpu.Execute(2, mem);
+  mem[0x0042] = 0x84;
+  cpu.Execute(3, mem);
   return 0;
 
 }

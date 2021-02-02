@@ -88,6 +88,15 @@ struct CPU {
     return Data;
   }
 
+  Word ReadWord(s32& Cycles, Word Address, Mem& memory) {
+    Byte LoByte = ReadByte(Cycles, Address, memory);
+    Byte HiByte = ReadByte(Cycles, Address + 1, memory);
+    return LoByte | (HiByte << 8);
+
+  }
+
+
+
   static constexpr Byte
     INS_LDA_IM = 0xA9,
     INS_LDA_ZP = 0xA5,
@@ -151,6 +160,40 @@ struct CPU {
             if (AbsAddrX - AbsAddr >= 0xFF) {
               Cycles--;
             }
+          } break;
+
+        case INS_LDA_ABSY: 
+          {
+            Word AbsAddr = FetchWord(Cycles, memory);
+            Word AbsAddrY =  AbsAddr + Y;
+            ReadByte(Cycles, AbsAddrY, memory);
+
+            if (AbsAddrY - AbsAddr >= 0xFF) {
+              Cycles--;
+            }
+          } break;
+
+        case INS_LDA_INDX:
+          {
+            Byte ZPAddress = FetchByte(Cycles, memory);
+            ZPAddress += X;
+            Cycles--;
+            Word EffectiveAddress = ReadWord(Cycles, ZPAddress, memory);
+            A = ReadByte(Cycles, EffectiveAddress, memory);
+
+          } break;
+
+        case INS_LDA_INDY: 
+          {
+            Byte ZPAddress = FetchByte(Cycles, memory);
+            Word EffectiveAddr = ReadWord(Cycles, ZPAddress, memory);
+            Word EffectiveAddrY = EffectiveAddr + Y;
+            A = ReadByte(Cycles, EffectiveAddrY, memory);
+
+            if (EffectiveAddrY - EffectiveAddr >= 0xFF) {
+              Cycles--;
+            }
+
           } break;
 
         case INS_JSR: 

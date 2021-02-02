@@ -6,6 +6,7 @@ using Byte = unsigned char;
 using Word = unsigned short;
 
 using u32 = unsigned int;
+using s32 = signed int;
 
 struct Mem {
   
@@ -31,7 +32,7 @@ struct Mem {
     return Data[Address];
   }
 
-  void WriteWord(Word Value, u32 Address, u32& Cycles) {
+  void WriteWord(Word Value, u32 Address, s32& Cycles) {
     Data[Address] = Value & 0xFF;
     Data[Address + 1] = (Value >> 8);
     Cycles -= 2;
@@ -61,14 +62,14 @@ struct CPU {
     memory.Initialise();
   }
 
-  Byte FetchByte(u32& Cycles, Mem& memory) {
+  Byte FetchByte(s32& Cycles, Mem& memory) {
     Byte Data = memory[PC];
     PC++;
     Cycles--;
     return Data;
   }
 
-  Word FetchWord(u32& Cycles, Mem& memory) {
+  Word FetchWord(s32& Cycles, Mem& memory) {
     // 6502 is little endian
     Word Data = memory[PC];
     PC++;
@@ -81,25 +82,34 @@ struct CPU {
     return Data;
   }
 
-  Byte ReadByte(u32& Cycles,Byte Address,  Mem& memory) {
+  Byte ReadByte(s32& Cycles, Word Address, Mem& memory) {
     Byte Data = memory[Address];
     Cycles--;
     return Data;
-
   }
 
   static constexpr Byte
     INS_LDA_IM = 0xA9,
     INS_LDA_ZP = 0xA5,
     INS_LDA_ZPX = 0xB5,
+    INS_LDA_ABS = 0xAD,
+    INS_LDA_ABSX = 0xBD,
+    INS_LDA_ABSY = 0xB9,
+    INS_LDA_INDX = 0xA1,
+    INS_LDA_INDY = 0xB1,
     INS_JSR = 0x20;
 
 
-    void LDASetStatus() {
-      Z = (A == 0);
-      N = (A & 0b10000000) > 0;
-    }
-  void Execute(u32 Cycles, Mem& memory) {
+
+  void LDASetStatus() {
+    Z = (A == 0);
+    N = (A & 0b10000000) > 0;
+  }
+
+  // Return the number of cycles that were used
+  s32 Execute(s32 Cycles, Mem& memory) {
+
+    const s32 CyclesRequested = Cycles;
     while (Cycles > 0) {
       Byte Ins = FetchByte(Cycles, memory);
       switch(Ins) {
@@ -126,10 +136,28 @@ struct CPU {
             LDASetStatus();
           } break;
 
+        case INS_LDA_ABS: 
+          {
+            Word AbsAddr = FetchWord(Cycles, memory);
+            ReadByte(Cycles, AbsAddr, memory);
+          } break;
+
+        case INS_LDA_ABSX:
+          {
+            Word AbsAddr = FetchWord(Cycles, memory);
+            Word AbsAddrX =  AbsAddr + X;
+            ReadByte(Cycles, AbsAddrX, memory);
+
+            if (AbsAddrX - AbsAddr >= 0xFF) {
+              Cycles--;
+            }
+          } break;
+
         case INS_JSR: 
           {
             Word SubAddr = FetchWord(Cycles, memory);
             memory.WriteWord(PC - 1, SP, Cycles);
+            SP += 2;
             PC = SubAddr;
             Cycles--;
           } break;
@@ -137,11 +165,13 @@ struct CPU {
         default:
           {
             printf("Instruction not handled %d", Ins);
+            throw -1;
           } break;
       }
     }
-
-
+  
+    const s32 NumCyclesUsed = CyclesRequested - Cycles;
+    return NumCyclesUsed;
   }
 };
 

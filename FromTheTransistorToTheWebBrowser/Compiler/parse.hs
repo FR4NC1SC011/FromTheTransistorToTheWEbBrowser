@@ -34,6 +34,7 @@ data Stmt = Seq [Stmt]                        --Statements--
           | Assign String AExpr
           | If BExpr Stmt Stmt
           | While BExpr Stmt
+          | Skip
           deriving(Show)
 
 
@@ -133,5 +134,38 @@ aExpression = buildExpressionParser aOperators aTerm
 bExpression :: Parser BExpr
 bExpression = buildExpressionParser bOperators bTerm
 
+
+aOperators = [ [Prefix (reservedOp "-" >> return(Neg))] 
+             , [Infix (reservedOp "*" >> return (ABinary Multiply)) AssocLeft,
+                Infix (reservedOp "/" >> return (ABinary Divide)) AssocLeft]
+             , [Infix (reservedOp "+" >> return (ABinary Add)) AssocLeft, 
+                Infix (reservedOp "-" >> return (ABinary Substract)) AssocLeft]
+             ]
+
+
+bOperators = [ [Prefix (reservedOp "not" >> return (Not))] 
+              ,[Infix (reservedOp "and" >> return (BBinary And)) AssocLeft
+              , Infix (reservedOp "or" >> return (BBinary Or)) AssocLeft]
+             ]
+
+aTerm = parens aExpression
+     <|>liftM Var identifier
+     <|>liftM IntConst integer
+
+bTerm = parens bExpression
+     <|>(reserved "true" >> return (BoolConst True))
+     <|>(reserved "false" >> return (BoolConst False))
+     <|> rExpression
+
+
+rExpression = do
+  a1 <- aExpression
+  op <- relation
+  a2 <- aExpression
+  return $ RBinary op a1 a2
+
+
+relation = (reservedOp ">" >> return Greater)
+        <|>(reservedOp "<" >> return Less)
 
 

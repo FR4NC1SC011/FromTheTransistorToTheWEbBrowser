@@ -169,3 +169,12 @@ relation = (reservedOp ">" >> return Greater)
         <|>(reservedOp "<" >> return Less)
 
 
+
+
+
+parseFile :: String -> IO Stmt
+parseFile file = do
+  program <- readFile file
+  case parse whileParser "" program of 
+    Left e -> print e >> fail "parse error"
+    Right r -> return r

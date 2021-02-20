@@ -14,7 +14,7 @@ public class GenerateAst {
     }
     String outputDir = args[0];
 
-    defineAst (outputDir, "Expr", Array.asList(
+    defineAst (outputDir, "Expr", Arrays.asList(
           "Binary : Expr left, Token operator, Expr right",
           "Grouping : Expr expression",
           "Literal : Object value", 
@@ -65,7 +65,7 @@ public class GenerateAst {
 
   private static void defineType (PrintWriter writer, String baseName, 
       String className, String fieldList) {
-    writer.println("  static class " + className, " extends " + 
+    writer.println("  static class " + className +  " extends " + 
         baseName + "{");
 
     // Constructor 

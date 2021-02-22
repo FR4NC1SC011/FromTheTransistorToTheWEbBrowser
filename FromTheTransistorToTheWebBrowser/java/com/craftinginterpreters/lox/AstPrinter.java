@@ -27,6 +27,41 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
     return builder.toString();
   }
 
+
+  @Override 
+  public String visitExpressionStmt (Stmt.Expression stmt) {
+    return parenthesize(";", stmt.expression);
+  }
+
+
+  @Override
+  public String visitVariableExpr(Expr.Variable expr) {
+    return expr.name.lexeme;
+  }
+
+
+  @Override
+  public String visitPrintStmt (Stmt.Print stmt) {
+    return parenthesize("print", stmt.expression);
+  }
+
+
+  @Override
+  public String visitVarStmt(Stmt.Var stmt) {
+    if (stmt.initializer == null) {
+      return parenthesize2("var", stmt.name);
+    }
+
+    return parenthesize2("var", stmt.name, "=", stmt.initializer);
+  }
+
+
+  @Override
+  public String visitAssignExpr(Expr.Assign expr) {
+    return parenthesize2("=", expr.name.lexeme, expr.value);
+  }
+
+
   @Override
   public String visitBinaryExpr(Expr.Binary expr) {
     return parenthesize(expr.operator.lexeme, expr.left, expr.right);
@@ -50,8 +85,6 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
 
 
 
-
-
   private String parenthesize(String name, Expr... exprs) {
     StringBuilder builder = new StringBuilder();
 
@@ -66,19 +99,35 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
     return builder.toString();
   }
 
+  private String parenthesize2(String name, Object... parts) {
+    StringBuilder builder = new StringBuilder();
 
+    builder.append("(").append(name);
+    transform(builder, parts);
+    builder.append(")");
 
-  public static void main(String[] args) {
-    Expr expression = new Expr.Binary(
-        new Expr.Unary(
-          new Token(TokenType.MINUS, "-", null, 1),
-          new Expr.Literal(123)), 
-        new Token(TokenType.STAR, "*", null, 1),
-        new Expr.Grouping(
-          new Expr.Literal(45.67)));
-
-
-    System.out.println(new AstPrinter().print(expression));
+    return builder.toString();
   }
+
+  
+
+  private void transform(StringBuilder builder, Object... parts) {
+    for (Object part : parts) {
+      builder.append(" ");
+      if (part instanceof Expr) {
+        builder.append(((Expr)part).accept(this));
+      } else if (part instanceof Stmt) {
+        builder.append(((Stmt) part).accept(this));
+      } else if (part instanceof Token) {
+        builder.append(((Token) part).lexeme);
+      } else if (part instanceof List) {
+        transform(builder, ((List) part).toArray());
+      } else {
+        builder.append(part);
+      }
+    }
+  }
+
+
 
 }

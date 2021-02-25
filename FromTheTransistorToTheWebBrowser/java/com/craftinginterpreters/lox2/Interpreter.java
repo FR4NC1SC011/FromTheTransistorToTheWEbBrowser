@@ -126,6 +126,7 @@ class Interpreter implements Expr.Visitor<Object>,
   }
 
 
+
   @Override
   public Void visitBlockStmt(Stmt.Block stmt) {
     executeBlock(stmt.statements, new Environment(environment));
@@ -173,6 +174,9 @@ class Interpreter implements Expr.Visitor<Object>,
   @Override
   public Void visitWhileStmt(Stmt.While stmt) {
     while(isTruthy(evaluate(stmt.condition))) {
+      if (stmt.breakStmt != null) {
+        System.out.println("break");
+      }
       execute(stmt.body);
     }
     return null;

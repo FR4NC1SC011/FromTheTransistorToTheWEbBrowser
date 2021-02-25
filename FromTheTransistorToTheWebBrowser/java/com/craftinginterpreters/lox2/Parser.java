@@ -49,7 +49,6 @@ class Parser {
     if (match(IF)) return ifStatement();
     if (match(PRINT)) return printStatement();
     if (match(WHILE)) return whileStatement();
-    if (match(BREAK)) return breakStatement();
     if (match(LEFT_BRACE)) return new Stmt.Block(block());
 
     return expressionStatement();
@@ -81,6 +80,7 @@ class Parser {
     consume(RIGHT_PAREN, "Expect ')' after for clauses");
 
     Stmt body = statement();
+    Stmt breakStmt = statement();
 
     if (increment != null) {
       body = new Stmt.Block(
@@ -90,7 +90,7 @@ class Parser {
     }
 
     if (condition == null) condition = new Expr.Literal(true);
-    body = new Stmt.While(condition, body);
+    body = new Stmt.While(condition, body, breakStmt);
 
     if (initializer != null) {
       body = new Stmt.Block(Arrays.asList(initializer, body));
@@ -141,14 +141,9 @@ class Parser {
     Expr condition = expression();
     consume(RIGHT_PAREN, "Expect ')' after condition.");
     Stmt body = statement();
+    Stmt breakStmt = statement();
 
-    return new Stmt.While(condition, body);
-  }
-
-
-  private Stmt breakStatement() {
-    System.out.println("Break statement");
-    return new Stmt.Break();
+    return new Stmt.While(condition, body, breakStmt);
   }
 
 

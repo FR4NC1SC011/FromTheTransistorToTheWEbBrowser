@@ -61,6 +61,6 @@ class Environment {
 
 
   Object getAt(int distance, String name) {
-    return ancestor(distance).values.get.(name);
+    return ancestor(distance).values.get(name);
   }
 }

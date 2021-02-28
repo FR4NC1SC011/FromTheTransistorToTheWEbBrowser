@@ -54,6 +54,20 @@ class Interpreter implements Expr.Visitor<Object>,
 
 
   @Override
+  public Object visitSetExpr(Expr.Set expr) {
+    Object object = evaluate(expr.object);
+
+    if (!object instanceof LoxInstance) {
+      throw new RuntimeError(expr.name, "Only instances have fields.");
+    }
+
+    Object value = evaluate(expr.value);
+    ((LoxInstance)object).set(expr.name, value);
+    return value;
+  }
+
+
+  @Override
   public Object visitUnaryExpr(Expr.Unary expr) {
     Object right = evaluate(expr.right);
 
@@ -320,6 +334,17 @@ class Interpreter implements Expr.Visitor<Object>,
           function.arity() + " arguments but got " + arguments.size() + ".");
     }
     return function.call(this, arguments);
+  }
+
+
+  @Override
+  public Object viistGetExpr (Expr.Get expr) {
+    Object object = evaluate(expr.object);
+    if (object instanceof LoxInstance) {
+      return ((LoxInstance) object).get(expr.name);
+    }
+
+    throw new RuntimeError(expr.name, "Only instances have properties.");
   }
 
 

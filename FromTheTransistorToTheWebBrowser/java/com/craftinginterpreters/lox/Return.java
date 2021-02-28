@@ -7,4 +7,12 @@ class Return extends RuntimeException {
     super(null, null, false, false);
     this.value = value;
   }
+
+
+  @Override
+  public Void visitSetExpr (Expr.Set expr) {
+    resolve(expr.value);
+    resolve(expr.object);
+    return null;
+  }
 }

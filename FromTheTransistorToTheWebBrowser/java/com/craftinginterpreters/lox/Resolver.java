@@ -232,6 +232,8 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
       Lox.error(expr.keyword, "Can't use 'this' outside of a class.");
       return null;
     }
+    resolveLocal(expr, expr.keyword);
+    return null;
 
   }
 

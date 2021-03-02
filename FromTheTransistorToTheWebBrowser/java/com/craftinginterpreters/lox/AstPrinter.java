@@ -144,6 +144,48 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
   }
 
 
+  @Override
+  public String visitClassStmt(Stmt.Class stmt) {
+    StringBuilder builder = new StringBuilder();
+    builder.append("(class " + stmt.name.lexeme);
+
+    if (stmt.superclass != null) {
+      builder.append(" < " + print(stmt.superclass));
+    }
+
+    for (Stmt.Function method : stmt.methods) {
+      builder.append(" " + print(method));
+    }
+
+    builder.append(")");
+    return builder.toString();
+  }
+
+
+  @Override
+  public String visitThisExpr(Expr.This expr) {
+    return "this";
+  }
+
+
+  @Override
+  public String visitSuperExpr(Expr.Super expr) {
+    return parenthesize2("super", expr.method);
+  }
+
+
+  @Override
+  public String visitGetExpr(Expr.Get expr) {
+    return parenthesize2(".", expr.object, expr.name.lexeme);
+  }
+
+
+  @Override
+  public String visitSetExpr(Expr.Set expr) {
+    return parenthesize2("=", expr.object, expr.name.lexeme, expr.value);
+  }
+
+
 
   private String parenthesize(String name, Expr... exprs) {
     StringBuilder builder = new StringBuilder();

@@ -57,7 +57,7 @@ class Interpreter implements Expr.Visitor<Object>,
   public Object visitSetExpr(Expr.Set expr) {
     Object object = evaluate(expr.object);
 
-    if (!object instanceof LoxInstance) {
+    if (!(object instanceof LoxInstance)) {
       throw new RuntimeError(expr.name, "Only instances have fields.");
     }
 
@@ -389,7 +389,7 @@ class Interpreter implements Expr.Visitor<Object>,
 
 
   @Override
-  public Object viistGetExpr (Expr.Get expr) {
+  public Object visitGetExpr (Expr.Get expr) {
     Object object = evaluate(expr.object);
     if (object instanceof LoxInstance) {
       return ((LoxInstance) object).get(expr.name);

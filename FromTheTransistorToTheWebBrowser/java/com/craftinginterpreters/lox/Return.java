@@ -9,10 +9,4 @@ class Return extends RuntimeException {
   }
 
 
-  @Override
-  public Void visitSetExpr (Expr.Set expr) {
-    resolve(expr.value);
-    resolve(expr.object);
-    return null;
-  }
 }

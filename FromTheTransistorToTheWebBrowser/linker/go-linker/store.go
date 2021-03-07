@@ -7,6 +7,8 @@ import (
 	"os"
 )
 
+var elfValues = make(map[string]string)
+
 func ioReader(file string) io.ReaderAt {
 	r, err := os.Open(file)
 	check(err)
@@ -50,16 +52,31 @@ func ReadElf(elf_object string) {
 		mach = "Unrecognized"
 	}
 
-	fmt.Printf("File Header: ")
-	fmt.Println(_elf.FileHeader)
-	fmt.Printf("Magic: %v\n", ident) // to do: Translate from int to hex
-	fmt.Printf("ELF Class: %s\n", arch)
-	fmt.Printf("Machine: %s\n", mach)
-	fmt.Printf("ELF Type: %s\n", _elf.Type)
-	fmt.Printf("ELF Data: %s\n", _elf.Data)
-	fmt.Printf("Entry Point: %d\n", _elf.Entry)
-	fmt.Printf("Section Addresses: %d\n", _elf.Sections)
-	fmt.Printf("OS: %d\n", _elf.OSABI) // Switch maybe...
+	elfValues["File Header"] = fmt.Sprintf("%s", _elf.FileHeader)
+	elfValues["ELF Class"] = arch
+	elfValues["Machine"] = mach
+	elfValues["ElF Type"] = fmt.Sprintf("%s", _elf.Type)
+	elfValues["ELF Data"] = fmt.Sprintf("%s", _elf.Data)
+	elfValues["Entry Point"] = fmt.Sprintf("%s", _elf.Entry)
+	//elfValues["Section Addresses"] = fmt.Sprintf("%s", _elf.Sections)
+
+	/*
+		fmt.Printf("File Header: ")
+		fmt.Println(_elf.FileHeader)
+		//fmt.Printf("Magic: %v\n", ident) // to do: Translate from int to hex
+		fmt.Printf("ELF Class: %s\n", arch)
+		fmt.Printf("Machine: %s\n", mach)
+		fmt.Printf("ELF Type: %s\n", _elf.Type)
+		fmt.Printf("ELF Data: %s\n", _elf.Data)
+		fmt.Printf("Entry Point: %d\n", _elf.Entry)
+		fmt.Printf("Section Addresses: %d\n", _elf.Sections)
+		//fmt.Printf("OS: %d\n", _elf.OSABI) // Switch maybe...
+	*/
+
+	fmt.Println("MAP:")
+	for k, v := range elfValues {
+		fmt.Println(k, ":", v)
+	}
 
 }
 

@@ -13,4 +13,11 @@ name = "simple_os"
 version = "0.1.0"
 dependencies = [
  "bootloader",
+ "volatile",
 ]
+
+[[package]]
+name = "volatile"
+version = "0.2.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f6b06ad3ed06fef1713569d547cdbdb439eafed76341820fb0e0344f29a41945"

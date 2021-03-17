@@ -10,14 +10,16 @@ edition = "2018"
 bootloader = "0.9.8"
 volatile = "0.2.6"
 spin = "0.5.2"
+x86_64 = "0.13.2"
 
 [dependencies.lazy_static]
 version = "1.0"
 features = ["spin_no_std"]
 
 
-[profile.dev]
-panic = "abort"
+[package.metadata.bootimage]
+test-args = ["-device", "isa-debug-exit,iobase=0xf4,iosize=0x04"]
+test-success-exit-code = 33
 
-[profile.release]
-panic = "abort"
+
+

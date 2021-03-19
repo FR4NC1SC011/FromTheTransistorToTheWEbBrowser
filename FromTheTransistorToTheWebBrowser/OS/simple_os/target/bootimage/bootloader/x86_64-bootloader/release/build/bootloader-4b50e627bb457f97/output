@@ -1,7 +1,7 @@
 cargo:rerun-if-changed=/home/fco/Desktop/Projects/FromTheTransistorToTheWebBrowser/OS/simple_os/Cargo.toml
 cargo:rustc-link-search=native=/home/fco/Desktop/Projects/FromTheTransistorToTheWebBrowser/OS/simple_os/target/bootimage/bootloader/x86_64-bootloader/release/build/bootloader-4b50e627bb457f97/out
-cargo:rustc-link-lib=static=kernel_bin-simple_os-34f3b191490f5aad
+cargo:rustc-link-lib=static=kernel_bin-basic_boot-181c33269ea580ec
 cargo:rerun-if-env-changed=KERNEL
 cargo:rerun-if-env-changed=KERNEL_MANIFEST
-cargo:rerun-if-changed=/home/fco/Desktop/Projects/FromTheTransistorToTheWebBrowser/OS/simple_os/target/x86_64-simple_os/debug/deps/simple_os-34f3b191490f5aad
+cargo:rerun-if-changed=/home/fco/Desktop/Projects/FromTheTransistorToTheWebBrowser/OS/simple_os/target/x86_64-simple_os/debug/deps/basic_boot-181c33269ea580ec
 cargo:rerun-if-changed=build.rs

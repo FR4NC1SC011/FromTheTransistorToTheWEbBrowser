@@ -6,18 +6,18 @@
 
 use simple_os::println;
 use core::panic::PanicInfo;
+use bootloader::{BootInfo, entry_point};
 
-#[no_mangle]
-pub extern "C" fn _start() -> ! {
+entry_point!(kernel_main);
+
+fn kernel_main (boot_info: &'static BootInfo) -> ! {
+    use blog_os::memory::active_level_4_table;
+    use x86_64::VirtAddr;
+
     println!("Hello world{}", "!");
-
     simple_os::init();
-
-    use x86_64::registers::control::Cr3;
-
-    let (level_4_page_table, _) = Cr3::read();
-    println!("Level 4 page table at: {:?}", level_4_page_table.start_address());
     
+
     #[cfg(test)]
     test_main();
 

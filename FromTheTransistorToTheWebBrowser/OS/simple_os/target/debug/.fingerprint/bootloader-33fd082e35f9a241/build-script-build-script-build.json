@@ -1,0 +1,1 @@
+{"rustc":5307094363147761691,"features":"[\"default\", \"map_physical_memory\"]","target":10429514197457385088,"profile":13719610756125836611,"path":13437871911719188908,"deps":[],"local":[{"CheckDepInfo":{"dep_info":"debug/.fingerprint/bootloader-33fd082e35f9a241/dep-build-script-build-script-build"}}],"rustflags":[],"metadata":3471642861815512940,"config":0,"compile_kind":0}

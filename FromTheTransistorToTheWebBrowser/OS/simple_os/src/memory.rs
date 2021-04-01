@@ -4,9 +4,7 @@ use bootloader::bootinfo::MemoryRegionType;
 
 use x86_64::{
     PhysAddr, VirtAddr,
-    structures::paging::{
-        FrameAllocator, Mapper, Page, PageTable, PhysFrame, Size4KiB,
-    }
+    structures::paging::{  FrameAllocator, PageTable, PhysFrame, Size4KiB, }
 };
 
 pub unsafe fn init(physical_memory_offset: VirtAddr) -> OffsetPageTable<'static> {
@@ -60,6 +58,7 @@ unsafe fn active_level_4_table(physical_memory_offset: VirtAddr)
         &mut *page_table_ptr
 }
 
+/*
 pub fn create_example_mapping(
     page: Page,
     mapper: &mut OffsetPageTable,
@@ -77,6 +76,8 @@ pub fn create_example_mapping(
     map_to_result.expect("map_to failed").flush();
 
 }
+
+*/
 
 
 unsafe impl FrameAllocator<Size4KiB> for BootInfoFrameAllocator {

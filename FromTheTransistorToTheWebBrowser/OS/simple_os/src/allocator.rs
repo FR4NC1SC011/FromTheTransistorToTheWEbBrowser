@@ -4,6 +4,9 @@ use core::ptr::null_mut;
 
 pub struct Dummy;
 
+#[global_allocator]
+static ALLOCATOR: Dummy = Dummy;
+
 unsafe impl GlobalAlloc for Dummy {
     unsafe fn alloc(&self, _layout: Layout) -> *mut u8 {
         null_mut()

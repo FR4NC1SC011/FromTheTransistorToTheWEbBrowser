@@ -18,7 +18,7 @@ x86_64 = "0.13.2"
 uart_16550 = "0.2.0"
 pic8259_simple = "0.2.0"
 pc-keyboard = "0.5.0"
-build-std = ["core", "compiler_builtins", "alloc"]
+
 
 [dependencies.lazy_static]
 version = "1.0"
@@ -30,7 +30,6 @@ test-args = [
   "-device", "isa-debug-exit,iobase=0xf4,iosize=0x04", "-serial", "stdio",
   "-display", "none"
   ]
-
 
 
 test-success-exit-code = 33

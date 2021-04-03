@@ -8,6 +8,7 @@ use simple_os::println;
 use core::panic::PanicInfo;
 use bootloader::{BootInfo, entry_point};
 use alloc::{boxed::Box, vec, vec::Vec, rc::Rc};
+use simple_os::task::{Task, simple_executor::SimpleExecutor};
 
 extern crate alloc;
 
@@ -30,6 +31,7 @@ fn kernel_main (boot_info: &'static BootInfo) -> ! {
     allocator::init_heap(&mut mapper, &mut frame_allocator)
         .expect("heap_initialization failed");
 
+    /*
     let heap_value = Box::new(41);
     println!("Heap_value at {:p}", heap_value);
 
@@ -54,6 +56,11 @@ fn kernel_main (boot_info: &'static BootInfo) -> ! {
         "reference count is {} now",
         Rc::strong_count(&cloned_reference)
     );
+    */
+
+    let mut executor = SimpleExecutor::new();
+    executor.spawn(Task::new(example_task()));
+    executor.run();
 
 
     #[cfg(test)]
@@ -61,6 +68,17 @@ fn kernel_main (boot_info: &'static BootInfo) -> ! {
 
     println!("It did not crash!");
     simple_os::hlt_loop(); 
+}
+
+
+
+async fn async_number() -> u32 {
+    42
+}
+
+async fn example_task() {
+    let number = async_number().await;
+    println!("async number: {}", number);
 }
 
 

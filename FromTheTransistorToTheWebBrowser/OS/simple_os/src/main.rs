@@ -10,6 +10,7 @@ use bootloader::{BootInfo, entry_point};
 use alloc::{boxed::Box, vec, vec::Vec, rc::Rc};
 use simple_os::task::{Task, simple_executor::SimpleExecutor};
 use simple_os::task::keyboard;
+use simple_os::task::executor::Executor; // new
 
 extern crate alloc;
 
@@ -62,13 +63,13 @@ fn kernel_main (boot_info: &'static BootInfo) -> ! {
     #[cfg(test)]
     test_main();
 
-    let mut executor = SimpleExecutor::new();
+    let mut executor = Executor::new();
     executor.spawn(Task::new(example_task()));
     executor.spawn(Task::new(keyboard::print_keypresses())); // new
     executor.run();
 
-    println!("It did not crash!");
-    simple_os::hlt_loop(); 
+   // println!("It did not crash!");
+    //simple_os::hlt_loop(); 
 }
 
 

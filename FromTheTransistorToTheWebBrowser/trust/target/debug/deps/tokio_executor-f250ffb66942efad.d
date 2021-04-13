@@ -1,0 +1,11 @@
+/home/fco/Desktop/Projects/FromTheTransistorToTheWebBrowser/trust/target/debug/deps/tokio_executor-f250ffb66942efad.rmeta: /home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-executor-0.1.10/src/lib.rs /home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-executor-0.1.10/src/enter.rs /home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-executor-0.1.10/src/error.rs /home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-executor-0.1.10/src/executor.rs /home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-executor-0.1.10/src/global.rs /home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-executor-0.1.10/src/park.rs /home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-executor-0.1.10/src/typed.rs
+
+/home/fco/Desktop/Projects/FromTheTransistorToTheWebBrowser/trust/target/debug/deps/tokio_executor-f250ffb66942efad.d: /home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-executor-0.1.10/src/lib.rs /home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-executor-0.1.10/src/enter.rs /home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-executor-0.1.10/src/error.rs /home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-executor-0.1.10/src/executor.rs /home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-executor-0.1.10/src/global.rs /home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-executor-0.1.10/src/park.rs /home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-executor-0.1.10/src/typed.rs
+
+/home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-executor-0.1.10/src/lib.rs:
+/home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-executor-0.1.10/src/enter.rs:
+/home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-executor-0.1.10/src/error.rs:
+/home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-executor-0.1.10/src/executor.rs:
+/home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-executor-0.1.10/src/global.rs:
+/home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-executor-0.1.10/src/park.rs:
+/home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-executor-0.1.10/src/typed.rs:

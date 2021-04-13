@@ -1,0 +1,13 @@
+/home/fco/Desktop/Projects/FromTheTransistorToTheWebBrowser/trust/target/debug/deps/tokio_uds-e37a9a56809f4d42.rmeta: /home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-uds-0.2.7/src/lib.rs /home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-uds-0.2.7/src/datagram.rs /home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-uds-0.2.7/src/frame.rs /home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-uds-0.2.7/src/incoming.rs /home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-uds-0.2.7/src/listener.rs /home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-uds-0.2.7/src/recv_dgram.rs /home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-uds-0.2.7/src/send_dgram.rs /home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-uds-0.2.7/src/stream.rs /home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-uds-0.2.7/src/ucred.rs
+
+/home/fco/Desktop/Projects/FromTheTransistorToTheWebBrowser/trust/target/debug/deps/tokio_uds-e37a9a56809f4d42.d: /home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-uds-0.2.7/src/lib.rs /home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-uds-0.2.7/src/datagram.rs /home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-uds-0.2.7/src/frame.rs /home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-uds-0.2.7/src/incoming.rs /home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-uds-0.2.7/src/listener.rs /home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-uds-0.2.7/src/recv_dgram.rs /home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-uds-0.2.7/src/send_dgram.rs /home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-uds-0.2.7/src/stream.rs /home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-uds-0.2.7/src/ucred.rs
+
+/home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-uds-0.2.7/src/lib.rs:
+/home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-uds-0.2.7/src/datagram.rs:
+/home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-uds-0.2.7/src/frame.rs:
+/home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-uds-0.2.7/src/incoming.rs:
+/home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-uds-0.2.7/src/listener.rs:
+/home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-uds-0.2.7/src/recv_dgram.rs:
+/home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-uds-0.2.7/src/send_dgram.rs:
+/home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-uds-0.2.7/src/stream.rs:
+/home/fco/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-uds-0.2.7/src/ucred.rs:

@@ -7,11 +7,21 @@ enum State {
     Estab,
 }
 
+impl State {
+    fn is_synchronized(&self) -> bool {
+        match *self {
+            State::SynRcvd => false,
+            State::Estab => true,
+        }
+    }
+}
+
 pub struct Connection {
     state: State,
     send: SendSequenceSpace,
     recv: RecvSequenceSpace,
     ip: etherparse::Ipv4Header,
+    tcp: etherparse::TcpHeader,
 }
 
 struct SendSequenceSpace {
@@ -58,13 +68,14 @@ impl Connection {
         }
 
         let iss = 0;
+        let wnd = 10;
         let mut c = Connection {
             state: State::SynRcvd,
             send: SendSequenceSpace {
                 iss,
                 una: iss,
-                nxt: iss + 1,
-                wnd: 10,
+                nxt: iss,
+                wnd: wnd,
                 up: false,
                 wl1: 0,
                 wl2: 0,
@@ -76,6 +87,8 @@ impl Connection {
                 wnd: tcph.window_size(),
                 up: false,
             },
+            tcp: etherparse::TcpHeader::new(tcph.destination_port(), tcph.source_port(), iss, wnd),
+
             ip: etherparse::Ipv4Header::new(
                 0,
                 64,
@@ -95,29 +108,44 @@ impl Connection {
             ),
         };
 
-        let mut syn_ack = etherparse::TcpHeader::new(
-            tcph.destination_port(),
-            tcph.source_port(),
-            c.send.iss,
-            c.send.wnd,
-        );
-        syn_ack.acknowledgment_number = c.recv.nxt;
         syn_ack.syn = true;
         syn_ack.ack = true;
-        c.ip.set_payload_len(syn_ack.header_len() as usize + 0);
-
-        //syn_ack.checksum = syn_ack.calc_checksum_ipv4(&ip, &[]).expect("failed to compute checksum");
-        eprintln!("got ip header: \n {:02x?}", iph);
-        eprintln!("got tcp header: \n {:02x?}", tcph);
-
-        let unwritten = {
-            let mut unwritten = &mut buf[..];
-            c.ip.write(&mut unwritten);
-            syn_ack.write(&mut unwritten);
-            unwritten.len();
-        };
-        nic.send(&buf[..unwritten])?;
+        c.write(nic, &[])?;
         Ok(Some(c))
+    
+    }
+
+    fn write(&mut self, nic: &mut tun_tap::Iface, payload: &[u8]) -> io::Result<usize> {
+        let mut buf = [0u8; 1500];
+        self.tcp.sequence_number = self.send.nxt;
+        self.tcp.acknowledgment_number = self.recv.nxt;
+        self.ip
+            .set_payload_len(self.tcp.header_len() as usize + payload.len());
+
+        use std::io::Write;
+        let mut unwritten = &mut buf[..];
+        self.ip.write(&mut unwritten);
+        self.tcp.write(&mut unwritten);
+        let payload_bytes = unwritten.write(payload)?;
+        let unwritten = unwritten.len();
+        self.send.nxt.wrapping_add(payload_bytes as u32);
+        if self.tcp.syn {
+            self.send.nxt = self.send.nxt.wrapping_add(1);
+            self.tcp.syn = false;
+        }
+         if self.tcp.fin {
+            self.send.nxt = self.send.nxt.wrapping_add(1);
+            self.tcp.fin = false;
+        }
+        nic.send(&buf[..buf.len() - unwritten])?;
+        Ok(payload_bytes)
+    }
+
+    fn send_rst(&mut self, nic: &mut tun_tap::Iface) -> io::Result<()> {
+        self.tcp.rst = true;
+        self.tcp.sequence_number = 0;
+        self.tcp.acknowledgment_number = 0;
+        self.ip.set_payload_len(self.tcp.header_len());
     }
 
     pub fn on_packet<'a>(
@@ -125,6 +153,7 @@ impl Connection {
         nic: &mut tun_tap::Iface,
         iph: etherparse::Ipv4HeaderSlice<'a>,
         tcph: etherparse::TcpHeaderSlice<'a>,
+        data: &'a [u8],
     ) -> io::Result<()> {
         // first check that sequence numbers are valid (RFC 793 S3.3)
         //
@@ -134,25 +163,47 @@ impl Connection {
         //
         let ackn = tcph.acknowledgment_number();
         if !is_between_wrapped(self.send.una, ackn, self.send.nxt.wrapping_add(1)) {
+            if !self.state.is_synchronized() {
+                self.send_rst(nic);
+            }
             return Ok(());
         }
 
         // valid segment check
         let seqn = tcph.sequence_number();
+        let mut slen = data.len() as u32;
+        if tcph.fin() {
+            slen += 1;
+        }
+        if tcph.syn() {
+            slen += 1;
+        }
         let wend = self.recv.nxt.wrapping_add(self.recv.wnd as u32);
-        if !is_between_wrapped(self.recv.nxt.wrapping_sub(1), seqn, wend)
-            && !is_between_wrapped(
-                self.recv.nxt.wrapping_sub(1),
-                seqn + data.len() as u32 - 1,
-                wend,
-            )
-        {
-            return Ok(());
+        if slen == 0 {
+            if self.recv.wnd == 0 {
+                if seqn != self.recv.nxt {
+                    return Ok(());
+                }
+            } else if !is_between_wrapped(self.recv.nxt.wrapping_sub(1), seqn, wend) {
+                return Ok(());
+            }
+        } else {
+            if self.recv.wnd == 0 {
+                return Ok(());
+            } else if !is_between_wrapped(self.recv.nxt.wrapping_sub(1), seqn, wend)
+                && !is_between_wrapped(self.recv.nxt.wrapping_sub(1), seqn + slen - 1, wend)
+            {
+                return Ok(());
+            }
         }
 
         match self.state {
             State::SynRcvd => {
                 // expect to get an ACK for our SYN
+                if !tcph.ack() {
+                    return Ok(());
+                }
+                self.state = Estab;
             }
 
             State::Estab => {

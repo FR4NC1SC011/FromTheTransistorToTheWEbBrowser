@@ -1,17 +1,20 @@
 use std::io;
 
-enum State {
+pub enum State {
     //Closed,
     // Listen,
     SynRcvd,
     Estab,
+    FinWait1,
+    FinWait2,
+    TimeWait,
 }
 
 impl State {
     fn is_synchronized(&self) -> bool {
         match *self {
             State::SynRcvd => false,
-            State::Estab => true,
+            State::Estab | State::FinWait1 | State::FinWait2 | State::TimeWait => true,
         }
     }
 }
@@ -68,7 +71,7 @@ impl Connection {
         }
 
         let iss = 0;
-        let wnd = 10;
+        let wnd = 1024;
         let mut c = Connection {
             state: State::SynRcvd,
             send: SendSequenceSpace {
@@ -108,19 +111,27 @@ impl Connection {
             ),
         };
 
-        syn_ack.syn = true;
-        syn_ack.ack = true;
+        c.tcp.syn = true;
+        c.tcp.ack = true;
         c.write(nic, &[])?;
         Ok(Some(c))
-    
     }
 
     fn write(&mut self, nic: &mut tun_tap::Iface, payload: &[u8]) -> io::Result<usize> {
         let mut buf = [0u8; 1500];
         self.tcp.sequence_number = self.send.nxt;
         self.tcp.acknowledgment_number = self.recv.nxt;
+        let size = std::cmp::min(
+            buf.len(),
+            self.tcp.header_len() as usize + self.ip.header_len() as usize + payload.len(),
+        );
         self.ip
-            .set_payload_len(self.tcp.header_len() as usize + payload.len());
+            .set_payload_len(size - self.ip.header_len() as usize);
+
+        self.tcp.checksum = self
+            .tcp
+            .calc_checksum_ipv4(&self.ip, &[])
+            .expect("failed to compute checksum");
 
         use std::io::Write;
         let mut unwritten = &mut buf[..];
@@ -133,7 +144,7 @@ impl Connection {
             self.send.nxt = self.send.nxt.wrapping_add(1);
             self.tcp.syn = false;
         }
-         if self.tcp.fin {
+        if self.tcp.fin {
             self.send.nxt = self.send.nxt.wrapping_add(1);
             self.tcp.fin = false;
         }
@@ -145,7 +156,8 @@ impl Connection {
         self.tcp.rst = true;
         self.tcp.sequence_number = 0;
         self.tcp.acknowledgment_number = 0;
-        self.ip.set_payload_len(self.tcp.header_len());
+        self.write(nic, &[])?;
+        Ok(())
     }
 
     pub fn on_packet<'a>(
@@ -156,18 +168,6 @@ impl Connection {
         data: &'a [u8],
     ) -> io::Result<()> {
         // first check that sequence numbers are valid (RFC 793 S3.3)
-        //
-        // acceptable ack check
-        // SND.UNA < SEG.ACK < SND.NXT
-        // but remember wrapping!!!
-        //
-        let ackn = tcph.acknowledgment_number();
-        if !is_between_wrapped(self.send.una, ackn, self.send.nxt.wrapping_add(1)) {
-            if !self.state.is_synchronized() {
-                self.send_rst(nic);
-            }
-            return Ok(());
-        }
 
         // valid segment check
         let seqn = tcph.sequence_number();
@@ -179,41 +179,95 @@ impl Connection {
             slen += 1;
         }
         let wend = self.recv.nxt.wrapping_add(self.recv.wnd as u32);
-        if slen == 0 {
+        let okay = if slen == 0 {
             if self.recv.wnd == 0 {
                 if seqn != self.recv.nxt {
-                    return Ok(());
+                    false
+                } else {
+                    true
                 }
             } else if !is_between_wrapped(self.recv.nxt.wrapping_sub(1), seqn, wend) {
-                return Ok(());
+                false
+            } else {
+                true
             }
         } else {
             if self.recv.wnd == 0 {
-                return Ok(());
+                false
             } else if !is_between_wrapped(self.recv.nxt.wrapping_sub(1), seqn, wend)
-                && !is_between_wrapped(self.recv.nxt.wrapping_sub(1), seqn + slen - 1, wend)
+                && !is_between_wrapped(
+                    self.recv.nxt.wrapping_sub(1),
+                    seqn.wrapping_add(slen - 1),
+                    wend,
+                )
             {
-                return Ok(());
+                false
+            } else {
+                true
+            }
+        };
+
+        if !okay {
+            self.write(nic, &[])?;
+            return Ok(());
+        }
+
+        self.recv.nxt = seqn.wrapping_add(slen);
+        //TODO:if not acceptable, send ACK
+        if !tcph.ack() {
+            return Ok(());
+        }
+
+        let ackn = tcph.acknowledgment_number();
+        if let State::SynRcvd = self.state {
+            if is_between_wrapped(
+                self.send.una.wrapping_sub(1),
+                ackn,
+                self.send.nxt.wrapping_add(1),
+            ) {
+                self.state = State::Estab;
+            } else {
+                //TODO: Reset
             }
         }
 
-        match self.state {
-            State::SynRcvd => {
-                // expect to get an ACK for our SYN
-                if !tcph.ack() {
-                    return Ok(());
-                }
-                self.state = Estab;
+        if let State::Estab | State::FinWait1 | State::FinWait2 = self.state {
+            if !is_between_wrapped(self.send.una, ackn, self.send.nxt.wrapping_add(1)) {
+                return Ok(());
             }
+            self.send.una = ackn;
+            assert!(data.is_empty());
 
-            State::Estab => {
-                unimplemented!();
+            if let State::Estab = self.state {
+                // terminate the connection
+                self.tcp.fin = true;
+                self.write(nic, &[])?;
+                self.state = State::FinWait1;
+            }
+        }
+
+        if let State::FinWait1 = self.state {
+            if self.send.una == self.send.iss + 2 {
+                // our FIN has been ACKed!
+                self.state = State::FinWait2;
+            }
+        }
+
+        if tcph.fin() {
+            match self.state {
+                State::FinWait2 => {
+                    // we're done with the connection
+                    self.write(nic, &[])?;
+                    self.state = State::TimeWait;
+                }
+                _ => unimplemented!(),
             }
         }
 
         Ok(())
     }
 }
+
 fn is_between_wrapped(start: u32, x: u32, end: u32) -> bool {
     use std::cmp::Ordering;
     match start.cmp(&x) {

@@ -1,4 +1,5 @@
 use std::io;
+use std::collections::VecDeque;
 
 pub enum State {
     //Closed,
@@ -25,6 +26,9 @@ pub struct Connection {
     recv: RecvSequenceSpace,
     ip: etherparse::Ipv4Header,
     tcp: etherparse::TcpHeader,
+
+    incoming: VecDeque<u8>,
+    unacked: VecDeque<u8>,
 }
 
 struct SendSequenceSpace {

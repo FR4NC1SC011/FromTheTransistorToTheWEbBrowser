@@ -2,90 +2,86 @@ use std::io;
 use std::io::prelude::*;
 use std::sync::mpsc;
 use std::thread;
+use std::collections::{VecDeque, HashMap};
 
 mod tcp;
 
-type InterfaceHandle = mpsc::Sender<InterfaceRequest>;
-
-
-enum InterfaceRequest {
-    Write{
-        bytes: Vec<u8>, 
-        ack: mpsc::Sender<usize>
-    },
-
-    Flush{
-        ack:mpsc::Sender<()>
-    },
-
-    Bind {
-        port: u16,
-        ack: mpsc::Sender<()>
-    },
-
-    Unbind,
-    Read{
-        max_length: usize, 
-        read: mpsc::Sender<Vec<u8>>
-    },
+#[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
+struct Quad {
+    src: (Ipv4Addr, u16),
+    dst: (Ipv4Addr, u16),
 }
 
-pub struct Interface{
-    tx: InterfaceHandle,
+type InterfaceHandle = Arc<Mutex<ConnectionManager>>;
+
+pub struct Interface {
+    ih: InterfaceHandle,
     jh: thread::JoindHandle<()>,
 }
 
-impl ConnectionManager {
-    fn run_on(self, rx: mpsc::Sender<InterfaceRequest>) {
-        // main event loop for packet processing
-        for req in rx {
 
-        }
-
-    }
-}
-
+#[derive(Default)]
 struct ConnectionManager {
     connections: HashMap<Quad, tcp::Connection>,
-    nic: tun_tap::Iface,
-    buf: [u8; 1504],
+    pending: HashMap<u16, Vec<Quad>>,
 }
 
 impl Interface {
     pub fn new() -> io::Result<Self> {
-        let cm = ConnectionManager {
-            connections: Default::default(),
-            nic: tun_tap::Iface::without_packet_info("tun0", tun_tap::Mode::Tun)?,
-            buf: [0u8; 1504],
-        };
+        let nic = tun_tap::Iface::without_packet_info("tun0", tun_tap::Mode::Tun)?;
 
-        let (tx, rx) = mpsc::channel();
-        let jh = thread::spawn(move || cm.run_on(rx));
+        let cm: InterfaceHandle = Arc::default(); 
 
-        Ok(Interface {
-            tx, jh
-        }) 
+        let jh =  {
+            let cm = cm.clone();
+            thread::spawn(move || {
+            let nic = nic;
+            let cm = cm;
+            let buf = [0u8; 1504];
 
+        })
+    };
+
+        Ok(Interface { cm, jh })
     }
 
-    pub fn bind (&mut self, port: u16) -> io::Result<TcpListener> {
-        let (ack, rx) = mpsc::channel();
-        self.tx.send(InterfaceRequest::Bind {
-            port,
-            ack,
-        });
-
-        rx.recv().unwrap();
-        Ok(TcpListener(self.tx.clone()))
+    pub fn bind(&mut self, port: u16) -> io::Result<TcpListener> {
+        use std::collections::hash_map::Entry;
+        let cm = self.ih.lock().unwrap();
+        match cm.pending.entry(port) {
+            Entry::Vacant(v) => {
+                v.insert(VecDeque::new);
+            },
+            Entry::Occupied(_) => {
+                return Err(io::Error::new(io::ErrorKind::AddrInUse, "port already bound."))
+            }
+        };
+        drop(cm);
+        Ok(TcpListener(port, self.ih.clone()));
     }
 }
 
-pub struct TcpStream (InterfaceHandle);
+pub struct TcpListener(u16, InterfaceHandle);
+
+impl TcpListener {
+    pub fn try_accept(&mut self) -> io::Result<TcpStream> {
+        let cm = self.ih.lock().unwrap();
+        if let Some(quad) = cm.pending.get_mut(&self.0).expect("port closed while listener still active").pop_front() {
+            return Ok(TcpStream(quad, self.1.clone()));
+        } else {
+            // TODO: block
+            return Err(io::Error::new(io::ErrorKind::WouldBlock, "no connection to accept"));
+        }
+    }
+}
+
+pub struct TcpStream(Quad, InterfaceHandle);
 
 impl Read for TcpStream {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         let (read, rx) = mpsc::channel();
-        self.tx.send(InterfaceRequest::Read {
+        self.1.send(InterfaceRequest::Read {
+            quad: self.quad,
             max_length: buf.len(),
             read,
         });
@@ -99,7 +95,8 @@ impl Read for TcpStream {
 impl Write for TcpStream {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         let (ack, rx) = mpsc::channel();
-        self.tx.send(InterfaceRequest::Write{
+        self.1.send(InterfaceRequest::Write {
+            quad: self.quad,
             bytes: Vec::from(buf),
             ack,
         });
@@ -110,13 +107,13 @@ impl Write for TcpStream {
     }
 
     fn flush(&mut self) -> io::Result<()> {
-        unimplemented!();
-    }
-}
-pub struct TcpListener (InterfaceHandle);
+        let (ack, rx) = mpsc::channel();
+        self.1.send(InterfaceRequest::Flush {
+            quad: self.quad,
+            ack,
+        });
 
-impl TcpListener {
-    pub fn accept(&mut self) -> io::Result<TcpStream> {
-        unimplemented!();
+        rx.recv().unwrap();
+        Ok(())
     }
 }

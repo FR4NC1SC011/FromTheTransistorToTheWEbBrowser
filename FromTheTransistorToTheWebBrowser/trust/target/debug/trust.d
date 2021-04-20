@@ -1,1 +1,0 @@
-/home/fco/Desktop/Projects/FromTheTransistorToTheWebBrowser/trust/target/debug/trust: /home/fco/Desktop/Projects/FromTheTransistorToTheWebBrowser/trust/src/main.rs /home/fco/Desktop/Projects/FromTheTransistorToTheWebBrowser/trust/src/tcp.rs

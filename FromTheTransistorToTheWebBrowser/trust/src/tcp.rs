@@ -27,8 +27,8 @@ pub struct Connection {
     ip: etherparse::Ipv4Header,
     tcp: etherparse::TcpHeader,
 
-    incoming: VecDeque<u8>,
-    unacked: VecDeque<u8>,
+    pub(crate) incoming: VecDeque<u8>,
+    pub(crate) unacked: VecDeque<u8>,
 }
 
 struct SendSequenceSpace {
@@ -113,6 +113,9 @@ impl Connection {
                     iph.source()[3],
                 ],
             ),
+
+            incoming: Default::default(),
+            unacked: Default::default(),
         };
 
         c.tcp.syn = true;

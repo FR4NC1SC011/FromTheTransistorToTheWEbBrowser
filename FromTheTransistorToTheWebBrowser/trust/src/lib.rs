@@ -1,10 +1,13 @@
+use std::collections::{HashMap, VecDeque};
 use std::io;
 use std::io::prelude::*;
-use std::sync::mpsc;
+use std::net::Ipv4Addr;
+use std::sync::{Arc, Mutex};
 use std::thread;
-use std::collections::{VecDeque, HashMap};
 
 mod tcp;
+
+const SENDQUEUE_SIZE: usize = 1024;
 
 #[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
 struct Quad {
@@ -16,104 +19,169 @@ type InterfaceHandle = Arc<Mutex<ConnectionManager>>;
 
 pub struct Interface {
     ih: InterfaceHandle,
-    jh: thread::JoindHandle<()>,
+    jh: thread::JoinHandle<()>,
 }
-
 
 #[derive(Default)]
 struct ConnectionManager {
     connections: HashMap<Quad, tcp::Connection>,
-    pending: HashMap<u16, Vec<Quad>>,
+    pending: HashMap<u16, VecDeque<Quad>>,
 }
 
 impl Interface {
     pub fn new() -> io::Result<Self> {
         let nic = tun_tap::Iface::without_packet_info("tun0", tun_tap::Mode::Tun)?;
 
-        let cm: InterfaceHandle = Arc::default(); 
+        let ih: InterfaceHandle = Arc::default();
 
-        let jh =  {
-            let cm = cm.clone();
+        let jh = {
+            let ih = ih.clone();
             thread::spawn(move || {
-            let nic = nic;
-            let cm = cm;
-            let buf = [0u8; 1504];
+                let nic = nic;
+                let ih = ih;
+                let buf = [0u8; 1504];
+            })
+        };
 
-        })
-    };
-
-        Ok(Interface { cm, jh })
+        Ok(Interface { ih, jh })
     }
 
     pub fn bind(&mut self, port: u16) -> io::Result<TcpListener> {
         use std::collections::hash_map::Entry;
-        let cm = self.ih.lock().unwrap();
+        let mut cm = self.ih.lock().unwrap();
         match cm.pending.entry(port) {
             Entry::Vacant(v) => {
-                v.insert(VecDeque::new);
-            },
+                v.insert(VecDeque::new());
+            }
             Entry::Occupied(_) => {
-                return Err(io::Error::new(io::ErrorKind::AddrInUse, "port already bound."))
+                return Err(io::Error::new(
+                    io::ErrorKind::AddrInUse,
+                    "port already bound.",
+                ))
             }
         };
         drop(cm);
-        Ok(TcpListener(port, self.ih.clone()));
+        Ok(TcpListener {
+            port,
+            h: self.ih.clone(),
+        })
     }
 }
 
-pub struct TcpListener(u16, InterfaceHandle);
+pub struct TcpListener {
+    port: u16,
+    h: InterfaceHandle,
+}
 
 impl TcpListener {
     pub fn try_accept(&mut self) -> io::Result<TcpStream> {
-        let cm = self.ih.lock().unwrap();
-        if let Some(quad) = cm.pending.get_mut(&self.0).expect("port closed while listener still active").pop_front() {
-            return Ok(TcpStream(quad, self.1.clone()));
+        let mut cm = self.h.lock().unwrap();
+        if let Some(quad) = cm
+            .pending
+            .get_mut(&self.port)
+            .expect("port closed while listener still active")
+            .pop_front()
+        {
+            return Ok(TcpStream {
+                quad,
+                h: self.h.clone(),
+            });
         } else {
             // TODO: block
-            return Err(io::Error::new(io::ErrorKind::WouldBlock, "no connection to accept"));
+            return Err(io::Error::new(
+                io::ErrorKind::WouldBlock,
+                "no connection to accept",
+            ));
         }
     }
 }
 
-pub struct TcpStream(Quad, InterfaceHandle);
+pub struct TcpStream {
+    quad: Quad,
+    h: InterfaceHandle,
+}
 
 impl Read for TcpStream {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        let (read, rx) = mpsc::channel();
-        self.1.send(InterfaceRequest::Read {
-            quad: self.quad,
-            max_length: buf.len(),
-            read,
-        });
+        let mut cm = self.h.lock().unwrap();
+        let c = cm.connections.get_mut(&self.quad).ok_or_else(|| {
+            io::Error::new(
+                io::ErrorKind::ConnectionAborted,
+                "stream was terminated unexpectedly",
+            )
+        })?;
 
-        let bytes = rx.recv().unwrap();
-        assert!(bytes.len() <= buf.len());
-        buf.copy_from_slice(&bytes[..]);
-        Ok(bytes.len())
+        if c.incoming.is_empty() {
+            //TODO: block
+            return Err(io::Error::new(
+                io::ErrorKind::WouldBlock,
+                "no bytes to read",
+            ));
+        }
+
+        // TODO: detect FIN and return nread == 0
+
+        let mut nread = 0;
+        let (head, tail) = c.incoming.as_slices();
+        let hread = std::cmp::min(buf.len(), head.len());
+        buf.copy_from_slice(&head[..hread]);
+        nread += hread;
+        let tread = std::cmp::min(buf.len() - nread, tail.len());
+        buf.copy_from_slice(&tail[..tread]);
+        nread += tread;
+        drop(c.incoming.drain(..nread));
+        Ok(nread)
     }
 }
+
 impl Write for TcpStream {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        let (ack, rx) = mpsc::channel();
-        self.1.send(InterfaceRequest::Write {
-            quad: self.quad,
-            bytes: Vec::from(buf),
-            ack,
-        });
+        let mut cm = self.h.lock().unwrap();
+        let c = cm.connections.get_mut(&self.quad).ok_or_else(|| {
+            io::Error::new(
+                io::ErrorKind::ConnectionAborted,
+                "stream was terminated unexpectedly",
+            )
+        })?;
 
-        let n = rx.recv().unwrap();
-        assert!(n <= buf.len());
-        Ok(n)
+        if c.unacked.len() >= SENDQUEUE_SIZE {
+            //TODO: block
+            return Err(io::Error::new(
+                io::ErrorKind::WouldBlock,
+                "too many bytes buffered",
+            ));
+        }
+
+        let nwrite = std::cmp::min(buf.len(), SENDQUEUE_SIZE - c.unacked.len());
+        c.unacked.extend(buf[..nwrite].iter());
+
+        // TODO: wake up a writer
+        Ok(nwrite)
     }
 
     fn flush(&mut self) -> io::Result<()> {
-        let (ack, rx) = mpsc::channel();
-        self.1.send(InterfaceRequest::Flush {
-            quad: self.quad,
-            ack,
-        });
+        let mut cm = self.h.lock().unwrap();
+        let c = cm.connections.get_mut(&self.quad).ok_or_else(|| {
+            io::Error::new(
+                io::ErrorKind::ConnectionAborted,
+                "stream was terminated unexpectedly",
+            )
+        })?;
 
-        rx.recv().unwrap();
-        Ok(())
+        if c.unacked.is_empty() {
+            Ok(())
+        } else {
+            //TODO: Block
+            Err(io::Error::new(
+                io::ErrorKind::WouldBlock,
+                "too many bytes buffered",
+            ))
+        }
+    }
+}
+
+impl TcpStream {
+    pub fn shutdown(&self, how: std::net::Shutdown) -> io::Result<()> {
+        unimplemented!();
     }
 }

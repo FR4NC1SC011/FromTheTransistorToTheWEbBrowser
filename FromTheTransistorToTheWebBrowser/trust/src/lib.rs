@@ -250,14 +250,15 @@ impl Read for TcpStream {
                 let mut nread = 0;
                 let (head, tail) = c.incoming.as_slices();
                 let hread = std::cmp::min(buf.len(), head.len());
-                buf.copy_from_slice(&head[..hread]);
+                buf[..hread].copy_from_slice(&head[..hread]);
                 nread += hread;
                 let tread = std::cmp::min(buf.len() - nread, tail.len());
-                buf.copy_from_slice(&tail[..tread]);
+                buf[hread..(hread + tread)].copy_from_slice(&tail[..tread]);
                 nread += tread;
                 drop(c.incoming.drain(..nread));
                 return Ok(nread);
             }
+
             cm = self.h.rcv_var.wait(cm).unwrap();
         }
     }

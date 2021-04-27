@@ -1,6 +1,6 @@
-use std::io;
-use std::collections::VecDeque;
 use bitflags::bitflags;
+use std::collections::VecDeque;
+use std::io;
 
 bitflags! {
     pub (crate)struct Available: u32 {
@@ -58,10 +58,8 @@ impl Connection {
         //TODO: take into account self.state
         //TODO: set Available::WRITE
         a
-
-
     }
-} 
+}
 
 struct SendSequenceSpace {
     ///SND.UNA - send unacknowledged
@@ -247,13 +245,16 @@ impl Connection {
         };
 
         if !okay {
+            eprintln!("NOT OKAY");
             self.write(nic, &[])?;
             return Ok(self.availability());
         }
 
-        self.recv.nxt = seqn.wrapping_add(slen);
-        //TODO:if not acceptable, send ACK
         if !tcph.ack() {
+            if tcph.syn() {
+                assert!(data.is_empty());
+                self.recv.nxt = seqn.wrapping_add(1);
+            }
             return Ok(self.availability());
         }
 
@@ -275,12 +276,14 @@ impl Connection {
                 self.send.una = ackn;
             }
 
-            assert!(data.is_empty());
+            // TODO: prune self.unacked
+            // TODO: if unacked empty and waiting flush, notify
+            // TODO: update window
 
             if let State::Estab = self.state {
                 // terminate the connection
                 self.tcp.fin = true;
-                self.write(nic, &[])?;
+                //self.write(nic, &[])?;
                 self.state = State::FinWait1;
             }
         }
@@ -292,6 +295,26 @@ impl Connection {
             }
         }
 
+        if let State::Estab | State::FinWait1 | State::FinWait2 = self.state {
+            let mut unread_data_at = (self.recv.nxt - seqn) as usize;
+
+            if unread_data_at > data.len() {
+                // we must have received a retransmitted FIN that we have already seen
+                // nxt points to beyond the FIN, but the FIN is not in data!
+                assert_eq!(unread_data_at, data.len() + 1);
+                unread_data_at = 0;
+            }
+
+            self.incoming.extend(&data[unread_data_at..]);
+
+            self.recv.nxt = seqn
+                .wrapping_add(if tcph.syn() { 1 } else { 0 })
+                .wrapping_add(data.len() as u32)
+                .wrapping_add(if tcph.fin() { 1 } else { 0 });
+
+            self.write(nic, &[])?;
+        }
+
         if tcph.fin() {
             match self.state {
                 State::FinWait2 => {
@@ -299,7 +322,7 @@ impl Connection {
                     self.write(nic, &[])?;
                     self.state = State::TimeWait;
                 }
-                _ => unimplemented!(),
+               _ => unimplemented!(),
             }
         }
 

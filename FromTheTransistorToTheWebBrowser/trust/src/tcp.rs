@@ -272,7 +272,7 @@ impl Connection {
         }
 
         if let State::Estab | State::FinWait1 | State::FinWait2 = self.state {
-            if !is_between_wrapped(self.send.una, ackn, self.send.nxt.wrapping_add(1)) {
+            if is_between_wrapped(self.send.una, ackn, self.send.nxt.wrapping_add(1)) {
                 self.send.una = ackn;
             }
 
@@ -308,7 +308,6 @@ impl Connection {
             self.incoming.extend(&data[unread_data_at..]);
 
             self.recv.nxt = seqn
-                .wrapping_add(if tcph.syn() { 1 } else { 0 })
                 .wrapping_add(data.len() as u32)
                 .wrapping_add(if tcph.fin() { 1 } else { 0 });
 
@@ -322,7 +321,7 @@ impl Connection {
                     self.write(nic, &[])?;
                     self.state = State::TimeWait;
                 }
-               _ => unimplemented!(),
+                _ => unimplemented!(),
             }
         }
 

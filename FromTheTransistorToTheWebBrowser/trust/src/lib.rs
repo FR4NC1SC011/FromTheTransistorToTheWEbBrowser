@@ -210,9 +210,8 @@ impl TcpListener {
                     quad,
                     h: self.h.clone(),
                 });
-            } else {
-                cm = self.h.pending_var.wait(cm).unwrap();
             }
+            cm = self.h.pending_var.wait(cm).unwrap();
         }
     }
 }

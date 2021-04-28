@@ -1,6 +1,6 @@
 use bitflags::bitflags;
 use std::collections::VecDeque;
-use std::io;
+use std::{io, time};
 
 bitflags! {
     pub (crate)struct Available: u32 {
@@ -36,8 +36,10 @@ pub struct Connection {
     ip: etherparse::Ipv4Header,
     tcp: etherparse::TcpHeader,
 
+    last_send: time::Instant, 
     pub(crate) incoming: VecDeque<u8>,
     pub(crate) unacked: VecDeque<u8>,
+    pub(crate) closed: bool,
 }
 
 impl Connection {
@@ -107,6 +109,8 @@ impl Connection {
         let iss = 0;
         let wnd = 1024;
         let mut c = Connection {
+            closed: false,
+            last_send: time::Instant::now(),
             state: State::SynRcvd,
             send: SendSequenceSpace {
                 iss,
@@ -195,6 +199,13 @@ impl Connection {
         self.tcp.acknowledgment_number = 0;
         self.write(nic, &[])?;
         Ok(())
+    }
+
+    pub(crate) fn on_tick<'a>(&mut self, nic: &mut tun_tap::Iface) -> io::Result<Available> {
+        // decide if it needs to send something
+
+
+
     }
 
     pub(crate) fn on_packet<'a>(

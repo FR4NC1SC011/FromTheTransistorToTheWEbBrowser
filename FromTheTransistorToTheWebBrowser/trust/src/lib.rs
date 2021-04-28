@@ -55,7 +55,21 @@ fn packet_loop(mut nic: tun_tap::Iface, ih: InterfaceHandle) -> io::Result<()> {
     let mut buf = [0u8; 1504];
 
     loop {
-        // TODO: set a timeout for this recv for TCP timers
+        use std::os::unix::io::AsRawFd;
+        let mut pfd = [nix::poll::PollFd::new(
+            nic.as_raw_fd(),
+            nix::poll::EventFlags::POLLIN,
+        )];
+        let n = nix::poll::poll(&mut pfd[..], 1).map_err(|e| e.as_errno().unwrap())?;
+        assert_ne!(n, -1);
+        if n == 0 {
+            let mut cmg = ih.manager.lock().unwrap();
+            for connection in cmg.values() {
+                connection.on_tick(&mut nic)?;
+            }
+            continue;
+        }
+        assert_eq!(n, 1);
         let nbytes = nic.recv(&mut buf[..])?;
         //let eth_flags = u16::from_be_bytes([buf[0], buf[1]]);
         //let eth_proto = u16::from_be_bytes([buf[2], buf[3]]);
@@ -311,6 +325,15 @@ impl Write for TcpStream {
 
 impl TcpStream {
     pub fn shutdown(&self, how: std::net::Shutdown) -> io::Result<()> {
-        unimplemented!();
+        let mut cm = self.h.manager.lock().unwrap();
+        let c = cm.connections.get_mut(&self.quad).ok_or_else(|| {
+            io::Error::new(
+                io::ErrorKind::ConnectionAborted,
+                "stream was terminated unexpectedly",
+            )
+        })?;
+
+        c.closed = true;
+        Ok(())
     }
 }

@@ -45,7 +45,7 @@ pub struct Connection {
 
 struct Timers {
     send_times: BTreeMap<u32, time::Instant>,
-    srtt: time::Duration,
+    srtt: f64,
 }
 
 impl Connection {
@@ -117,7 +117,7 @@ impl Connection {
         let mut c = Connection {
             timers: Timers {
                 send_times: Default::default(),
-                srtt: time::Duration::from_secs(1 * 60),
+                srtt: time::Duration::from_secs(1 * 60).as_secs_f64(),
             },
             state: State::SynRcvd,
             send: SendSequenceSpace {
@@ -169,7 +169,7 @@ impl Connection {
         Ok(Some(c))
     }
 
-    fn write(&mut self, nic: &mut tun_tap::Iface, seq: u32, len: usize) -> io::Result<usize> {
+    fn write(&mut self, nic: &mut tun_tap::Iface, seq: u32, mut len: usize) -> io::Result<usize> {
         let mut buf = [0u8; 1500];
         self.tcp.sequence_number = seq;
         self.tcp.acknowledgment_number = self.recv.nxt;
@@ -177,7 +177,8 @@ impl Connection {
         let mut offset = seq.wrapping_sub(self.send.una) as usize;
         if let Some(closed_at) = self.closed_at {
             if seq == closed_at.wrapping_add(1) {
-                offset -= 1;
+                offset = 0;
+                len = 0;
             }
         }
         let (mut h, mut t) = self.unacked.as_slices();
@@ -261,7 +262,7 @@ impl Connection {
 
         let should_retransmit = if let Some(waited_for) = waited_for {
             waited_for > time::Duration::from_secs(1)
-                && waited_for.as_secs_f64() > 1.5 * self.timers.srtt.as_secs_f64()
+                && waited_for.as_secs_f64() > 1.5 * self.timers.srtt
         } else {
             false
         };
@@ -364,6 +365,7 @@ impl Connection {
                 ackn,
                 self.send.nxt.wrapping_add(1),
             ) {
+                eprintln!("Enter Estab");
                 self.state = State::Estab;
             } else {
                 //TODO: Reset
@@ -372,6 +374,28 @@ impl Connection {
 
         if let State::Estab | State::FinWait1 | State::FinWait2 = self.state {
             if is_between_wrapped(self.send.una, ackn, self.send.nxt.wrapping_add(1)) {
+                if !self.unacked.is_empty() {
+                    let nacked = self
+                        .unacked
+                        .drain(..ackn.wrapping_sub(self.send.una) as usize)
+                        .count();
+
+                    let old = std::mem::replace(&mut self.timers.send_times, BTreeMap::new());
+
+                    let una = self.send.una;
+                    let mut srtt = &mut self.timers.srtt;
+                    self.timers
+                        .send_times
+                        .extend(old.into_iter().filter_map(|(seq, sent)| {
+                            if is_between_wrapped(una, seq, ackn) {
+                                let rtt = sent.elapsed();
+                                *srtt = 0.8 * *srtt + (1.0 - 0.8) * sent.elapsed().as_secs_f64();
+                                None
+                            } else {
+                                Some((seq, sent))
+                            }
+                        }));
+                }
                 self.send.una = ackn;
             }
 
@@ -383,6 +407,7 @@ impl Connection {
         if let State::FinWait1 = self.state {
             if self.send.una == self.send.iss + 2 {
                 // our FIN has been ACKed!
+                eprintln!("Enter FinWait2");
                 self.state = State::FinWait2;
             }
         }
@@ -413,7 +438,7 @@ impl Connection {
                     self.write(nic, self.send.nxt, 0)?;
                     self.state = State::TimeWait;
                 }
-                _ => unimplemented!(),
+                _ => eprintln!("No se que pedo :("),
             }
         }
 
@@ -424,6 +449,7 @@ impl Connection {
         self.closed = true;
         match self.state {
             State::SynRcvd | State::Estab => {
+                eprintln!("Enter FinWait1");
                 self.state = State::FinWait1;
             }
 

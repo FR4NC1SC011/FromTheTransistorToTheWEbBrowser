@@ -64,7 +64,7 @@ fn packet_loop(mut nic: tun_tap::Iface, ih: InterfaceHandle) -> io::Result<()> {
         assert_ne!(n, -1);
         if n == 0 {
             let mut cmg = ih.manager.lock().unwrap();
-            for connection in cmg.connections.values() {
+            for connection in cmg.connections.values_mut() {
                 connection.on_tick(&mut nic)?;
             }
             continue;
@@ -93,7 +93,7 @@ fn packet_loop(mut nic: tun_tap::Iface, ih: InterfaceHandle) -> io::Result<()> {
                         use std::collections::hash_map::Entry;
                         let datai = iph.slice().len() + tcph.slice().len();
                         let mut cmg = ih.manager.lock().unwrap();
-                        let mut cm = &mut *cmg;
+                        let cm = &mut *cmg;
                         let q = Quad {
                             src: (src, tcph.source_port()),
                             dst: (dst, tcph.destination_port()),
@@ -145,7 +145,6 @@ fn packet_loop(mut nic: tun_tap::Iface, ih: InterfaceHandle) -> io::Result<()> {
                 }
             }
             Err(e) => {
-                eprintln!("Ignoring weird packet {:?}", e);
             }
         }
     }
@@ -237,7 +236,7 @@ pub struct TcpStream {
 
 impl Drop for TcpStream {
     fn drop(&mut self) {
-        let mut cm = self.h.manager.lock().unwrap();
+        let cm = self.h.manager.lock().unwrap();
         // TODO: send FIN on cm.connections[quad]
         // TODO: _eventually_ remove self.quad frmo cm.connections
     }

@@ -1,5 +1,5 @@
 use bitflags::bitflags;
-use std::collections::VecDeque;
+use std::collections::{BTreeMap, VecDeque};
 use std::{io, time};
 
 bitflags! {
@@ -105,7 +105,7 @@ impl Connection {
         tcph: etherparse::TcpHeaderSlice<'a>,
         data: &'a [u8],
     ) -> io::Result<Option<Self>> {
-        let mut buf = [0u8; 1500];
+        let buf = [0u8; 1500];
 
         if !tcph.syn() {
             // got unexpected SYN
@@ -165,23 +165,31 @@ impl Connection {
 
         c.tcp.syn = true;
         c.tcp.ack = true;
-        c.write(nic, c.send.nxt, &[], &[], 0)?;
+        c.write(nic, c.send.nxt, 0)?;
         Ok(Some(c))
     }
 
-    fn write(
-        &mut self,
-        nic: &mut tun_tap::Iface,
-        seq: u32,
-        payload1: &[u8],
-        payload2: &[u8],
-        len: usize,
-    ) -> io::Result<usize> {
+    fn write(&mut self, nic: &mut tun_tap::Iface, seq: u32, len: usize) -> io::Result<usize> {
         let mut buf = [0u8; 1500];
         self.tcp.sequence_number = seq;
         self.tcp.acknowledgment_number = self.recv.nxt;
-        let max_data = std::cmp::min(len, payload1.len() + payload2.len());
 
+        let mut offset = seq.wrapping_sub(self.send.una) as usize;
+        if let Some(closed_at) = self.closed_at {
+            if seq == closed_at.wrapping_add(1) {
+                offset -= 1;
+            }
+        }
+        let (mut h, mut t) = self.unacked.as_slices();
+        if h.len() >= offset {
+            h = &h[offset..];
+        } else {
+            let skipped = h.len();
+            h = &[];
+            t = &t[(offset - skipped)..];
+        }
+
+        let max_data = std::cmp::min(len, h.len() + t.len());
         let size = std::cmp::min(
             buf.len(),
             self.tcp.header_len() as usize + self.ip.header_len() as usize + max_data,
@@ -202,18 +210,18 @@ impl Connection {
         let payload_bytes = {
             let mut written = 0;
             let mut len = max_data;
-            let mut p1l = std::cmp::min(len, payload1.len());
-            written += unwritten.write(&payload1[..p1l])?;
+            let p1l = std::cmp::min(len, h.len());
+            written += unwritten.write(&h[..p1l])?;
             len -= written;
 
-            let mut p2l = std::cmp::min(len, payload2.len());
-            written += unwritten.write(&payload2[..p2l])?;
+            let p2l = std::cmp::min(len, t.len());
+            written += unwritten.write(&t[..p2l])?;
 
             written
         };
 
         let unwritten = unwritten.len();
-        let next_seq = seq.wrapping_add(payload_bytes as u32);
+        let mut next_seq = seq.wrapping_add(payload_bytes as u32);
         if self.tcp.syn {
             next_seq = next_seq.wrapping_add(1);
             self.tcp.syn = false;
@@ -225,7 +233,7 @@ impl Connection {
         if wrapping_lt(self.send.nxt, next_seq) {
             self.send.nxt = next_seq;
         }
-        self.send_times.insert(seq, time::Instant::now());
+        self.timers.send_times.insert(seq, time::Instant::now());
 
         nic.send(&buf[..buf.len() - unwritten])?;
         Ok(payload_bytes)
@@ -235,7 +243,7 @@ impl Connection {
         self.tcp.rst = true;
         self.tcp.sequence_number = 0;
         self.tcp.acknowledgment_number = 0;
-        self.write(nic, self.send.nxt, &[], &[], 0)?;
+        self.write(nic, self.send.nxt, 0)?;
         Ok(())
     }
 
@@ -249,29 +257,29 @@ impl Connection {
             .send_times
             .range(self.send.una..)
             .next()
-            .map(time::Instant::elapsed);
+            .map(|t| t.1.elapsed());
 
         let should_retransmit = if let Some(waited_for) = waited_for {
-            waited_for > time::Duration::from_secs(1) && waited_for.as_float_secs() > 1.5 * self.timers.srtt.as_float_secs()
+            waited_for > time::Duration::from_secs(1)
+                && waited_for.as_secs_f64() > 1.5 * self.timers.srtt.as_secs_f64()
         } else {
             false
         };
 
-        if should_retransmit { 
+        if should_retransmit {
             let resend = std::cmp::min(self.unacked.len() as u32, self.send.wnd as u32);
             if resend < self.send.wnd as u32 && self.closed {
                 self.tcp.fin = true;
-                self.closed_at = Some(self.send.una + self.unacked.len());
+                self.closed_at = Some(self.send.una.wrapping_add(self.unacked.len() as u32));
             }
 
-            let (h, t) = self.unacked.as_slices();
-            self.write(nic, self.send.una, h, t, resend as usize)?;
+            self.write(nic, self.send.una, resend as usize)?;
         } else {
             if unsent == 0 && self.closed_at.is_some() {
                 return Ok(());
             }
 
-            let allowed = self.send.wnd - nunacked;
+            let allowed = self.send.wnd as u32 - nunacked;
             if allowed == 0 {
                 return Ok(());
             }
@@ -279,18 +287,10 @@ impl Connection {
             let send = std::cmp::min(unsent, allowed);
             if send < allowed && self.closed && self.closed_at.is_none() {
                 self.tcp.fin = true;
-                self.closed_at = Some(self.send.nxt.wrapping_add(unsent));
+                self.closed_at = Some(self.send.una.wrapping_add(self.unacked.len() as u32));
             }
             let (mut h, mut t) = self.unacked.as_slices();
-
-            if h.len() >= nunacked {
-                h = &h[nunacked..];
-            } else {
-                let skipped = h.len();
-                h = &[];
-                t = &t[(nunacked - skipped)..];
-            }
-            self.write(nic, self.send.nxt, h, t, send)?;
+            self.write(nic, self.send.nxt, send as usize)?;
         }
 
         Ok(())
@@ -345,7 +345,7 @@ impl Connection {
 
         if !okay {
             eprintln!("NOT OKAY");
-            self.write(nic, self.send.nxt, &[], &[], 0)?;
+            self.write(nic, self.send.nxt, 0)?;
             return Ok(self.availability());
         }
 
@@ -378,13 +378,6 @@ impl Connection {
             // TODO: prune self.unacked
             // TODO: if unacked empty and waiting flush, notify
             // TODO: update window
-
-            if let State::Estab = self.state {
-                // terminate the connection
-                self.tcp.fin = true;
-                //self.write(nic, &[])?;
-                self.state = State::FinWait1;
-            }
         }
 
         if let State::FinWait1 = self.state {
@@ -410,14 +403,14 @@ impl Connection {
                 .wrapping_add(data.len() as u32)
                 .wrapping_add(if tcph.fin() { 1 } else { 0 });
 
-            self.write(nic, self.send.nxt, &[], &[], 0)?;
+            self.write(nic, self.send.nxt, 0)?;
         }
 
         if tcph.fin() {
             match self.state {
                 State::FinWait2 => {
                     // we're done with the connection
-                    self.write(nic, self.send.nxt, &[], &[], 0)?;
+                    self.write(nic, self.send.nxt, 0)?;
                     self.state = State::TimeWait;
                 }
                 _ => unimplemented!(),
@@ -461,4 +454,3 @@ fn wrapping_lt(lhs: u32, rhs: u32) -> bool {
 fn is_between_wrapped(start: u32, x: u32, end: u32) -> bool {
     wrapping_lt(start, x) && wrapping_lt(x, end)
 }
-

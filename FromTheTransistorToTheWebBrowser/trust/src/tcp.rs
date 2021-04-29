@@ -23,8 +23,8 @@ pub enum State {
 impl State {
     fn is_synchronized(&self) -> bool {
         match *self {
-            State::SynRcvd => false,
-            State::Estab | State::FinWait1 | State::FinWait2 | State::TimeWait => true,
+            State::SynRcvd | State::Estab => false,
+            State::FinWait1 | State::FinWait2 | State::TimeWait => true,
         }
     }
 }
@@ -35,11 +35,17 @@ pub struct Connection {
     recv: RecvSequenceSpace,
     ip: etherparse::Ipv4Header,
     tcp: etherparse::TcpHeader,
+    timers: Timers,
 
-    last_send: time::Instant, 
     pub(crate) incoming: VecDeque<u8>,
     pub(crate) unacked: VecDeque<u8>,
     pub(crate) closed: bool,
+    closed_at: Option<u32>,
+}
+
+struct Timers {
+    send_times: BTreeMap<u32, time::Instant>,
+    srtt: time::Duration,
 }
 
 impl Connection {
@@ -109,8 +115,10 @@ impl Connection {
         let iss = 0;
         let wnd = 1024;
         let mut c = Connection {
-            closed: false,
-            last_send: time::Instant::now(),
+            timers: Timers {
+                send_times: Default::default(),
+                srtt: time::Duration::from_secs(1 * 60),
+            },
             state: State::SynRcvd,
             send: SendSequenceSpace {
                 iss,
@@ -150,21 +158,33 @@ impl Connection {
 
             incoming: Default::default(),
             unacked: Default::default(),
+
+            closed: false,
+            closed_at: None,
         };
 
         c.tcp.syn = true;
         c.tcp.ack = true;
-        c.write(nic, &[])?;
+        c.write(nic, c.send.nxt, &[], &[], 0)?;
         Ok(Some(c))
     }
 
-    fn write(&mut self, nic: &mut tun_tap::Iface, payload: &[u8]) -> io::Result<usize> {
+    fn write(
+        &mut self,
+        nic: &mut tun_tap::Iface,
+        seq: u32,
+        payload1: &[u8],
+        payload2: &[u8],
+        len: usize,
+    ) -> io::Result<usize> {
         let mut buf = [0u8; 1500];
-        self.tcp.sequence_number = self.send.nxt;
+        self.tcp.sequence_number = seq;
         self.tcp.acknowledgment_number = self.recv.nxt;
+        let max_data = std::cmp::min(len, payload1.len() + payload2.len());
+
         let size = std::cmp::min(
             buf.len(),
-            self.tcp.header_len() as usize + self.ip.header_len() as usize + payload.len(),
+            self.tcp.header_len() as usize + self.ip.header_len() as usize + max_data,
         );
         self.ip
             .set_payload_len(size - self.ip.header_len() as usize);
@@ -178,17 +198,35 @@ impl Connection {
         let mut unwritten = &mut buf[..];
         self.ip.write(&mut unwritten);
         self.tcp.write(&mut unwritten);
-        let payload_bytes = unwritten.write(payload)?;
+
+        let payload_bytes = {
+            let mut written = 0;
+            let mut len = max_data;
+            let mut p1l = std::cmp::min(len, payload1.len());
+            written += unwritten.write(&payload1[..p1l])?;
+            len -= written;
+
+            let mut p2l = std::cmp::min(len, payload2.len());
+            written += unwritten.write(&payload2[..p2l])?;
+
+            written
+        };
+
         let unwritten = unwritten.len();
-        self.send.nxt.wrapping_add(payload_bytes as u32);
+        let next_seq = seq.wrapping_add(payload_bytes as u32);
         if self.tcp.syn {
-            self.send.nxt = self.send.nxt.wrapping_add(1);
+            next_seq = next_seq.wrapping_add(1);
             self.tcp.syn = false;
         }
         if self.tcp.fin {
-            self.send.nxt = self.send.nxt.wrapping_add(1);
+            next_seq = next_seq.wrapping_add(1);
             self.tcp.fin = false;
         }
+        if wrapping_lt(self.send.nxt, next_seq) {
+            self.send.nxt = next_seq;
+        }
+        self.send_times.insert(seq, time::Instant::now());
+
         nic.send(&buf[..buf.len() - unwritten])?;
         Ok(payload_bytes)
     }
@@ -197,15 +235,65 @@ impl Connection {
         self.tcp.rst = true;
         self.tcp.sequence_number = 0;
         self.tcp.acknowledgment_number = 0;
-        self.write(nic, &[])?;
+        self.write(nic, self.send.nxt, &[], &[], 0)?;
         Ok(())
     }
 
-    pub(crate) fn on_tick<'a>(&mut self, nic: &mut tun_tap::Iface) -> io::Result<Available> {
+    pub(crate) fn on_tick(&mut self, nic: &mut tun_tap::Iface) -> io::Result<()> {
         // decide if it needs to send something
+        let nunacked = self.send.nxt.wrapping_sub(self.send.una);
+        let unsent = self.unacked.len() as u32 - nunacked;
 
+        let waited_for = self
+            .timers
+            .send_times
+            .range(self.send.una..)
+            .next()
+            .map(time::Instant::elapsed);
 
+        let should_retransmit = if let Some(waited_for) = waited_for {
+            waited_for > time::Duration::from_secs(1) && waited_for.as_float_secs() > 1.5 * self.timers.srtt.as_float_secs()
+        } else {
+            false
+        };
 
+        if should_retransmit { 
+            let resend = std::cmp::min(self.unacked.len() as u32, self.send.wnd as u32);
+            if resend < self.send.wnd as u32 && self.closed {
+                self.tcp.fin = true;
+                self.closed_at = Some(self.send.una + self.unacked.len());
+            }
+
+            let (h, t) = self.unacked.as_slices();
+            self.write(nic, self.send.una, h, t, resend as usize)?;
+        } else {
+            if unsent == 0 && self.closed_at.is_some() {
+                return Ok(());
+            }
+
+            let allowed = self.send.wnd - nunacked;
+            if allowed == 0 {
+                return Ok(());
+            }
+
+            let send = std::cmp::min(unsent, allowed);
+            if send < allowed && self.closed && self.closed_at.is_none() {
+                self.tcp.fin = true;
+                self.closed_at = Some(self.send.nxt.wrapping_add(unsent));
+            }
+            let (mut h, mut t) = self.unacked.as_slices();
+
+            if h.len() >= nunacked {
+                h = &h[nunacked..];
+            } else {
+                let skipped = h.len();
+                h = &[];
+                t = &t[(nunacked - skipped)..];
+            }
+            self.write(nic, self.send.nxt, h, t, send)?;
+        }
+
+        Ok(())
     }
 
     pub(crate) fn on_packet<'a>(
@@ -257,7 +345,7 @@ impl Connection {
 
         if !okay {
             eprintln!("NOT OKAY");
-            self.write(nic, &[])?;
+            self.write(nic, self.send.nxt, &[], &[], 0)?;
             return Ok(self.availability());
         }
 
@@ -322,14 +410,14 @@ impl Connection {
                 .wrapping_add(data.len() as u32)
                 .wrapping_add(if tcph.fin() { 1 } else { 0 });
 
-            self.write(nic, &[])?;
+            self.write(nic, self.send.nxt, &[], &[], 0)?;
         }
 
         if tcph.fin() {
             match self.state {
                 State::FinWait2 => {
                     // we're done with the connection
-                    self.write(nic, &[])?;
+                    self.write(nic, self.send.nxt, &[], &[], 0)?;
                     self.state = State::TimeWait;
                 }
                 _ => unimplemented!(),
@@ -338,8 +426,43 @@ impl Connection {
 
         Ok(self.availability())
     }
+
+    pub(crate) fn close(&mut self) -> io::Result<()> {
+        self.closed = true;
+        match self.state {
+            State::SynRcvd | State::Estab => {
+                self.state = State::FinWait1;
+            }
+
+            State::FinWait1 | State::FinWait2 => {}
+
+            _ => {
+                return Err(io::Error::new(
+                    io::ErrorKind::NotConnected,
+                    "already closing",
+                ))
+            }
+        };
+        Ok(())
+    }
 }
 
+fn wrapping_lt(lhs: u32, rhs: u32) -> bool {
+    // From RFC1323:
+    //     TCP determines if a data segment is "old" or "new" by testing
+    //     whether its sequence number is within 2**31 bytes of the left edge
+    //     of the window, and if it is not, discarding the data as "old".  To
+    //     insure that new data is never mistakenly considered old and vice-
+    //     versa, the left edge of the sender's window has to be at most
+    //     2**31 away from the right edge of the receiver's window.
+    lhs.wrapping_sub(rhs) > (1 << 31)
+}
+
+fn is_between_wrapped(start: u32, x: u32, end: u32) -> bool {
+    wrapping_lt(start, x) && wrapping_lt(x, end)
+}
+
+/*
 fn is_between_wrapped(start: u32, x: u32, end: u32) -> bool {
     use std::cmp::Ordering;
     match start.cmp(&x) {
@@ -359,3 +482,6 @@ fn is_between_wrapped(start: u32, x: u32, end: u32) -> bool {
     }
     true
 }
+
+
+*/

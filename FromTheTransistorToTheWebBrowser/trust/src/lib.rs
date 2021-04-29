@@ -64,7 +64,7 @@ fn packet_loop(mut nic: tun_tap::Iface, ih: InterfaceHandle) -> io::Result<()> {
         assert_ne!(n, -1);
         if n == 0 {
             let mut cmg = ih.manager.lock().unwrap();
-            for connection in cmg.values() {
+            for connection in cmg.connections.values() {
                 connection.on_tick(&mut nic)?;
             }
             continue;
@@ -333,7 +333,6 @@ impl TcpStream {
             )
         })?;
 
-        c.closed = true;
-        Ok(())
+        c.close()
     }
 }

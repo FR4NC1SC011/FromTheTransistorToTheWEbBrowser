@@ -462,26 +462,3 @@ fn is_between_wrapped(start: u32, x: u32, end: u32) -> bool {
     wrapping_lt(start, x) && wrapping_lt(x, end)
 }
 
-/*
-fn is_between_wrapped(start: u32, x: u32, end: u32) -> bool {
-    use std::cmp::Ordering;
-    match start.cmp(&x) {
-        Ordering::Equal => return false,
-        Ordering::Less => {
-            if end >= start && end <= x {
-                return false;
-            }
-        }
-        Ordering::Greater => {
-            // check is ok if only if n is between u and a
-            if end < start && end > x {
-            } else {
-                return false;
-            }
-        }
-    }
-    true
-}
-
-
-*/

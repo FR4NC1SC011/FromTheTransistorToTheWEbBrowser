@@ -438,7 +438,7 @@ impl Connection {
                     self.write(nic, self.send.nxt, 0)?;
                     self.state = State::TimeWait;
                 }
-                _ => eprintln!("No se que pedo :("),
+                _ => unimplemented!(),
             }
         }
 

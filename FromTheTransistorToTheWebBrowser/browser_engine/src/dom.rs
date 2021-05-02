@@ -2,8 +2,8 @@ use std::collections::{HashMap, HashSet};
 use std::fmt;
 
 pub struct Node {
-    children: Vec<Node>,
-    node_type: NodeType,
+    pub children: Vec<Node>,
+    pub node_type: NodeType,
 }
 
 pub enum NodeType {
@@ -13,12 +13,12 @@ pub enum NodeType {
 }
 
 pub struct ElementData {
-    tag_name: String,
-    attributes: AttrMap,
+    pub tag_name: String,
+    pub attributes: AttrMap,
 }
 
 impl ElementData {
-    fn new(tag_name: String, attributes: AttrMap) -> ElementData {
+    pub fn new(tag_name: String, attributes: AttrMap) -> ElementData {
         ElementData {
             tag_name,
             attributes,
@@ -40,7 +40,7 @@ impl ElementData {
 pub type AttrMap = HashMap<String, String>;
 
 impl Node {
-    fn new(node_type: NodeType, children: Vec<Node>) -> Node {
+    pub fn new(node_type: NodeType, children: Vec<Node>) -> Node {
         Node {
             node_type,
             children,

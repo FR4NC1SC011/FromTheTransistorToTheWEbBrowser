@@ -1,7 +1,8 @@
-use dom::{AttrMap, ElementData, Node, NodeType};
+use crate::dom::{AttrMap, ElementData, Node, NodeType};
 
 use std::iter::Peekable;
 use std::str::Chars;
+
 
 pub struct HtmlParser<'a> {
     chars: Peekable<Chars<'a>>,
@@ -66,7 +67,7 @@ impl<'a> HtmlParser<'a> {
 
     fn parse_node(&mut self) -> Node {
         let tagname = self.consume_while(is_valid_tag_name);
-        let attributes = self.parse_attribute();
+        let attributes = self.parse_attributes();
 
         let elem = ElementData::new(tagname, attributes);
         let children = self.parse_nodes();
@@ -129,10 +130,7 @@ impl<'a> HtmlParser<'a> {
                         if self.chars.peek().map_or(false, |c| *c == '-') {
                             self.consume_while(|c| c != '>');
 
-                            return Node::new(NodeType::Comments(String::from("")), 
-                                Vec::new(),
-                            );
-
+                            return Node::new(NodeType::Comment(String::from("")), Vec::new());
                         } else {
                             comment_content.push_str("<!-");
                         }
@@ -154,26 +152,26 @@ impl<'a> HtmlParser<'a> {
                                         comment_content.push_str("<! --");
                                     }
                                 } else {
-                                        comment_content.push_str("<! -");
+                                    comment_content.push_str("<! -");
                                 }
                             } else {
-                                        comment_content.push_str("<! ");  
+                                comment_content.push_str("<! ");
                             }
-                        } 
+                        }
                     } else {
-                                        comment_content.push_str("<!");
+                        comment_content.push_str("<!");
                     }
                 } else {
-                                        comment_content.push_str("<");
+                    comment_content.push_str("<");
                 }
             } else if self.chars.peek().map_or(false, |c| *c == '-') {
                 self.chars.next();
                 if self.chars.peek().map_or(false, |c| *c == '-') {
                     self.chars.next();
-                if self.chars.peek().map_or(false, |c| *c == '>') {
-                    self.chars.next();
-                    break;
-                } else {
+                    if self.chars.peek().map_or(false, |c| *c == '>') {
+                        self.chars.next();
+                        break;
+                    } else {
                         comment_content.push_str("--");
                     }
                 } else {
@@ -181,8 +179,93 @@ impl<'a> HtmlParser<'a> {
                 }
             }
         }
-
-
         Node::new(NodeType::Comment(comment_content), Vec::new())
     }
+
+    fn parse_attributes(&mut self) -> AttrMap {
+        let mut attributes = AttrMap::new();
+
+        while self.chars.peek().map_or(false, |c| *c != '>') {
+            self.consume_while(char::is_whitespace);
+            let name = self.consume_while(|c| is_valid_attr_name(c)).to_lowercase();
+            self.consume_while(char::is_whitespace);
+
+            let value = if self.chars.peek().map_or(false, |c| *c == '=') {
+                self.chars.next();
+                self.consume_while(char::is_whitespace);
+                let s = self.parse_attr_value();
+                self.consume_while(|c| !c.is_whitespace() && c != '>');
+                self.consume_while(char::is_whitespace);
+                s
+            } else {
+                "".to_string()
+            };
+            attributes.insert(name, value);
+        }
+        self.chars.next();
+
+        attributes
+    }
+
+    fn parse_attr_value(&mut self) -> String {
+        self.consume_while(char::is_whitespace);
+
+        let result = match self.chars.peek() {
+            Some(&c) if c == '"' || c == '\'' => {
+                self.chars.next();
+                let ret = self.consume_while(|x| x != c);
+                self.chars.next();
+                ret
+            }
+
+            _ => self.consume_while(id_valid_attr_value),
+        };
+
+        result
+    }
+
+    fn consume_while<F>(&mut self, condition: F) -> String
+    where
+        F: Fn(char) -> bool,
+    {
+        let mut result = String::new();
+        while self.chars.peek().map_or(false, |c| condition(*c)) {
+            result.push(self.chars.next().unwrap());
+        }
+
+        result
+    }
 }
+
+
+fn is_valid_tag_name(ch: char) -> bool {
+    ch.is_digit(36)
+}
+
+fn is_valid_attr_name(c: char) -> bool {
+    !is_excluded_name(c) && !is_control(c)
+}
+
+fn is_control(ch: char) -> bool {
+    match ch {
+        '\u{007F}' => true,
+        c if c >= '\u{0000}' && c <= '\u{001F}' => true,
+        c if c >= '\u{0080}' && c <= '\u{009F}' => true,
+        _ => false,
+    }
+}
+
+fn is_excluded_name(c: char) -> bool {
+    match c {
+        ' ' | '"' | '\'' | '>' | '/' | '=' => true,
+        _ => false,
+    }
+}
+
+fn id_valid_attr_value(c: char) -> bool {
+    match c {
+        ' ' | '"' | '\'' | '=' | '<' | '>' | '`' => false,
+        _ => true,
+    }
+}
+

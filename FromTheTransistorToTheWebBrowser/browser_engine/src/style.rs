@@ -45,8 +45,8 @@ impl<'a> StyledNode<'a> {
     fn get_styles(element: &'a ElementData, stylesheet: &'a StyleSheet) -> PropertyMap<'a> {
         let mut styles = PropertyMap::new();
 
-        for rules in &stylesheet.rules {
-            for selector in &rule.selector {
+        for rule in &stylesheet.rules {
+            for selector in &rule.selectors {
                 if selector_matches(element, &selector) {
                     for declar in &rule.declarations {
                         styles.insert(&declar.property, &declar.value);

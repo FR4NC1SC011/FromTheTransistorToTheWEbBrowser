@@ -29,7 +29,9 @@ struct CPU {
     V: c_uchar,
     N: c_uchar,
 
-    INS_LDA_IM: c_uchar, // Load Accumulator
+    // Opcodes
+    INS_LDA_IM: c_uchar,
+    INS_LDA_ZP: c_uchar,
 }
 
 impl Mem {
@@ -67,30 +69,46 @@ impl CPU {
         data
     }
 
+    fn read_byte(&mut self, cycles: &mut usize, address: c_uchar, memory: &mut Mem) -> c_uchar {
+        let data: c_uchar = memory.Data[address as usize];
+        *cycles -= 1;
+        data
+    }
+
     fn execute(&mut self, cycles: &mut usize, memory: &mut Mem) {
         while cycles > &mut 0 {
             let ins: c_uchar = self.fetch_byte(cycles, memory);
 
             match ins {
-                INS_LDA_IM => {
+                0xA9 => {
                     println!("Instruction Load A");
                     let value: c_uchar = self.fetch_byte(cycles, memory);
                     self.A = value;
+                    self.lda_set_status();
+                }
 
-                    self.Z = match self.A == 0 {
-                        false => 0,
-                        true => 1,
-                    };
-
-                    self.N = match (self.A & 0b10000000) > 0 {
-                        false => 0,
-                        true => 1,
-                    };
+                0xA5 => {
+                    println!("Instruction Load ZP");
+                    let zero_page_address: c_uchar = self.fetch_byte(cycles, memory);
+                    self.A = self.read_byte(cycles, zero_page_address, memory);
+                    self.lda_set_status();
                 }
 
                 _ => eprintln!("Instruction not handled {}", ins),
             }
         }
+    }
+
+    fn lda_set_status(&mut self) {
+        self.Z = match self.A == 0 {
+            false => 0,
+            true => 1,
+        };
+
+        self.N = match (self.A & 0b10000000) > 0 {
+            false => 0,
+            true => 1,
+        };
     }
 }
 
@@ -116,17 +134,19 @@ fn main() {
         V: 1,
         N: 1,
 
+        // Opcodes
         INS_LDA_IM: 0xA9,
+        INS_LDA_ZP: 0xA5,
     };
 
     println!("6502 Emulator with rust");
 
-    // TODO: print values in hex
-    println!("{:?}, {:?}", cpu, mem);
+    println!("{:x?}, {:x?}", cpu, mem);
     cpu.reset(&mut mem);
-    println!("{:?}, {:?}", cpu, mem);
-    mem.Data[0xFFFC] = cpu.INS_LDA_IM;
+    println!("{:x?}, {:x?}", cpu, mem);
+    mem.Data[0xFFFC] = cpu.INS_LDA_ZP;
     mem.Data[0xFFFD] = 0x42;
-    cpu.execute(&mut 2, &mut mem);
-    println!("{:?}, {:?}", cpu, mem);
+    mem.Data[0x0042] = 0x84;
+    cpu.execute(&mut 3, &mut mem);
+    println!("{:x?}, {:x?}", cpu, mem);
 }

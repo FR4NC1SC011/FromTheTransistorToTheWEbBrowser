@@ -121,8 +121,7 @@ impl CPU {
                 0xB5 => {
                     println!("Instruction Load ZPX");
                     let mut zero_page_address: c_uchar = self.fetch_byte(cycles, memory);
-                    zero_page_address += self.X;
-                    // zero_page_address.wrapping_add(self.X);
+                    zero_page_address = zero_page_address.wrapping_add(self.X);
                     *cycles -= 1;
                     self.A = self.read_byte(cycles, zero_page_address, memory);
                     self.lda_set_status();
@@ -367,6 +366,8 @@ mod tests {
             INS_LDA_ZPX: 0xB5,
             INS_JSR: 0x20,
         };
+        cpu_copy.reset(&mut mem);
+
         let cycles_used = cpu.execute(&mut 4, &mut mem);
 
         // then:

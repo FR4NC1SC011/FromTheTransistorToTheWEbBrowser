@@ -1,1 +1,1 @@
-/home/fco/Desktop/FromTheTransistorToTheWEbBrowser/FromTheTransistorToTheWebBrowser/rust-6502/target/debug/rust-6502: /home/fco/Desktop/FromTheTransistorToTheWEbBrowser/FromTheTransistorToTheWebBrowser/rust-6502/src/main.rs
+/home/fco/Desktop/FromTheTransistorToTheWEbBrowser/FromTheTransistorToTheWebBrowser/rust-6502/target/debug/rust-6502: /home/fco/Desktop/FromTheTransistorToTheWEbBrowser/FromTheTransistorToTheWebBrowser/rust-6502/src/main.rs /home/fco/Desktop/FromTheTransistorToTheWEbBrowser/FromTheTransistorToTheWebBrowser/rust-6502/src/mos6502.rs

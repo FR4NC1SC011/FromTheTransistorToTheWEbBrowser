@@ -1,6 +1,5 @@
-
-use std::os::raw::*;
 use std::num::Wrapping;
+use std::os::raw::*;
 
 //TODO: alias declaration?
 // Byte = c_uchar
@@ -35,8 +34,7 @@ pub struct CPU {
     pub INS_LDA_IM: c_uchar,
     pub INS_LDA_ZP: c_uchar,
     pub INS_LDA_ZPX: c_uchar,
-    pub INS_JSR: c_uchar,       // TODO: Fix it
-
+    pub INS_JSR: c_uchar, // TODO: Fix overflow
 }
 
 impl Mem {
@@ -46,9 +44,9 @@ impl Mem {
         }
     }
 
-    // write 2 bytes 
+    // write 2 bytes
     fn write_word(&mut self, value: c_ushort, address: u32, cycles: &mut usize) {
-        self.Data[address as usize]     = (value & 0xFF) as u8;
+        self.Data[address as usize] = (value & 0xFF) as u8;
         self.Data[(address + 1) as usize] = (value >> 8) as u8;
         *cycles -= 2;
     }
@@ -74,14 +72,13 @@ impl CPU {
         memory.initialize();
     }
 
-   fn fetch_word(&mut self, cycles: &mut usize, memory: &mut Mem) -> c_ushort {
-
-       // 6502 is little endian
+    fn fetch_word(&mut self, cycles: &mut usize, memory: &mut Mem) -> c_ushort {
+        // 6502 is little endian
         let mut data: c_ushort = memory.Data[self.PC as usize] as u16;
         self.PC += 1;
 
         data |= (memory.Data[self.PC as usize] << 8 as u32) as u16;
-        
+
         self.PC += 1;
 
         *cycles -= 2;
@@ -121,22 +118,23 @@ impl CPU {
                 }
 
                 0xB5 => {
-                    println!("Instruction Load ZP");
+                    println!("Instruction Load ZPX");
                     let mut zero_page_address: c_uchar = self.fetch_byte(cycles, memory);
-                    zero_page_address += self.X;
+                    // zero_page_address += self.X;
+                    zero_page_address.wrapping_add(self.X);
                     *cycles -= 1;
                     self.A = self.read_byte(cycles, zero_page_address, memory);
                     self.lda_set_status();
                 }
 
-                0x20 => {
-                    println!("Instruction Load JSR");
-                    let mut sub_addr: c_ushort = self.fetch_word(cycles, memory);
-                    memory.write_word(self.PC - 1, self.SP as u32, cycles);
-                    self.PC = sub_addr;
-                    *cycles -= 1;
-                }
-
+                // TODO: Fix overflow
+                // 0x20 => {
+                //     println!("Instruction Load JSR");
+                //     let mut sub_addr: c_ushort = self.fetch_word(cycles, memory);
+                //     memory.write_word(self.PC - 1, self.SP as u32, cycles);
+                //     self.PC = sub_addr;
+                //     *cycles -= 1;
+                // }
                 _ => eprintln!("Instruction not handled {}", ins),
             }
         }
@@ -155,4 +153,145 @@ impl CPU {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
 
+    #[test]
+    fn test_LDAInmValueintoARegister() {
+        // LDAInmediateCanLoadAValueIntoTheAReg
+        let mut mem = Mem {
+            MAX_MEM: 1024 * 64,
+            Data: Vec::new(),
+        };
+
+        let mut cpu = CPU {
+            PC: 0,
+            SP: 0,
+
+            A: 0,
+            X: 0,
+            Y: 0,
+
+            C: 1,
+            Z: 1,
+            I: 1,
+            D: 1,
+            B: 1,
+            V: 1,
+            N: 1,
+
+            // Opcodes
+            INS_LDA_IM: 0xA9,
+            INS_LDA_ZP: 0xA5,
+            INS_LDA_ZPX: 0xB5,
+            INS_JSR: 0x20,
+        };
+
+        // given:
+        // start - inline a little program
+        cpu.reset(&mut mem);
+        mem.Data[0xFFFC] = cpu.INS_LDA_IM;
+        mem.Data[0xFFFD] = 0x84;
+        // end - inline a little program
+
+        // when:
+        cpu.execute(&mut 2, &mut mem);
+
+        // then:
+        assert_eq!(cpu.A, 0x84);
+    }
+
+    #[test]
+    fn test_LDAZPValueintoARegister() {
+        // LDAZeroPageCanLoadAValueIntoTheAReg
+        let mut mem = Mem {
+            MAX_MEM: 1024 * 64,
+            Data: Vec::new(),
+        };
+
+        let mut cpu = CPU {
+            PC: 0,
+            SP: 0,
+
+            A: 0,
+            X: 0,
+            Y: 0,
+
+            C: 1,
+            Z: 1,
+            I: 1,
+            D: 1,
+            B: 1,
+            V: 1,
+            N: 1,
+
+            // Opcodes
+            INS_LDA_IM: 0xA9,
+            INS_LDA_ZP: 0xA5,
+            INS_LDA_ZPX: 0xB5,
+            INS_JSR: 0x20,
+        };
+
+        // given:
+        // start - inline a little program
+        cpu.reset(&mut mem);
+        mem.Data[0xFFFC] = cpu.INS_LDA_ZP;
+        mem.Data[0xFFFD] = 0x42;
+        mem.Data[0x0042] = 0x37;
+        // end - inline a little program
+
+        // when:
+        cpu.execute(&mut 3, &mut mem);
+
+        // then:
+        assert_eq!(cpu.A, 0x37);
+    }
+
+    #[test]
+    fn test_LDAZPXValueintoARegister() {
+        // LDAZeroPageXCanLoadAValueIntoTheAReg
+        let mut mem = Mem {
+            MAX_MEM: 1024 * 64,
+            Data: Vec::new(),
+        };
+
+        let mut cpu = CPU {
+            PC: 0,
+            SP: 0,
+
+            A: 0,
+            X: 0,
+            Y: 0,
+
+            C: 1,
+            Z: 1,
+            I: 1,
+            D: 1,
+            B: 1,
+            V: 1,
+            N: 1,
+
+            // Opcodes
+            INS_LDA_IM: 0xA9,
+            INS_LDA_ZP: 0xA5,
+            INS_LDA_ZPX: 0xB5,
+            INS_JSR: 0x20,
+        };
+
+        // given:
+        cpu.X = 5;
+        // start - inline a little program
+        cpu.reset(&mut mem);
+        mem.Data[0xFFFC] = cpu.INS_LDA_ZPX;
+        mem.Data[0xFFFD] = 0x42;
+        mem.Data[0x0047] = 0x37;
+        // end - inline a little program
+
+        // when:
+        cpu.execute(&mut 4, &mut mem);
+
+        // then:
+        assert_eq!(cpu.A, 0x37);
+    }
+}

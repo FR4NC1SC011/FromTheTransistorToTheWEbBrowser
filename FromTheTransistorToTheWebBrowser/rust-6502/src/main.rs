@@ -33,16 +33,36 @@ fn main() {
 
     println!("6502 Emulator with rust");
 
-    println!("{:x?}, {:x?}", cpu, mem);
-    cpu.reset(&mut mem);
-    println!("{:x?}, {:x?}", cpu, mem);
-    mem.Data[0xFFFC] = cpu.INS_JSR;
-    mem.Data[0xFFFD] = 0x42;
-    mem.Data[0xFFFE] = 0x42;
-    mem.Data[0x4242] = cpu.INS_LDA_IM;
-    mem.Data[0x4242] = 0x84;
-    cpu.execute(&mut 9, &mut mem);
-    println!("{:x?}, {:x?}", cpu, mem);
+        println!("{}", cpu.A);
+        cpu.X = 5;
+        // start - inline a little program
+        cpu.reset(&mut mem);
+        mem.Data[0xFFFC] = cpu.INS_LDA_ZPX;
+        mem.Data[0xFFFD] = 0x42;
+        mem.Data[0x0047] = 0x37;
+        // end - inline a little program
+
+        println!("{}", cpu.A);
+
+        // when:
+        cpu.execute(&mut 4, &mut mem);
+
+        // then:
+        // assert_eq!(cpu.A, 0x37);
+        println!("{}", cpu.A);
+
+    // println!("{:x?}, {:x?}", cpu, mem);
+    // cpu.reset(&mut mem);
+    // println!("{:x?}, {:x?}", cpu, mem);
+    // mem.Data[0xFFFC] = cpu.INS_JSR;
+    // mem.Data[0xFFFD] = 0x42;
+    // mem.Data[0xFFFE] = 0x42;
+    // mem.Data[0x4242] = cpu.INS_LDA_IM;
+    // mem.Data[0x4242] = 0x84;
+    // cpu.execute(&mut 9, &mut mem);
+    // println!("{:x?}, {:x?}", cpu, mem);
 }
+
+
 
 

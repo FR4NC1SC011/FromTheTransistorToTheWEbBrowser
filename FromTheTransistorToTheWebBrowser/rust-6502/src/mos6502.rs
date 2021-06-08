@@ -98,7 +98,8 @@ impl CPU {
         data
     }
 
-    pub fn execute(&mut self, cycles: &mut usize, memory: &mut Mem) {
+    pub fn execute(&mut self, cycles: &mut usize, memory: &mut Mem) -> usize {
+        let cycles_requested = *cycles;
         while cycles > &mut 0 {
             let ins: c_uchar = self.fetch_byte(cycles, memory);
 
@@ -120,8 +121,8 @@ impl CPU {
                 0xB5 => {
                     println!("Instruction Load ZPX");
                     let mut zero_page_address: c_uchar = self.fetch_byte(cycles, memory);
-                    // zero_page_address += self.X;
-                    zero_page_address.wrapping_add(self.X);
+                    zero_page_address += self.X;
+                    // zero_page_address.wrapping_add(self.X);
                     *cycles -= 1;
                     self.A = self.read_byte(cycles, zero_page_address, memory);
                     self.lda_set_status();
@@ -138,6 +139,7 @@ impl CPU {
                 _ => eprintln!("Instruction not handled {}", ins),
             }
         }
+        cycles_requested - *cycles
     }
 
     fn lda_set_status(&mut self) {
@@ -196,7 +198,8 @@ mod tests {
         // end - inline a little program
 
         // when:
-        cpu.execute(&mut 2, &mut mem);
+        let cycles_used = cpu.execute(&mut 2, &mut mem);
+        assert_eq!(cycles_used, 2);
 
         // then:
         assert_eq!(cpu.A, 0x84);
@@ -242,7 +245,8 @@ mod tests {
         // end - inline a little program
 
         // when:
-        cpu.execute(&mut 3, &mut mem);
+        let cycles_used = cpu.execute(&mut 3, &mut mem);
+        assert_eq!(cycles_used, 3);
 
         // then:
         assert_eq!(cpu.A, 0x37);
@@ -280,18 +284,101 @@ mod tests {
         };
 
         // given:
-        cpu.X = 5;
-        // start - inline a little program
         cpu.reset(&mut mem);
+        cpu.X = 5;
+
+        // start - inline a little program
         mem.Data[0xFFFC] = cpu.INS_LDA_ZPX;
         mem.Data[0xFFFD] = 0x42;
         mem.Data[0x0047] = 0x37;
         // end - inline a little program
 
         // when:
-        cpu.execute(&mut 4, &mut mem);
+        let cycles_used = cpu.execute(&mut 4, &mut mem);
+        // then:
+        assert_eq!(cpu.A, 0x37);
+        assert_eq!(cycles_used, 4);
+    }
+
+  #[test]
+    fn test_LDAZPXValueintoARegisterWhenItWraps() {
+        // LDAZeroPageXCanLoadAValueIntoTheAReg
+        let mut mem = Mem {
+            MAX_MEM: 1024 * 64,
+            Data: Vec::new(),
+        };
+
+        let mut cpu = CPU {
+            PC: 0,
+            SP: 0,
+
+            A: 0,
+            X: 0,
+            Y: 0,
+
+            C: 1,
+            Z: 1,
+            I: 1,
+            D: 1,
+            B: 1,
+            V: 1,
+            N: 1,
+
+            // Opcodes
+            INS_LDA_IM: 0xA9,
+            INS_LDA_ZP: 0xA5,
+            INS_LDA_ZPX: 0xB5,
+            INS_JSR: 0x20,
+        };
+
+        
+
+        // given:
+        cpu.reset(&mut mem);
+        cpu.X = 0xFF;
+
+        // start - inline a little program
+        mem.Data[0xFFFC] = cpu.INS_LDA_ZPX;
+        mem.Data[0xFFFD] = 0x80;
+        mem.Data[0x007F] = 0x37;
+        // end - inline a little program
+
+
+        // when:
+        let mut cpu_copy = CPU {
+            PC: 0,
+            SP: 0,
+
+            A: 0,
+            X: 0,
+            Y: 0,
+
+            C: 1,
+            Z: 1,
+            I: 1,
+            D: 1,
+            B: 1,
+            V: 1,
+            N: 1,
+
+            // Opcodes
+            INS_LDA_IM: 0xA9,
+            INS_LDA_ZP: 0xA5,
+            INS_LDA_ZPX: 0xB5,
+            INS_JSR: 0x20,
+        };
+        let cycles_used = cpu.execute(&mut 4, &mut mem);
 
         // then:
         assert_eq!(cpu.A, 0x37);
+        assert_eq!(cycles_used, 4);
+
+
+        assert_eq!(cpu.C, cpu_copy.C);
+        assert_eq!(cpu.I, cpu_copy.I);
+        assert_eq!(cpu.D, cpu_copy.D);
+        assert_eq!(cpu.B, cpu_copy.B);
+        assert_eq!(cpu.V, cpu_copy.V);
     }
+
 }

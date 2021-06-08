@@ -34,9 +34,9 @@ fn main() {
     println!("6502 Emulator with rust");
 
         println!("{}", cpu.A);
+        cpu.reset(&mut mem);
         cpu.X = 5;
         // start - inline a little program
-        cpu.reset(&mut mem);
         mem.Data[0xFFFC] = cpu.INS_LDA_ZPX;
         mem.Data[0xFFFD] = 0x42;
         mem.Data[0x0047] = 0x37;
@@ -48,7 +48,7 @@ fn main() {
         cpu.execute(&mut 4, &mut mem);
 
         // then:
-        // assert_eq!(cpu.A, 0x37);
+        assert_eq!(cpu.A, 0x37);
         println!("{}", cpu.A);
 
     // println!("{:x?}, {:x?}", cpu, mem);

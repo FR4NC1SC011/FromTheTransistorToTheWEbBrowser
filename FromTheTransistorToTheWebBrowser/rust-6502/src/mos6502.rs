@@ -80,9 +80,7 @@ impl CPU {
 
         // data |= (memory.Data[self.PC as usize] << 8 as u32) as u16;
         // data = data.wrapping_shl(memory.Data[self.PC as usize] as u32);
-        println!("{:#034b}", data);
-        data = WrappingShl::wrapping_shl(&data, 8);
-        println!("{:#034b}", data);
+        data = data + WrappingShl::wrapping_shl(&data, 8);
 
         self.PC += 1;
 
@@ -132,13 +130,12 @@ impl CPU {
                     self.lda_set_status();
                 }
 
-                // TODO: Fix overflow
                 0x20 => {
                     println!("Instruction Load JSR");
                     let mut sub_addr: c_ushort = self.fetch_word(cycles, memory);
-                    memory = memory.write_word(self.PC - 1, self.SP as u32, cycles);
-                    self.PC = sub_addr;
+                    memory.write_word(self.PC - 1, self.SP as u32, cycles);
                     self.SP += 2;
+                    self.PC = sub_addr;
                     *cycles -= 1;
                 }
                 _ => eprintln!("Instruction not handled {}", ins),

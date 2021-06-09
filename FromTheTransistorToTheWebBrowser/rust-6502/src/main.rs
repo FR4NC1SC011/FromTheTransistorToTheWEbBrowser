@@ -68,6 +68,8 @@ fn main() {
     mem.Data[0xFFFC] = cpu.INS_JSR;
     mem.Data[0xFFFD] = 0x42;
     mem.Data[0xFFFE] = 0x42;
+    println!("0xFFFC: {} |  0xFFFD: {}", mem.Data[0xFFFD], mem.Data[0xFFFE]);
+    println!("PC: {}", cpu.PC);
     mem.Data[0x4242] = cpu.INS_LDA_IM;
     mem.Data[0x4243] = 0x84;
     cpu.execute(&mut 9, &mut mem);
@@ -77,6 +79,8 @@ fn main() {
     assert_ne!(mem.Data[0xFFFE], mem_copy.Data[0xFFFE]);
     assert_ne!(mem.Data[0x4242], mem_copy.Data[0x4242]);
     assert_ne!(mem.Data[0x4243], mem_copy.Data[0x4243]);
+    
+    assert_eq!(cpu.A, 0x84);
 
     println!("A: {}", cpu.A);
 }

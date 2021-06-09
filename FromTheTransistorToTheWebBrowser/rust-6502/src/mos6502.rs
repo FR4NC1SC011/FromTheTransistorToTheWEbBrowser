@@ -1,4 +1,5 @@
 use std::num::Wrapping;
+use num_traits::WrappingShl;
 use std::os::raw::*;
 
 //TODO: alias declaration?
@@ -77,7 +78,11 @@ impl CPU {
         let mut data: c_ushort = memory.Data[self.PC as usize] as u16;
         self.PC += 1;
 
-        data |= (memory.Data[self.PC as usize] << 8 as u32) as u16;
+        // data |= (memory.Data[self.PC as usize] << 8 as u32) as u16;
+        // data = data.wrapping_shl(memory.Data[self.PC as usize] as u32);
+        println!("{:#034b}", data);
+        data = WrappingShl::wrapping_shl(&data, 8);
+        println!("{:#034b}", data);
 
         self.PC += 1;
 
@@ -128,13 +133,14 @@ impl CPU {
                 }
 
                 // TODO: Fix overflow
-                // 0x20 => {
-                //     println!("Instruction Load JSR");
-                //     let mut sub_addr: c_ushort = self.fetch_word(cycles, memory);
-                //     memory.write_word(self.PC - 1, self.SP as u32, cycles);
-                //     self.PC = sub_addr;
-                //     *cycles -= 1;
-                // }
+                0x20 => {
+                    println!("Instruction Load JSR");
+                    let mut sub_addr: c_ushort = self.fetch_word(cycles, memory);
+                    memory = memory.write_word(self.PC - 1, self.SP as u32, cycles);
+                    self.PC = sub_addr;
+                    self.SP += 2;
+                    *cycles -= 1;
+                }
                 _ => eprintln!("Instruction not handled {}", ins),
             }
         }
@@ -166,32 +172,13 @@ mod tests {
             Data: Vec::new(),
         };
 
-        let mut cpu = CPU {
-            PC: 0,
-            SP: 0,
-
-            A: 0,
-            X: 0,
-            Y: 0,
-
-            C: 1,
-            Z: 1,
-            I: 1,
-            D: 1,
-            B: 1,
-            V: 1,
-            N: 1,
-
-            // Opcodes
-            INS_LDA_IM: 0xA9,
-            INS_LDA_ZP: 0xA5,
-            INS_LDA_ZPX: 0xB5,
-            INS_JSR: 0x20,
-        };
+        let mut cpu = create_cpu();
+        let mut cpu_copy = create_cpu();
 
         // given:
         // start - inline a little program
         cpu.reset(&mut mem);
+        cpu_copy.reset(&mut mem);
         mem.Data[0xFFFC] = cpu.INS_LDA_IM;
         mem.Data[0xFFFD] = 0x84;
         // end - inline a little program
@@ -202,6 +189,7 @@ mod tests {
 
         // then:
         assert_eq!(cpu.A, 0x84);
+        verify_unmodified_flags_from_lda(cpu, cpu_copy);
     }
 
     #[test]
@@ -212,32 +200,13 @@ mod tests {
             Data: Vec::new(),
         };
 
-        let mut cpu = CPU {
-            PC: 0,
-            SP: 0,
-
-            A: 0,
-            X: 0,
-            Y: 0,
-
-            C: 1,
-            Z: 1,
-            I: 1,
-            D: 1,
-            B: 1,
-            V: 1,
-            N: 1,
-
-            // Opcodes
-            INS_LDA_IM: 0xA9,
-            INS_LDA_ZP: 0xA5,
-            INS_LDA_ZPX: 0xB5,
-            INS_JSR: 0x20,
-        };
+        let mut cpu = create_cpu();
+        let mut cpu_copy = create_cpu();
 
         // given:
         // start - inline a little program
         cpu.reset(&mut mem);
+        cpu_copy.reset(&mut mem);
         mem.Data[0xFFFC] = cpu.INS_LDA_ZP;
         mem.Data[0xFFFD] = 0x42;
         mem.Data[0x0042] = 0x37;
@@ -249,6 +218,7 @@ mod tests {
 
         // then:
         assert_eq!(cpu.A, 0x37);
+        verify_unmodified_flags_from_lda(cpu, cpu_copy);
     }
 
     #[test]
@@ -259,31 +229,12 @@ mod tests {
             Data: Vec::new(),
         };
 
-        let mut cpu = CPU {
-            PC: 0,
-            SP: 0,
-
-            A: 0,
-            X: 0,
-            Y: 0,
-
-            C: 1,
-            Z: 1,
-            I: 1,
-            D: 1,
-            B: 1,
-            V: 1,
-            N: 1,
-
-            // Opcodes
-            INS_LDA_IM: 0xA9,
-            INS_LDA_ZP: 0xA5,
-            INS_LDA_ZPX: 0xB5,
-            INS_JSR: 0x20,
-        };
+        let mut cpu = create_cpu();
+        let mut cpu_copy = create_cpu();
 
         // given:
         cpu.reset(&mut mem);
+        cpu_copy.reset(&mut mem);
         cpu.X = 5;
 
         // start - inline a little program
@@ -297,9 +248,10 @@ mod tests {
         // then:
         assert_eq!(cpu.A, 0x37);
         assert_eq!(cycles_used, 4);
+        verify_unmodified_flags_from_lda(cpu, cpu_copy);
     }
 
-  #[test]
+    #[test]
     fn test_LDAZPXValueintoARegisterWhenItWraps() {
         // LDAZeroPageXCanLoadAValueIntoTheAReg
         let mut mem = Mem {
@@ -307,30 +259,7 @@ mod tests {
             Data: Vec::new(),
         };
 
-        let mut cpu = CPU {
-            PC: 0,
-            SP: 0,
-
-            A: 0,
-            X: 0,
-            Y: 0,
-
-            C: 1,
-            Z: 1,
-            I: 1,
-            D: 1,
-            B: 1,
-            V: 1,
-            N: 1,
-
-            // Opcodes
-            INS_LDA_IM: 0xA9,
-            INS_LDA_ZP: 0xA5,
-            INS_LDA_ZPX: 0xB5,
-            INS_JSR: 0x20,
-        };
-
-        
+        let mut cpu = create_cpu();
 
         // given:
         cpu.reset(&mut mem);
@@ -342,9 +271,23 @@ mod tests {
         mem.Data[0x007F] = 0x37;
         // end - inline a little program
 
-
         // when:
-        let mut cpu_copy = CPU {
+        let mut cpu_copy = create_cpu();
+        cpu_copy.reset(&mut mem);
+
+        let cycles_used = cpu.execute(&mut 4, &mut mem);
+
+        // then:
+        assert_eq!(cpu.A, 0x37);
+        assert_eq!(cycles_used, 4);
+
+        verify_unmodified_flags_from_lda(cpu, cpu_copy);
+    }
+
+    // TODO: move this function into the CPU implementation
+    // TODO: also return memory?
+    fn create_cpu() -> CPU {
+        let cpu = CPU {
             PC: 0,
             SP: 0,
 
@@ -366,20 +309,14 @@ mod tests {
             INS_LDA_ZPX: 0xB5,
             INS_JSR: 0x20,
         };
-        cpu_copy.reset(&mut mem);
+        cpu
+    }
 
-        let cycles_used = cpu.execute(&mut 4, &mut mem);
-
-        // then:
-        assert_eq!(cpu.A, 0x37);
-        assert_eq!(cycles_used, 4);
-
-
+    fn verify_unmodified_flags_from_lda(cpu: CPU, cpu_copy: CPU) {
         assert_eq!(cpu.C, cpu_copy.C);
         assert_eq!(cpu.I, cpu_copy.I);
         assert_eq!(cpu.D, cpu_copy.D);
         assert_eq!(cpu.B, cpu_copy.B);
         assert_eq!(cpu.V, cpu_copy.V);
     }
-
 }

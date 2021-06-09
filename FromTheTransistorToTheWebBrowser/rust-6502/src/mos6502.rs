@@ -1,5 +1,5 @@
-use std::num::Wrapping;
 use num_traits::WrappingShl;
+use std::num::Wrapping;
 use std::os::raw::*;
 
 //TODO: alias declaration?
@@ -45,6 +45,13 @@ impl Mem {
         }
     }
 
+    pub fn new() -> Self {
+        Mem {
+            MAX_MEM: 1024 * 64,
+            Data: Vec::new(),
+        }
+    }
+
     // write 2 bytes
     fn write_word(&mut self, value: c_ushort, address: u32, cycles: &mut usize) {
         self.Data[address as usize] = (value & 0xFF) as u8;
@@ -54,6 +61,31 @@ impl Mem {
 }
 
 impl CPU {
+    pub fn new() -> Self {
+        CPU {
+            PC: 0,
+            SP: 0,
+
+            A: 0,
+            X: 0,
+            Y: 0,
+
+            C: 1,
+            Z: 1,
+            I: 1,
+            D: 1,
+            B: 1,
+            V: 1,
+            N: 1,
+
+            // Opcodes
+            INS_LDA_IM: 0xA9,
+            INS_LDA_ZP: 0xA5,
+            INS_LDA_ZPX: 0xB5,
+            INS_JSR: 0x20,
+        }
+    }
+
     pub fn reset(&mut self, memory: &mut Mem) {
         self.PC = 0xFFFC;
         self.SP = 0x0100;
@@ -164,13 +196,9 @@ mod tests {
     #[test]
     fn test_LDAInmValueintoARegister() {
         // LDAInmediateCanLoadAValueIntoTheAReg
-        let mut mem = Mem {
-            MAX_MEM: 1024 * 64,
-            Data: Vec::new(),
-        };
-
-        let mut cpu = create_cpu();
-        let mut cpu_copy = create_cpu();
+        let mut mem = Mem::new();
+        let mut cpu = CPU::new();
+        let mut cpu_copy = CPU::new();
 
         // given:
         // start - inline a little program
@@ -192,13 +220,9 @@ mod tests {
     #[test]
     fn test_LDAZPValueintoARegister() {
         // LDAZeroPageCanLoadAValueIntoTheAReg
-        let mut mem = Mem {
-            MAX_MEM: 1024 * 64,
-            Data: Vec::new(),
-        };
-
-        let mut cpu = create_cpu();
-        let mut cpu_copy = create_cpu();
+        let mut mem = Mem::new();
+        let mut cpu = CPU::new();
+        let mut cpu_copy = CPU::new();
 
         // given:
         // start - inline a little program
@@ -221,13 +245,9 @@ mod tests {
     #[test]
     fn test_LDAZPXValueintoARegister() {
         // LDAZeroPageXCanLoadAValueIntoTheAReg
-        let mut mem = Mem {
-            MAX_MEM: 1024 * 64,
-            Data: Vec::new(),
-        };
-
-        let mut cpu = create_cpu();
-        let mut cpu_copy = create_cpu();
+        let mut mem = Mem::new();
+        let mut cpu = CPU::new();
+        let mut cpu_copy = CPU::new();
 
         // given:
         cpu.reset(&mut mem);
@@ -251,12 +271,8 @@ mod tests {
     #[test]
     fn test_LDAZPXValueintoARegisterWhenItWraps() {
         // LDAZeroPageXCanLoadAValueIntoTheAReg
-        let mut mem = Mem {
-            MAX_MEM: 1024 * 64,
-            Data: Vec::new(),
-        };
-
-        let mut cpu = create_cpu();
+        let mut mem = Mem::new();
+        let mut cpu = CPU::new();
 
         // given:
         cpu.reset(&mut mem);
@@ -269,7 +285,7 @@ mod tests {
         // end - inline a little program
 
         // when:
-        let mut cpu_copy = create_cpu();
+        let mut cpu_copy = CPU::new();
         cpu_copy.reset(&mut mem);
 
         let cycles_used = cpu.execute(&mut 4, &mut mem);
@@ -279,34 +295,6 @@ mod tests {
         assert_eq!(cycles_used, 4);
 
         verify_unmodified_flags_from_lda(cpu, cpu_copy);
-    }
-
-    // TODO: move this function into the CPU implementation
-    // TODO: also return memory?
-    fn create_cpu() -> CPU {
-        let cpu = CPU {
-            PC: 0,
-            SP: 0,
-
-            A: 0,
-            X: 0,
-            Y: 0,
-
-            C: 1,
-            Z: 1,
-            I: 1,
-            D: 1,
-            B: 1,
-            V: 1,
-            N: 1,
-
-            // Opcodes
-            INS_LDA_IM: 0xA9,
-            INS_LDA_ZP: 0xA5,
-            INS_LDA_ZPX: 0xB5,
-            INS_JSR: 0x20,
-        };
-        cpu
     }
 
     fn verify_unmodified_flags_from_lda(cpu: CPU, cpu_copy: CPU) {

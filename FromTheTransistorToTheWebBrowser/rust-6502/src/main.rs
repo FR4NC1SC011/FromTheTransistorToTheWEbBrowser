@@ -13,28 +13,7 @@ fn main() {
         Data: Vec::new(),
     };
 
-    let mut cpu = mos6502::CPU {
-        PC: 0,
-        SP: 0,
-
-        A: 0,
-        X: 0,
-        Y: 0,
-
-        C: 1,
-        Z: 1,
-        I: 1,
-        D: 1,
-        B: 1,
-        V: 1,
-        N: 1,
-
-        // Opcodes
-        INS_LDA_IM: 0xA9,
-        INS_LDA_ZP: 0xA5,
-        INS_LDA_ZPX: 0xB5,
-        INS_JSR: 0x20,
-    };
+    let mut cpu = mos6502::CPU::new();
 
     println!("6502 Emulator with rust");
 
@@ -68,7 +47,10 @@ fn main() {
     mem.Data[0xFFFC] = cpu.INS_JSR;
     mem.Data[0xFFFD] = 0x42;
     mem.Data[0xFFFE] = 0x42;
-    println!("0xFFFC: {} |  0xFFFD: {}", mem.Data[0xFFFD], mem.Data[0xFFFE]);
+    println!(
+        "0xFFFC: {} |  0xFFFD: {}",
+        mem.Data[0xFFFD], mem.Data[0xFFFE]
+    );
     println!("PC: {}", cpu.PC);
     mem.Data[0x4242] = cpu.INS_LDA_IM;
     mem.Data[0x4243] = 0x84;
@@ -79,7 +61,7 @@ fn main() {
     assert_ne!(mem.Data[0xFFFE], mem_copy.Data[0xFFFE]);
     assert_ne!(mem.Data[0x4242], mem_copy.Data[0x4242]);
     assert_ne!(mem.Data[0x4243], mem_copy.Data[0x4243]);
-    
+
     assert_eq!(cpu.A, 0x84);
 
     println!("A: {}", cpu.A);

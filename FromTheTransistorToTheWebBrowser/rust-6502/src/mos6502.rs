@@ -116,12 +116,9 @@ impl CPU {
     fn fetch_word(&mut self, cycles: &mut usize, memory: &mut Mem) -> Word {
         // 6502 is little endian
         let mut data: Word = memory.Data[self.PC as usize] as Word;
-        println!("data: {}", data);
         self.PC += 1;
 
         data |= WrappingShl::wrapping_shl(&(memory.Data[self.PC as usize] as Word), 8);
-        println!("data: {}", data);
-
         self.PC += 1;
 
         *cycles -= 2;
@@ -142,6 +139,18 @@ impl CPU {
         *cycles = cycles.wrapping_sub(1);
         data
     }
+
+    fn read_word(&mut self, cycles: &mut usize, address: Word, memory: &mut Mem) -> Word {
+
+        let lo_byte: Byte = self.read_byte(cycles, address, memory);
+        let hi_byte: Byte = self.read_byte(cycles, address + 1, memory);
+
+        let mut data: Word = lo_byte as Word;
+        data |= WrappingShl::wrapping_shl(&(hi_byte as Word), 8);
+
+        data        
+    }
+
 
     pub fn execute(&mut self, cycles: &mut usize, memory: &mut Mem) -> usize {
         let cycles_requested = *cycles;
@@ -184,9 +193,7 @@ impl CPU {
                 0xAD => {
                     println!("Instruction LDA Absolute");
                     let abs_addrress: Word = self.fetch_word(cycles, memory);
-                    println!("address: {}", abs_addrress);
                     self.A = self.read_byte(cycles, abs_addrress as u16, memory);
-                    println!("A: {}", self.A);
                 } 
 
                 0xBD => {
@@ -195,14 +202,43 @@ impl CPU {
                     let abs_address_plus_x: Word = abs_addrress + self.X as u16;
                     self.A = self.read_byte(cycles, abs_address_plus_x, memory);
                     if abs_address_plus_x - abs_addrress >= 0xFF {
-                        println!("crossed page boundary");
                         *cycles -= 1;
                     }
                 }
 
+                0xB9 => {
+                    println!("Instruction LDA Absolute Y");
+                    let abs_addrress: Word = self.fetch_word(cycles, memory);
+                    let abs_address_plus_y: Word = abs_addrress + self.Y as u16;
+                    self.A = self.read_byte(cycles, abs_address_plus_y, memory);
+                    if abs_address_plus_y - abs_addrress >= 0xFF {
+                        *cycles -= 1;
+                    }
+                }
+
+                0xA1 => {
+                    println!("Instruction LDA Indirect X");
+                    let mut zero_page_address: Byte = self.fetch_byte(cycles, memory);
+                    zero_page_address += self.X;
+                    *cycles -= 1;
+                    let effective_address: Word = self.read_word(cycles, zero_page_address as u16, memory);
+                    self.A = self.read_byte(cycles, effective_address, memory);
+                }
+
+                0xB1 => {
+                    println!("Instruction LDA Indirect Y");
+                    let mut zero_page_address: Byte = self.fetch_byte(cycles, memory);
+                    let effective_address: Word = self.read_word(cycles, zero_page_address as u16, memory);
+                    let effective_address_y: Word = effective_address + self.Y as u16;
+                    self.A = self.read_byte(cycles, effective_address_y, memory);
+                    if effective_address_y - effective_address >= 0xFF {
+                        *cycles -= 1;
+                    }
+
+                }
+
                 _ => {
-                    eprintln!("Instruction not handled {}", ins);
-                    unimplemented!();
+                    unimplemented!("Instruction not handled {}", ins);
                 }
             }
         }
@@ -483,9 +519,10 @@ mod tests {
         let mut cpu_copy = CPU::new();
 
         // given:
-        cpu.Y = 1;
         cpu.reset(&mut mem);
         cpu_copy.reset(&mut mem);
+
+        cpu.Y = 1;
         mem.Data[0xFFFC] = cpu.INS_LDA_ABSY;
         mem.Data[0xFFFD] = 0x80;
         mem.Data[0xFFFE] = 0x44;  // 0x4480
@@ -497,7 +534,7 @@ mod tests {
         // then:
         assert_eq!(cpu.A, 0x37);
         assert_eq!(cycles_used, 4);
-        assert_eq!(cpu.Z, 1);
+        assert_eq!(cpu.Z, 0);
         assert_eq!(cpu.N, 0);
         verify_unmodified_flags_from_lda(cpu, cpu_copy);
     }
@@ -509,9 +546,10 @@ mod tests {
         let mut cpu_copy = CPU::new();
 
         // given:
-        cpu.Y = 0xFF;
         cpu.reset(&mut mem);
         cpu_copy.reset(&mut mem);
+
+        cpu.Y = 0xFF;
         mem.Data[0xFFFC] = cpu.INS_LDA_ABSY;
         mem.Data[0xFFFD] = 0x02;
         mem.Data[0xFFFE] = 0x44;  // 0x4402
@@ -523,7 +561,7 @@ mod tests {
         // then:
         assert_eq!(cpu.A, 0x37);
         assert_eq!(cycles_used, 5);
-        assert_eq!(cpu.Z, 1);
+        assert_eq!(cpu.Z, 0);
         assert_eq!(cpu.N, 0);
         verify_unmodified_flags_from_lda(cpu, cpu_copy);
     }
@@ -535,9 +573,10 @@ mod tests {
         let mut cpu_copy = CPU::new();
 
         // given:
-        cpu.X = 0x04;
         cpu.reset(&mut mem);
         cpu_copy.reset(&mut mem);
+
+        cpu.X = 0x04;
         mem.Data[0xFFFC] = cpu.INS_LDA_INDX;
         mem.Data[0xFFFD] = 0x02;
         mem.Data[0x0006] = 0x00;  // 0x02 + 0x04
@@ -550,7 +589,7 @@ mod tests {
         // then:
         assert_eq!(cpu.A, 0x37);
         assert_eq!(cycles_used, 6);
-        assert_eq!(cpu.Z, 1);
+        assert_eq!(cpu.Z, 0);
         assert_eq!(cpu.N, 0);
         verify_unmodified_flags_from_lda(cpu, cpu_copy);
     }
@@ -562,9 +601,10 @@ mod tests {
         let mut cpu_copy = CPU::new();
 
         // given:
-        cpu.Y = 0x04;
         cpu.reset(&mut mem);
         cpu_copy.reset(&mut mem);
+
+        cpu.Y = 0x04;
         mem.Data[0xFFFC] = cpu.INS_LDA_INDY;
         mem.Data[0xFFFD] = 0x02;
         mem.Data[0x0002] = 0x00;  
@@ -577,7 +617,7 @@ mod tests {
         // then:
         assert_eq!(cpu.A, 0x37);
         assert_eq!(cycles_used, 5);
-        assert_eq!(cpu.Z, 1);
+        assert_eq!(cpu.Z, 0);
         assert_eq!(cpu.N, 0);
         verify_unmodified_flags_from_lda(cpu, cpu_copy);
     }
@@ -589,9 +629,10 @@ mod tests {
         let mut cpu_copy = CPU::new();
 
         // given:
-        cpu.Y = 0xFF;
         cpu.reset(&mut mem);
         cpu_copy.reset(&mut mem);
+
+        cpu.Y = 0xFF;
         mem.Data[0xFFFC] = cpu.INS_LDA_INDY;
         mem.Data[0xFFFD] = 0x02;
         mem.Data[0x0002] = 0x02;  
@@ -604,7 +645,7 @@ mod tests {
         // then:
         assert_eq!(cpu.A, 0x37);
         assert_eq!(cycles_used, 6);
-        assert_eq!(cpu.Z, 1);
+        assert_eq!(cpu.Z, 0);
         assert_eq!(cpu.N, 0);
         verify_unmodified_flags_from_lda(cpu, cpu_copy);
     }

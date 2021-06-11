@@ -1,4 +1,5 @@
 mod mos6502;
+mod m6502_tests;
 
 use mos6502::*;
 

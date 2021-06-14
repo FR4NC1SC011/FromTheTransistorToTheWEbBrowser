@@ -1,8 +1,13 @@
 
 
+
 #[cfg(test)]
 mod tests {
 use crate::mos6502::*;
+use std::os::raw::*;
+
+type Byte = c_uchar;
+type Word = c_ushort;
 
     #[test]
     fn test_ldainmediate_can_load_value_into_a_register() {
@@ -139,8 +144,6 @@ use crate::mos6502::*;
     }
 
 //      #[test]
-
-
 //     fn cpu_can_execute_more_cycles_than_requested_if_required_by_the_instruction() {
 //         // LDAInmediateCanLoadAValueIntoTheAReg
 //         let mut mem = Mem::new();
@@ -392,9 +395,28 @@ use crate::mos6502::*;
         verify_unmodified_flags_from_lda(cpu, cpu_copy);
     }
 
+    
 
-
-
+// TODO: fix this function
+//     fn test_load_register_inmediate(opcode: Byte, CPU:: *mut Byte ) {
+//         let mut mem = Mem::new();
+//         let mut cpu = CPU::new();
+//         let mut cpu_copy = CPU::new();
+// 
+//         // given:
+//         cpu.reset(&mut mem);
+//         cpu_copy.reset(&mut mem);
+//         mem.Data[0xFFFC] = cpu.INS_LDA_IM;
+//         mem.Data[0xFFFD] = 0x84;
+// 
+//         // when:
+//         let cycles_used = cpu.execute(&mut 2, &mut mem);
+//         assert_eq!(cycles_used, 2);
+// 
+//         // then:
+//         assert_eq!(cpu.*register, 0x84);
+//         verify_unmodified_flags_from_lda(cpu, cpu_copy);
+//     }
 
 
     fn verify_unmodified_flags_from_lda(cpu: CPU, cpu_copy: CPU) {

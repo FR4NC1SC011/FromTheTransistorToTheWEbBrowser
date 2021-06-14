@@ -55,6 +55,18 @@ pub struct CPU {
     pub INS_LDY_ABS: Byte,
     pub INS_LDY_ABSX: Byte,
 
+    // STA
+    pub INS_STA_ZP: Byte,
+    pub INS_STA_ABS: Byte,
+
+    // STX
+    pub INS_STX_ZP: Byte,
+    pub INS_STX_ABS: Byte,
+
+    // STY
+    pub INS_STY_ZP: Byte,
+    pub INS_STY_ABS: Byte,
+
 
 
     pub INS_JSR: Byte, // TODO: Fix overflow
@@ -125,6 +137,18 @@ impl CPU {
             INS_LDY_ZPX: 0xB4,
             INS_LDY_ABS: 0xAC,
             INS_LDY_ABSX: 0xBC,
+
+            // STA
+            INS_STA_ZP: 0x85,
+            INS_STA_ABS: 0x8D,
+
+            // STX
+            INS_STX_ZP: 0x86,
+            INS_STX_ABS: 0x8E,
+
+            // STY
+            INS_STY_ZP: 0x84,
+            INS_STY_ABS: 0x8C,
 
             INS_JSR: 0x20,
         }
@@ -203,13 +227,13 @@ impl CPU {
                 0xA2 => {
                     println!("Instruction LDX Inmediate");
                     self.X = self.fetch_byte(cycles, memory);
-                    self.lda_register_set_status();
+                    self.ldx_register_set_status();
                 }
 
                 0xA0 => {
                     println!("Instruction LDY Inmediate");
                     self.Y = self.fetch_byte(cycles, memory);
-                    self.lda_register_set_status();
+                    self.ldy_register_set_status();
                 }
 
                 0xA5 => {
@@ -223,14 +247,14 @@ impl CPU {
                     println!("Instruction LDX ZP");
                     let zero_page_address: Byte = self.fetch_byte(cycles, memory);
                     self.X = self.read_byte(cycles, zero_page_address as u16, memory);
-                    self.lda_register_set_status();
+                    self.ldx_register_set_status();
                 }
 
                 0xA4 => {
                     println!("Instruction LDY ZP");
                     let zero_page_address: Byte = self.fetch_byte(cycles, memory);
                     self.Y = self.read_byte(cycles, zero_page_address as u16, memory);
-                    self.lda_register_set_status();
+                    self.ldy_register_set_status();
                 }
 
                 0xB4 => {
@@ -239,7 +263,7 @@ impl CPU {
                     zero_page_address = zero_page_address.wrapping_add(self.X);
                     *cycles -= 1;
                     self.Y = self.read_byte(cycles, zero_page_address as u16, memory);
-                    self.lda_register_set_status();
+                    self.ldy_register_set_status();
                 }
 
                 0xB5 => {
@@ -257,7 +281,7 @@ impl CPU {
                     zero_page_address = zero_page_address.wrapping_add(self.Y);
                     *cycles -= 1;
                     self.X = self.read_byte(cycles, zero_page_address as u16, memory);
-                    self.lda_register_set_status();
+                    self.ldx_register_set_status();
                 }
 
                 0x20 => {
@@ -273,18 +297,21 @@ impl CPU {
                     println!("Instruction LDA Absolute");
                     let abs_addrress: Word = self.fetch_word(cycles, memory);
                     self.A = self.read_byte(cycles, abs_addrress as u16, memory);
+                    self.lda_register_set_status();
                 } 
 
                0xAE => {
                     println!("Instruction LDX Absolute");
                     let abs_addrress: Word = self.fetch_word(cycles, memory);
                     self.X = self.read_byte(cycles, abs_addrress as u16, memory);
+                    self.ldx_register_set_status();
                 } 
 
                 0xAC => {
                     println!("Instruction LDY Absolute");
                     let abs_addrress: Word = self.fetch_word(cycles, memory);
                     self.Y = self.read_byte(cycles, abs_addrress as u16, memory);
+                    self.ldy_register_set_status();
                 }
 
                 0xBC => {
@@ -295,6 +322,7 @@ impl CPU {
                     if abs_address_plus_x - abs_addrress >= 0xFF {
                         *cycles -= 1;
                     }
+                    self.ldy_register_set_status();
                 }
 
                 0xBD => {
@@ -305,6 +333,7 @@ impl CPU {
                     if abs_address_plus_x - abs_addrress >= 0xFF {
                         *cycles -= 1;
                     }
+                    self.lda_register_set_status();
                 }
 
                 0xBE => {
@@ -315,6 +344,7 @@ impl CPU {
                     if abs_address_plus_y - abs_addrress >= 0xFF {
                         *cycles -= 1;
                     }
+                    self.ldx_register_set_status();
                 }
 
                 0xB9 => {
@@ -325,6 +355,7 @@ impl CPU {
                     if abs_address_plus_y - abs_addrress >= 0xFF {
                         *cycles -= 1;
                     }
+                    self.lda_register_set_status();
                 }
 
                 0xA1 => {
@@ -334,6 +365,7 @@ impl CPU {
                     *cycles -= 1;
                     let effective_address: Word = self.read_word(cycles, zero_page_address as u16, memory);
                     self.A = self.read_byte(cycles, effective_address, memory);
+                    self.lda_register_set_status();
                 }
 
                 0xB1 => {
@@ -345,7 +377,16 @@ impl CPU {
                     if effective_address_y - effective_address >= 0xFF {
                         *cycles -= 1;
                     }
+                    self.lda_register_set_status();
+                }
 
+
+
+
+
+
+                0x85 => {
+                    
                 }
 
                 _ => {
@@ -367,6 +408,32 @@ impl CPU {
             true => 1,
         };
     }
+
+    fn ldx_register_set_status(&mut self) {
+        self.Z = match self.X == 0 {
+            false => 0,
+            true => 1,
+        };
+
+        self.N = match (self.X & 0b10000000) > 0 {
+            false => 0,
+            true => 1,
+        };
+    }
+
+    fn ldy_register_set_status(&mut self) {
+        self.Z = match self.Y == 0 {
+            false => 0,
+            true => 1,
+        };
+
+        self.N = match (self.Y & 0b10000000) > 0 {
+            false => 0,
+            true => 1,
+        };
+    }
+
+
 }
 
 

@@ -1,5 +1,6 @@
 mod mos6502;
-mod m6502_tests;
+mod load_tests;
+mod store_tests;
 
 use mos6502::*;
 

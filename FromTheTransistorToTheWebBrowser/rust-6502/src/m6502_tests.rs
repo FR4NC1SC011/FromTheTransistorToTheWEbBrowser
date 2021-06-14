@@ -32,6 +32,50 @@ type Word = c_ushort;
     }
 
     #[test]
+    fn test_ldxinmediate_can_load_value_into_x_register() {
+        let mut mem = Mem::new();
+        let mut cpu = CPU::new();
+        let mut cpu_copy = CPU::new();
+
+        // given:
+        cpu.reset(&mut mem);
+        cpu_copy.reset(&mut mem);
+        mem.Data[0xFFFC] = cpu.INS_LDX_IM;
+        mem.Data[0xFFFD] = 0x84;
+
+        // when:
+        let cycles_used = cpu.execute(&mut 2, &mut mem);
+        assert_eq!(cycles_used, 2);
+
+        // then:
+        assert_eq!(cpu.X, 0x84);
+        verify_unmodified_flags_from_lda(cpu, cpu_copy);
+    }
+
+    #[test]
+    fn test_ldyinmediate_can_load_value_into_y_register() {
+        let mut mem = Mem::new();
+        let mut cpu = CPU::new();
+        let mut cpu_copy = CPU::new();
+
+        // given:
+        cpu.reset(&mut mem);
+        cpu_copy.reset(&mut mem);
+        mem.Data[0xFFFC] = cpu.INS_LDY_IM;
+        mem.Data[0xFFFD] = 0x84;
+
+        // when:
+        let cycles_used = cpu.execute(&mut 2, &mut mem);
+        assert_eq!(cycles_used, 2);
+
+        // then:
+        assert_eq!(cpu.Y, 0x84);
+        verify_unmodified_flags_from_lda(cpu, cpu_copy);
+    }
+
+
+
+    #[test]
     fn test_ldainmediate_can_affect_the_zero_flag() {
         // LDAInmediateCanLoadAValueIntoTheAReg
         let mut mem = Mem::new();
@@ -78,6 +122,50 @@ type Word = c_ushort;
     }
 
     #[test]
+    fn test_ldxzp_can_load_value_into_x_register() {
+        let mut mem = Mem::new();
+        let mut cpu = CPU::new();
+        let mut cpu_copy = CPU::new();
+
+        // given
+        cpu.reset(&mut mem);
+        cpu_copy.reset(&mut mem);
+        mem.Data[0xFFFC] = cpu.INS_LDX_ZP;
+        mem.Data[0xFFFD] = 0x42;
+        mem.Data[0x0042] = 0x37;
+
+        // when:
+        let cycles_used = cpu.execute(&mut 3, &mut mem);
+        assert_eq!(cycles_used, 3);
+
+        // then:
+        assert_eq!(cpu.X, 0x37);
+        verify_unmodified_flags_from_lda(cpu, cpu_copy);
+    }
+
+    #[test]
+    fn test_ldyzp_can_load_value_into_y_register() {
+        let mut mem = Mem::new();
+        let mut cpu = CPU::new();
+        let mut cpu_copy = CPU::new();
+
+        // given
+        cpu.reset(&mut mem);
+        cpu_copy.reset(&mut mem);
+        mem.Data[0xFFFC] = cpu.INS_LDY_ZP;
+        mem.Data[0xFFFD] = 0x42;
+        mem.Data[0x0042] = 0x37;
+
+        // when:
+        let cycles_used = cpu.execute(&mut 3, &mut mem);
+        assert_eq!(cycles_used, 3);
+
+        // then:
+        assert_eq!(cpu.Y, 0x37);
+        verify_unmodified_flags_from_lda(cpu, cpu_copy);
+    }
+
+    #[test]
     fn test_ldazpx_can_load_value_into_a_register() {
         // LDAZeroPageXCanLoadAValueIntoTheAReg
         let mut mem = Mem::new();
@@ -102,6 +190,59 @@ type Word = c_ushort;
         assert_eq!(cycles_used, 4);
         verify_unmodified_flags_from_lda(cpu, cpu_copy);
     }
+
+    #[test]
+    fn test_ldxzpy_can_load_value_into_x_register() {
+        let mut mem = Mem::new();
+        let mut cpu = CPU::new();
+        let mut cpu_copy = CPU::new();
+
+        // given:
+        cpu.reset(&mut mem);
+        cpu_copy.reset(&mut mem);
+        cpu.Y = 5;
+
+        // start - inline a little program
+        mem.Data[0xFFFC] = cpu.INS_LDX_ZPY;
+        mem.Data[0xFFFD] = 0x42;
+        mem.Data[0x0047] = 0x37;
+        // end - inline a little program
+
+        // when:
+        let cycles_used = cpu.execute(&mut 4, &mut mem);
+        // then:
+        assert_eq!(cpu.X, 0x37);
+        assert_eq!(cycles_used, 4);
+        verify_unmodified_flags_from_lda(cpu, cpu_copy);
+    }
+
+    #[test]
+    fn test_ldyzpx_can_load_value_into_y_register() {
+        let mut mem = Mem::new();
+        let mut cpu = CPU::new();
+        let mut cpu_copy = CPU::new();
+
+        // given:
+        cpu.reset(&mut mem);
+        cpu_copy.reset(&mut mem);
+        cpu.X = 5;
+
+        // start - inline a little program
+        mem.Data[0xFFFC] = cpu.INS_LDY_ZPX;
+        mem.Data[0xFFFD] = 0x42;
+        mem.Data[0x0047] = 0x37;
+        // end - inline a little program
+
+        // when:
+        let cycles_used = cpu.execute(&mut 4, &mut mem);
+        // then:
+        assert_eq!(cpu.Y, 0x37);
+        assert_eq!(cycles_used, 4);
+        verify_unmodified_flags_from_lda(cpu, cpu_copy);
+    }
+
+
+
 
     #[test]
     fn test_ldazpx_can_load_value_into_a_register_when_it_wraps() {
@@ -203,6 +344,46 @@ type Word = c_ushort;
         assert_eq!(cycles_used, 4);
     }
 
+    #[test]
+    fn test_ldxabs_can_load_value_into_x_register() {
+        let mut mem = Mem::new();
+        let mut cpu = CPU::new();
+
+        // given:
+        cpu.reset(&mut mem);
+        mem.Data[0xFFFC] = cpu.INS_LDX_ABS;
+        mem.Data[0xFFFD] = 0x80;
+        mem.Data[0xFFFE] = 0x44;  // 0x4480
+        mem.Data[0x4480] = 0x37;
+
+        // when:
+        let cycles_used = cpu.execute(&mut 4, &mut mem);
+
+        // then:
+        assert_eq!(cpu.X, 0x37);
+        assert_eq!(cycles_used, 4);
+    }
+
+    #[test]
+    fn test_ldyabs_can_load_value_into_y_register() {
+        let mut mem = Mem::new();
+        let mut cpu = CPU::new();
+
+        // given:
+        cpu.reset(&mut mem);
+        mem.Data[0xFFFC] = cpu.INS_LDY_ABS;
+        mem.Data[0xFFFD] = 0x80;
+        mem.Data[0xFFFE] = 0x44;  // 0x4480
+        mem.Data[0x4480] = 0x37;
+
+        // when:
+        let cycles_used = cpu.execute(&mut 4, &mut mem);
+
+        // then:
+        assert_eq!(cpu.Y, 0x37);
+        assert_eq!(cycles_used, 4);
+    }
+
      #[test]
      fn test_ldaabsx_can_load_value_into_a_register() {
         let mut mem = Mem::new();
@@ -229,6 +410,116 @@ type Word = c_ushort;
         assert_eq!(cpu.N, 0);
         verify_unmodified_flags_from_lda(cpu, cpu_copy);
     }
+
+     #[test]
+     fn test_ldxabsy_can_load_value_into_x_register() {
+        let mut mem = Mem::new();
+        let mut cpu = CPU::new();
+        let mut cpu_copy = CPU::new();
+
+        // given:
+        cpu.reset(&mut mem);
+        cpu_copy.reset(&mut mem);
+
+        cpu.Y = 1;
+        mem.Data[0xFFFC] = cpu.INS_LDX_ABSY;
+        mem.Data[0xFFFD] = 0x80;
+        mem.Data[0xFFFE] = 0x44;  // 0x4480
+        mem.Data[0x4481] = 0x37;
+
+        // when:
+        let cycles_used = cpu.execute(&mut 4, &mut mem);
+
+        // then:
+        assert_eq!(cpu.X, 0x37);
+        assert_eq!(cycles_used, 4);
+        assert_eq!(cpu.Z, 0);
+        assert_eq!(cpu.N, 0);
+        verify_unmodified_flags_from_lda(cpu, cpu_copy);
+    }
+
+     #[test]
+     fn test_ldxabsy_can_load_value_into_x_register_when_it_crosses_page_boundary() {
+        let mut mem = Mem::new();
+        let mut cpu = CPU::new();
+        let mut cpu_copy = CPU::new();
+
+        // given:
+        cpu.reset(&mut mem);
+        cpu_copy.reset(&mut mem);
+
+        cpu.Y = 0xFF;
+        mem.Data[0xFFFC] = cpu.INS_LDX_ABSY;
+        mem.Data[0xFFFD] = 0x02;
+        mem.Data[0xFFFE] = 0x44;  // 0x4402
+        mem.Data[0x4501] = 0x37;  // 0x4402 + 0xFF crosses page boundary!
+
+        // when:
+        let cycles_used = cpu.execute(&mut 5, &mut mem);
+
+        // then:
+        assert_eq!(cpu.X, 0x37);
+        assert_eq!(cycles_used, 5);
+        assert_eq!(cpu.Z, 0);
+        assert_eq!(cpu.N, 0);
+        verify_unmodified_flags_from_lda(cpu, cpu_copy);
+    }
+
+
+     #[test]
+     fn test_ldyabsx_can_load_value_into_y_register() {
+        let mut mem = Mem::new();
+        let mut cpu = CPU::new();
+        let mut cpu_copy = CPU::new();
+
+        // given:
+        cpu.reset(&mut mem);
+        cpu_copy.reset(&mut mem);
+
+        cpu.X = 1;
+        mem.Data[0xFFFC] = cpu.INS_LDY_ABSX;
+        mem.Data[0xFFFD] = 0x80;
+        mem.Data[0xFFFE] = 0x44;  // 0x4480
+        mem.Data[0x4481] = 0x37;
+
+        // when:
+        let cycles_used = cpu.execute(&mut 4, &mut mem);
+
+        // then:
+        assert_eq!(cpu.Y, 0x37);
+        assert_eq!(cycles_used, 4);
+        assert_eq!(cpu.Z, 0);
+        assert_eq!(cpu.N, 0);
+        verify_unmodified_flags_from_lda(cpu, cpu_copy);
+    }
+
+     #[test]
+     fn test_ldyabsx_can_load_value_into_y_register_when_it_crosses_page_boundary() {
+        let mut mem = Mem::new();
+        let mut cpu = CPU::new();
+        let mut cpu_copy = CPU::new();
+
+        // given:
+        cpu.reset(&mut mem);
+        cpu_copy.reset(&mut mem);
+
+        cpu.X = 0xFF;
+        mem.Data[0xFFFC] = cpu.INS_LDY_ABSX;
+        mem.Data[0xFFFD] = 0x02;
+        mem.Data[0xFFFE] = 0x44;  // 0x4402
+        mem.Data[0x4501] = 0x37;  // 0x4402 + 0xFF crosses page boundary!
+
+        // when:
+        let cycles_used = cpu.execute(&mut 5, &mut mem);
+
+        // then:
+        assert_eq!(cpu.Y, 0x37);
+        assert_eq!(cycles_used, 5);
+        assert_eq!(cpu.Z, 0);
+        assert_eq!(cpu.N, 0);
+        verify_unmodified_flags_from_lda(cpu, cpu_copy);
+    }
+
     
      #[test]
      fn test_ldaabsx_can_load_value_into_a_register_when_it_crosses_page_boundary() {

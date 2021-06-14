@@ -30,6 +30,8 @@ pub struct CPU {
     pub N: Byte,
 
     // Opcodes
+
+    // LDA
     pub INS_LDA_IM: Byte,
     pub INS_LDA_ZP: Byte,
     pub INS_LDA_ZPX: Byte,
@@ -38,6 +40,23 @@ pub struct CPU {
     pub INS_LDA_ABSY: Byte,
     pub INS_LDA_INDX: Byte,
     pub INS_LDA_INDY: Byte,
+
+    // LDX
+    pub INS_LDX_IM: Byte,
+    pub INS_LDX_ZP: Byte,
+    pub INS_LDX_ZPY: Byte,
+    pub INS_LDX_ABS: Byte,
+    pub INS_LDX_ABSY: Byte,
+    
+    // LDY
+    pub INS_LDY_IM: Byte,
+    pub INS_LDY_ZP: Byte,
+    pub INS_LDY_ZPX: Byte,
+    pub INS_LDY_ABS: Byte,
+    pub INS_LDY_ABSX: Byte,
+
+
+
     pub INS_JSR: Byte, // TODO: Fix overflow
 }
 
@@ -82,6 +101,8 @@ impl CPU {
             N: 1,
 
             // Opcodes
+            
+            // LDA
             INS_LDA_IM: 0xA9,
             INS_LDA_ZP: 0xA5,
             INS_LDA_ZPX: 0xB5,
@@ -90,6 +111,21 @@ impl CPU {
             INS_LDA_ABSY: 0xB9,
             INS_LDA_INDX: 0xA1,
             INS_LDA_INDY: 0xB1,
+            
+            // LDX
+            INS_LDX_IM: 0xA2,
+            INS_LDX_ZP: 0xA6,
+            INS_LDX_ZPY: 0xB6,
+            INS_LDX_ABS: 0xAE,
+            INS_LDX_ABSY: 0xBE,
+
+            // LDY
+            INS_LDY_IM: 0xA0,
+            INS_LDY_ZP: 0xA4,
+            INS_LDY_ZPX: 0xB4,
+            INS_LDY_ABS: 0xAC,
+            INS_LDY_ABSX: 0xBC,
+
             INS_JSR: 0x20,
         }
     }
@@ -160,25 +196,68 @@ impl CPU {
             match ins {
                 0xA9 => {
                     println!("Instruction LDA Inmediate");
-                    let value: Byte = self.fetch_byte(cycles, memory);
-                    self.A = value;
-                    self.lda_set_status();
+                    self.A = self.fetch_byte(cycles, memory);
+                    self.lda_register_set_status();
+                }
+
+                0xA2 => {
+                    println!("Instruction LDX Inmediate");
+                    self.X = self.fetch_byte(cycles, memory);
+                    self.lda_register_set_status();
+                }
+
+                0xA0 => {
+                    println!("Instruction LDY Inmediate");
+                    self.Y = self.fetch_byte(cycles, memory);
+                    self.lda_register_set_status();
                 }
 
                 0xA5 => {
-                    println!("Instruction Load ZP");
+                    println!("Instruction LDA ZP");
                     let zero_page_address: Byte = self.fetch_byte(cycles, memory);
                     self.A = self.read_byte(cycles, zero_page_address as u16, memory);
-                    self.lda_set_status();
+                    self.lda_register_set_status();
+                }
+
+                0xA6 => {
+                    println!("Instruction LDX ZP");
+                    let zero_page_address: Byte = self.fetch_byte(cycles, memory);
+                    self.X = self.read_byte(cycles, zero_page_address as u16, memory);
+                    self.lda_register_set_status();
+                }
+
+                0xA4 => {
+                    println!("Instruction LDY ZP");
+                    let zero_page_address: Byte = self.fetch_byte(cycles, memory);
+                    self.Y = self.read_byte(cycles, zero_page_address as u16, memory);
+                    self.lda_register_set_status();
+                }
+
+                0xB4 => {
+                    println!("Instruction LDY ZPX");
+                    let mut zero_page_address: Byte = self.fetch_byte(cycles, memory);
+                    zero_page_address = zero_page_address.wrapping_add(self.X);
+                    *cycles -= 1;
+                    self.Y = self.read_byte(cycles, zero_page_address as u16, memory);
+                    self.lda_register_set_status();
                 }
 
                 0xB5 => {
-                    println!("Instruction Load ZPX");
+                    println!("Instruction LDA ZPX");
                     let mut zero_page_address: Byte = self.fetch_byte(cycles, memory);
                     zero_page_address = zero_page_address.wrapping_add(self.X);
                     *cycles -= 1;
                     self.A = self.read_byte(cycles, zero_page_address as u16, memory);
-                    self.lda_set_status();
+                    self.lda_register_set_status();
+                }
+
+                0xB6 => {
+                    println!("Instruction LDX ZPY");
+                    let mut zero_page_address: Byte = self.fetch_byte(cycles, memory);
+                    zero_page_address = zero_page_address.wrapping_add(self.Y);
+                    *cycles -= 1;
+                    self.X = self.read_byte(cycles, zero_page_address as u16, memory);
+                    self.lda_register_set_status();
                 }
 
                 0x20 => {
@@ -196,12 +275,44 @@ impl CPU {
                     self.A = self.read_byte(cycles, abs_addrress as u16, memory);
                 } 
 
+               0xAE => {
+                    println!("Instruction LDX Absolute");
+                    let abs_addrress: Word = self.fetch_word(cycles, memory);
+                    self.X = self.read_byte(cycles, abs_addrress as u16, memory);
+                } 
+
+                0xAC => {
+                    println!("Instruction LDY Absolute");
+                    let abs_addrress: Word = self.fetch_word(cycles, memory);
+                    self.Y = self.read_byte(cycles, abs_addrress as u16, memory);
+                }
+
+                0xBC => {
+                    println!("Instruction LDY Absolute X");
+                    let abs_addrress: Word = self.fetch_word(cycles, memory);
+                    let abs_address_plus_x: Word = abs_addrress + self.X as u16;
+                    self.Y = self.read_byte(cycles, abs_address_plus_x, memory);
+                    if abs_address_plus_x - abs_addrress >= 0xFF {
+                        *cycles -= 1;
+                    }
+                }
+
                 0xBD => {
                     println!("Instruction LDA Absolute X");
                     let abs_addrress: Word = self.fetch_word(cycles, memory);
                     let abs_address_plus_x: Word = abs_addrress + self.X as u16;
                     self.A = self.read_byte(cycles, abs_address_plus_x, memory);
                     if abs_address_plus_x - abs_addrress >= 0xFF {
+                        *cycles -= 1;
+                    }
+                }
+
+                0xBE => {
+                    println!("Instruction LDX Absolute Y");
+                    let abs_addrress: Word = self.fetch_word(cycles, memory);
+                    let abs_address_plus_y: Word = abs_addrress + self.Y as u16;
+                    self.X = self.read_byte(cycles, abs_address_plus_y, memory);
+                    if abs_address_plus_y - abs_addrress >= 0xFF {
                         *cycles -= 1;
                     }
                 }
@@ -245,7 +356,7 @@ impl CPU {
          cycles_requested - *cycles
     }
 
-    fn lda_set_status(&mut self) {
+    fn lda_register_set_status(&mut self) {
         self.Z = match self.A == 0 {
             false => 0,
             true => 1,

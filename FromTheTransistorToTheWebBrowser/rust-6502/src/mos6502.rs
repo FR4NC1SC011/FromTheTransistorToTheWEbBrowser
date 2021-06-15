@@ -57,14 +57,21 @@ pub struct CPU {
 
     // STA
     pub INS_STA_ZP: Byte,
+    pub INS_STA_ZPX: Byte,
     pub INS_STA_ABS: Byte,
+    pub INS_STA_ABSX: Byte,
+    pub INS_STA_ABSY: Byte,
+    pub INS_STA_INDX: Byte,
+    pub INS_STA_INDY: Byte,
 
     // STX
     pub INS_STX_ZP: Byte,
+    pub INS_STX_ZPY: Byte,
     pub INS_STX_ABS: Byte,
 
     // STY
     pub INS_STY_ZP: Byte,
+    pub INS_STY_ZPX: Byte,
     pub INS_STY_ABS: Byte,
 
 
@@ -140,14 +147,22 @@ impl CPU {
 
             // STA
             INS_STA_ZP: 0x85,
+            INS_STA_ZPX: 0x95,
             INS_STA_ABS: 0x8D,
+            INS_STA_ABSX: 0x9D,
+            INS_STA_ABSY: 0x99,
+            INS_STA_INDX: 0x81,
+            INS_STA_INDY: 0x91,
+
 
             // STX
             INS_STX_ZP: 0x86,
+            INS_STX_ZPY: 0x96,
             INS_STX_ABS: 0x8E,
 
             // STY
             INS_STY_ZP: 0x84,
+            INS_STY_ZPX: 0x94,
             INS_STY_ABS: 0x8C,
 
             INS_JSR: 0x20,
@@ -209,6 +224,11 @@ impl CPU {
         data |= WrappingShl::wrapping_shl(&(hi_byte as Word), 8);
 
         data        
+    }
+
+    fn write_byte(&mut self, value: Byte, cycles: &mut usize, address: Word, memory: &mut Mem) {
+        memory.Data[address as usize] = value;
+        *cycles = cycles.wrapping_sub(1);
     }
 
 
@@ -386,14 +406,110 @@ impl CPU {
 
 
                 0x85 => {
-                    
+                    println!("Instruction STA Zero Page");
+                    let zero_page_address: Byte = self.fetch_byte(cycles, memory);
+                    self.write_byte(self.A, cycles, zero_page_address as u16, memory);
                 }
+
+                0x95 => {
+                    println!("Instruction STA Zero Page X");
+                    let mut zero_page_address: Byte = self.fetch_byte(cycles, memory);
+                    zero_page_address = zero_page_address.wrapping_add(self.X);
+                    *cycles -= 1;
+                    self.write_byte(self.A, cycles, zero_page_address as u16, memory);
+                }
+
+                0x86 => {
+                    println!("Instruction STX Zero Page");
+                    let zero_page_address: Byte = self.fetch_byte(cycles, memory);
+                    self.write_byte(self.X, cycles, zero_page_address as u16, memory);
+                }
+
+                0x84 => {
+                    println!("Instruction STY Zero Page");
+                    let zero_page_address: Byte = self.fetch_byte(cycles, memory);
+                    self.write_byte(self.Y, cycles, zero_page_address as u16, memory);
+                }
+
+                0x94 => {
+                    println!("Instruction STY Zero Page X");
+                    let mut zero_page_address: Byte = self.fetch_byte(cycles, memory);
+                    zero_page_address = zero_page_address.wrapping_add(self.X);
+                    *cycles -= 1;
+                    self.write_byte(self.Y, cycles, zero_page_address as u16, memory);
+                }
+
+                0x8D => {
+                    println!("Instriction STA Absolute");
+                    let abs_addrress: Word = self.fetch_word(cycles, memory);
+                    self.write_byte(self.A, cycles, abs_addrress as u16, memory);
+                }
+
+                0x8E => {
+                    println!("Instriction STX Absolute");
+                    let abs_addrress: Word = self.fetch_word(cycles, memory);
+                    self.write_byte(self.X, cycles, abs_addrress as u16, memory);
+                }
+
+                0x8C => {
+                    println!("Instruction STY Absolute");
+                    let abs_addrress: Word = self.fetch_word(cycles, memory);
+                    self.write_byte(self.Y, cycles, abs_addrress as u16, memory);
+                }
+
+                0x9D => {
+                    println!("Instruction STA Absolute X");
+                    let abs_addrress: Word = self.fetch_word(cycles, memory);
+                    let abs_address_plus_x: Word = abs_addrress + self.X as u16;
+                    self.write_byte(self.A, cycles, abs_address_plus_x, memory);
+                    if abs_address_plus_x - abs_addrress >= 0xFF {
+                        *cycles -= 1;
+                    }
+                    *cycles -= 1;       // TODO: check is this is correct
+                }
+
+                0x99 => {
+                    println!("Instruction STA Absolute Y");
+                    let abs_addrress: Word = self.fetch_word(cycles, memory);
+                    let abs_address_plus_x: Word = abs_addrress + self.Y as u16;
+                    self.write_byte(self.A, cycles, abs_address_plus_x, memory);
+                    if abs_address_plus_x - abs_addrress >= 0xFF {
+                        *cycles -= 1;
+                    }
+                    *cycles -= 1;       // TODO: check is this is correct
+                }
+
+                0x81 => {
+                    println!("Instruction STA Indirect X");
+                    let mut zero_page_address: Byte = self.fetch_byte(cycles, memory);
+                    zero_page_address += self.X;
+                    *cycles -= 1;
+                    let effective_address: Word = self.read_word(cycles, zero_page_address as u16, memory);
+                    self.write_byte(self.A, cycles, effective_address, memory);
+                }
+
+                0x91 => {
+                    println!("Instruction STA Indirect Y");
+                    let zero_page_address: Byte = self.fetch_byte(cycles, memory);
+                    let effective_address: Word = self.read_word(cycles, zero_page_address as u16, memory);
+                    let effective_address_y: Word = effective_address + self.Y as u16;
+                    if effective_address_y - effective_address >= 0xFF {
+                        *cycles -= 1;
+                    }
+                    self.write_byte(self.A, cycles, effective_address_y, memory);
+                    *cycles -= 1;
+   
+                }
+
+
+
 
                 _ => {
                     unimplemented!("Instruction not handled {}", ins);
                 }
             }
         }
+
          cycles_requested - *cycles
     }
 

@@ -26,6 +26,7 @@ pub struct CPU {
     pub I: Byte,
     pub D: Byte,
     pub B: Byte,
+    pub Unused: Byte,
     pub V: Byte,
     pub N: Byte,
 
@@ -111,6 +112,7 @@ impl CPU {
             I: 0,
             D: 0,
             B: 0,
+            Unused: 0,
             V: 0,
             N: 0,
 

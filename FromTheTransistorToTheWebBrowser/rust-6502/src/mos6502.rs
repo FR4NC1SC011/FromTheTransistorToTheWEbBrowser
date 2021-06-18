@@ -48,7 +48,7 @@ pub struct CPU {
     pub INS_LDX_ZPY: Byte,
     pub INS_LDX_ABS: Byte,
     pub INS_LDX_ABSY: Byte,
-    
+
     // LDY
     pub INS_LDY_IM: Byte,
     pub INS_LDY_ZP: Byte,
@@ -74,11 +74,12 @@ pub struct CPU {
     pub INS_STY_ZP: Byte,
     pub INS_STY_ZPX: Byte,
     pub INS_STY_ABS: Byte,
-    
-    // Jumps And Calls
-    pub INS_JSR: Byte,
-    pub INS_RTS: Byte, 
 
+    // Jumps And Calls
+    pub INS_JMP_ABS: Byte,
+    pub INS_JMP_IND: Byte,
+    pub INS_JSR: Byte,
+    pub INS_RTS: Byte,
 }
 
 impl Mem {
@@ -94,8 +95,7 @@ impl Mem {
             Data: Vec::new(),
         }
     }
-
-   }
+}
 
 impl CPU {
     pub fn new() -> Self {
@@ -107,17 +107,17 @@ impl CPU {
             X: 0,
             Y: 0,
 
-            C: 0,
-            Z: 0,
-            I: 0,
-            D: 0,
-            B: 0,
-            Unused: 0,
-            V: 0,
-            N: 0,
+            C: 1,
+            Z: 1,
+            I: 1,
+            D: 1,
+            B: 1,
+            Unused: 1,
+            V: 1,
+            N: 1,
 
             // Opcodes
-            
+
             // LDA
             INS_LDA_IM: 0xA9,
             INS_LDA_ZP: 0xA5,
@@ -127,7 +127,7 @@ impl CPU {
             INS_LDA_ABSY: 0xB9,
             INS_LDA_INDX: 0xA1,
             INS_LDA_INDY: 0xB1,
-            
+
             // LDX
             INS_LDX_IM: 0xA2,
             INS_LDX_ZP: 0xA6,
@@ -151,7 +151,6 @@ impl CPU {
             INS_STA_INDX: 0x81,
             INS_STA_INDY: 0x91,
 
-
             // STX
             INS_STX_ZP: 0x86,
             INS_STX_ZPY: 0x96,
@@ -163,6 +162,8 @@ impl CPU {
             INS_STY_ABS: 0x8C,
 
             // Jumps And Calls
+            INS_JMP_ABS: 0x4C,
+            INS_JMP_IND: 0x6C,
             INS_JSR: 0x20,
             INS_RTS: 0x60,
         }
@@ -176,13 +177,13 @@ impl CPU {
         self.X = 0;
         self.Y = 0;
 
-        self.C = 0;
-        self.Z = 0;
-        self.I = 0;
-        self.D = 0;
-        self.B = 0;
-        self.V = 0;
-        self.N = 0;
+        self.C = 1;
+        self.Z = 1;
+        self.I = 1;
+        self.D = 1;
+        self.B = 1;
+        self.V = 1;
+        self.N = 1;
 
         memory.initialize();
     }
@@ -195,13 +196,13 @@ impl CPU {
         self.X = 0;
         self.Y = 0;
 
-        self.C = 0;
-        self.Z = 0;
-        self.I = 0;
-        self.D = 0;
-        self.B = 0;
-        self.V = 0;
-        self.N = 0;
+        self.C = 1;
+        self.Z = 1;
+        self.I = 1;
+        self.D = 1;
+        self.B = 1;
+        self.V = 1;
+        self.N = 1;
 
         memory.initialize();
     }
@@ -234,14 +235,13 @@ impl CPU {
     }
 
     fn read_word(&mut self, cycles: &mut usize, address: Word, memory: &mut Mem) -> Word {
-
         let lo_byte: Byte = self.read_byte(cycles, address, memory);
         let hi_byte: Byte = self.read_byte(cycles, address + 1, memory);
 
         let mut data: Word = lo_byte as Word;
         data |= WrappingShl::wrapping_shl(&(hi_byte as Word), 8);
 
-        data        
+        data
     }
 
     fn write_byte(&mut self, value: Byte, cycles: &mut usize, address: Word, memory: &mut Mem) {
@@ -249,7 +249,7 @@ impl CPU {
         *cycles = cycles.wrapping_sub(1);
     }
 
-     // write 2 bytes
+    // write 2 bytes
     fn write_word(&mut self, value: Byte, cycles: &mut usize, address: Word, memory: &mut Mem) {
         memory.Data[address as usize] = (value & 0xFF) as u8;
         let mut x: u16 = value as u16;
@@ -260,10 +260,10 @@ impl CPU {
 
     // return the stack pointer as a full 16-bit address
     fn sp_to_address(&mut self) -> Word {
-        0x100 as u16 | self.SP as u16 
+        0x100 as u16 | self.SP as u16
     }
 
-    fn push_word_to_stack(&mut self, cycles: &mut usize, memory: &mut Mem , value: Word) {
+    fn push_word_to_stack(&mut self, cycles: &mut usize, memory: &mut Mem, value: Word) {
         let mut sp_16_bit = self.sp_to_address();
         self.write_byte(value.wrapping_shr(8) as u8, cycles, sp_16_bit, memory);
         self.SP -= 1;
@@ -273,11 +273,11 @@ impl CPU {
     }
 
     // push the PC - 1 onto the stack
-    fn push_pc_to_stack(&mut self, cycles: &mut usize, memory: &mut Mem ) {
-//         let sp_16_bit = self.sp_to_address();
-//         self.write_word((self.PC - 1) as u8, cycles, sp_16_bit - 1, memory);
-//         self.PC -= 2;
-//         dbg!(sp_16_bit);
+    fn push_pc_to_stack(&mut self, cycles: &mut usize, memory: &mut Mem) {
+        //         let sp_16_bit = self.sp_to_address();
+        //         self.write_word((self.PC - 1) as u8, cycles, sp_16_bit - 1, memory);
+        //         self.PC -= 2;
+        //         dbg!(sp_16_bit);
 
         self.push_word_to_stack(cycles, memory, self.PC);
     }
@@ -295,15 +295,12 @@ impl CPU {
         value_from_stack
     }
 
-
-
     pub fn execute(&mut self, cycles: &mut usize, memory: &mut Mem) -> usize {
         let cycles_requested = *cycles;
         while cycles > &mut 0 {
             let ins: Byte = self.fetch_byte(cycles, memory);
 
             match ins {
-
                 // Load Instructions
                 0xA9 => {
                     println!("Instruction LDA Inmediate");
@@ -371,21 +368,19 @@ impl CPU {
                     self.ldx_register_set_status();
                 }
 
-
-
                 0xAD => {
                     println!("Instruction LDA Absolute");
                     let abs_addrress: Word = self.fetch_word(cycles, memory);
                     self.A = self.read_byte(cycles, abs_addrress as u16, memory);
                     self.lda_register_set_status();
-                } 
+                }
 
-               0xAE => {
+                0xAE => {
                     println!("Instruction LDX Absolute");
                     let abs_addrress: Word = self.fetch_word(cycles, memory);
                     self.X = self.read_byte(cycles, abs_addrress as u16, memory);
                     self.ldx_register_set_status();
-                } 
+                }
 
                 0xAC => {
                     println!("Instruction LDY Absolute");
@@ -443,7 +438,8 @@ impl CPU {
                     let mut zero_page_address: Byte = self.fetch_byte(cycles, memory);
                     zero_page_address += self.X;
                     *cycles -= 1;
-                    let effective_address: Word = self.read_word(cycles, zero_page_address as u16, memory);
+                    let effective_address: Word =
+                        self.read_word(cycles, zero_page_address as u16, memory);
                     self.A = self.read_byte(cycles, effective_address, memory);
                     self.lda_register_set_status();
                 }
@@ -451,7 +447,8 @@ impl CPU {
                 0xB1 => {
                     println!("Instruction LDA Indirect Y");
                     let zero_page_address: Byte = self.fetch_byte(cycles, memory);
-                    let effective_address: Word = self.read_word(cycles, zero_page_address as u16, memory);
+                    let effective_address: Word =
+                        self.read_word(cycles, zero_page_address as u16, memory);
                     let effective_address_y: Word = effective_address + self.Y as u16;
                     self.A = self.read_byte(cycles, effective_address_y, memory);
                     if effective_address_y - effective_address >= 0xFF {
@@ -459,7 +456,6 @@ impl CPU {
                     }
                     self.lda_register_set_status();
                 }
-
 
                 // Store Instructions
                 0x85 => {
@@ -535,20 +531,45 @@ impl CPU {
                     let mut zero_page_address: Byte = self.fetch_byte(cycles, memory);
                     zero_page_address += self.X;
                     *cycles -= 1;
-                    let effective_address: Word = self.read_word(cycles, zero_page_address as u16, memory);
+                    let effective_address: Word =
+                        self.read_word(cycles, zero_page_address as u16, memory);
                     self.write_byte(self.A, cycles, effective_address, memory);
                 }
 
                 0x91 => {
                     println!("Instruction STA Indirect Y");
                     let zero_page_address: Byte = self.fetch_byte(cycles, memory);
-                    let effective_address: Word = self.read_word(cycles, zero_page_address as u16, memory);
+                    let effective_address: Word =
+                        self.read_word(cycles, zero_page_address as u16, memory);
                     let effective_address_y: Word = effective_address + self.Y as u16;
                     self.write_byte(self.A, cycles, effective_address_y, memory);
-                    *cycles -= 1;   
+                    *cycles -= 1;
                 }
 
                 // Jumps and Calls
+
+            // NB:
+        //      An original 6502 has does not correctly fetch the target address
+        //      if the indirect vector falls on a page boundary
+        //      (e.g. $xxFF where xx is any value from $00 to $FF).
+        //      In this case fetches the LSB from $xxFF as expected but takes
+        //      the MSB from $xx00. This is fixed in some later chips like
+        //      the 65SC02 so for compatibility always ensure the indirect vector
+        //      is not at the end of the page.
+
+                0x4C => {
+                    println!("Instruction JMP Absolute");
+                    let abs_addrress: Word = self.fetch_word(cycles, memory);
+                    self.PC = abs_addrress;
+                }
+
+                0x6C => {
+                    println!("Instruction JMP Indirect");
+                    let mut abs_addrress: Word = self.fetch_word(cycles, memory);
+                    abs_addrress = self.read_word(cycles, abs_addrress, memory);
+                    self.PC = abs_addrress;
+                }
+
                 0x20 => {
                     println!("Instruction JSR");
                     let sub_addr: Word = self.fetch_word(cycles, memory);
@@ -560,14 +581,11 @@ impl CPU {
                 0x60 => {
                     println!("Instruction RTS");
                     let return_address = self.pop_word_from_stack(cycles, memory);
-                    
+
                     // TODO: self.PC = return_address + 1 work on the video. Why?
                     self.PC = return_address;
                     *cycles -= 2;
                 }
-
-
-
 
                 _ => {
                     unimplemented!("Instruction not handled {}", ins);
@@ -575,7 +593,7 @@ impl CPU {
             }
         }
 
-         cycles_requested - *cycles
+        cycles_requested - *cycles
     }
 
     fn lda_register_set_status(&mut self) {
@@ -613,7 +631,4 @@ impl CPU {
             true => 1,
         };
     }
-
 }
-
-

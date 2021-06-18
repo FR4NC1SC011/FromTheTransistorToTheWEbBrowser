@@ -91,8 +91,8 @@ type Word = c_ushort;
         let cycles_used = cpu.execute(&mut 2, &mut mem);
 
         // then:
-        assert_eq!(cpu.Z, 1);
-        assert_eq!(cpu.N, 0);
+        assert_eq!(cpu.PS.1, 1);
+        assert_eq!(cpu.PS.7, 0);
         verify_unmodified_flags_from_lda(cpu, cpu_copy);
     }
 
@@ -265,8 +265,8 @@ type Word = c_ushort;
         // then:
         assert_eq!(cpu.A, 0x37);
         assert_eq!(cycles_used, 4);
-
         verify_unmodified_flags_from_lda(cpu, cpu_copy);
+
     }
 
     #[test]
@@ -404,8 +404,8 @@ type Word = c_ushort;
         // then:
         assert_eq!(cpu.A, 0x37);
         assert_eq!(cycles_used, 4);
-        assert_eq!(cpu.Z, 0);
-        assert_eq!(cpu.N, 0);
+        assert_eq!(cpu.PS.1, 0);
+        assert_eq!(cpu.PS.7, 0);
         verify_unmodified_flags_from_lda(cpu, cpu_copy);
     }
 
@@ -431,8 +431,8 @@ type Word = c_ushort;
         // then:
         assert_eq!(cpu.X, 0x37);
         assert_eq!(cycles_used, 4);
-        assert_eq!(cpu.Z, 0);
-        assert_eq!(cpu.N, 0);
+        assert_eq!(cpu.PS.1, 0);
+        assert_eq!(cpu.PS.7, 0);
         verify_unmodified_flags_from_lda(cpu, cpu_copy);
     }
 
@@ -458,8 +458,8 @@ type Word = c_ushort;
         // then:
         assert_eq!(cpu.X, 0x37);
         assert_eq!(cycles_used, 5);
-        assert_eq!(cpu.Z, 0);
-        assert_eq!(cpu.N, 0);
+        assert_eq!(cpu.PS.1, 0);
+        assert_eq!(cpu.PS.7, 0);
         verify_unmodified_flags_from_lda(cpu, cpu_copy);
     }
 
@@ -486,8 +486,8 @@ type Word = c_ushort;
         // then:
         assert_eq!(cpu.Y, 0x37);
         assert_eq!(cycles_used, 4);
-        assert_eq!(cpu.Z, 0);
-        assert_eq!(cpu.N, 0);
+        assert_eq!(cpu.PS.1, 0);
+        assert_eq!(cpu.PS.7, 0);
         verify_unmodified_flags_from_lda(cpu, cpu_copy);
     }
 
@@ -502,8 +502,8 @@ type Word = c_ushort;
         cpu_copy.reset(&mut mem);
 
         cpu.X = 0xFF;
-        cpu.Z = 1;
-        cpu.N = 1;
+        cpu.PS.1 = 1;
+        cpu.PS.7 = 1;
         mem.Data[0xFFFC] = cpu.INS_LDY_ABSX;
         mem.Data[0xFFFD] = 0x02;
         mem.Data[0xFFFE] = 0x44;  // 0x4402
@@ -515,8 +515,8 @@ type Word = c_ushort;
         // then:
         assert_eq!(cpu.Y, 0x37);
         assert_eq!(cycles_used, 5);
-        assert_eq!(cpu.Z, 0);
-        assert_eq!(cpu.N, 0);
+        assert_eq!(cpu.PS.1, 0);
+        assert_eq!(cpu.PS.7, 0);
         verify_unmodified_flags_from_lda(cpu, cpu_copy);
     }
 
@@ -543,8 +543,8 @@ type Word = c_ushort;
         // then:
         assert_eq!(cpu.A, 0x37);
         assert_eq!(cycles_used, 5);
-        assert_eq!(cpu.Z, 0);
-        assert_eq!(cpu.N, 0);
+        assert_eq!(cpu.PS.1, 0);
+        assert_eq!(cpu.PS.7, 0);
         verify_unmodified_flags_from_lda(cpu, cpu_copy);
     }
 
@@ -570,8 +570,8 @@ type Word = c_ushort;
         // then:
         assert_eq!(cpu.A, 0x37);
         assert_eq!(cycles_used, 4);
-        assert_eq!(cpu.Z, 0);
-        assert_eq!(cpu.N, 0);
+        assert_eq!(cpu.PS.1, 0);
+        assert_eq!(cpu.PS.7, 0);
         verify_unmodified_flags_from_lda(cpu, cpu_copy);
     }
     
@@ -597,8 +597,8 @@ type Word = c_ushort;
         // then:
         assert_eq!(cpu.A, 0x37);
         assert_eq!(cycles_used, 5);
-        assert_eq!(cpu.Z, 0);
-        assert_eq!(cpu.N, 0);
+        assert_eq!(cpu.PS.1, 0);
+        assert_eq!(cpu.PS.7, 0);
         verify_unmodified_flags_from_lda(cpu, cpu_copy);
     }
 
@@ -625,8 +625,8 @@ type Word = c_ushort;
         // then:
         assert_eq!(cpu.A, 0x37);
         assert_eq!(cycles_used, 6);
-        assert_eq!(cpu.Z, 0);
-        assert_eq!(cpu.N, 0);
+        assert_eq!(cpu.PS.1, 0);
+        assert_eq!(cpu.PS.7, 0);
         verify_unmodified_flags_from_lda(cpu, cpu_copy);
     }
 
@@ -653,8 +653,8 @@ type Word = c_ushort;
         // then:
         assert_eq!(cpu.A, 0x37);
         assert_eq!(cycles_used, 5);
-        assert_eq!(cpu.Z, 0);
-        assert_eq!(cpu.N, 0);
+        assert_eq!(cpu.PS.1, 0);
+        assert_eq!(cpu.PS.7, 0);
         verify_unmodified_flags_from_lda(cpu, cpu_copy);
     }
 
@@ -681,8 +681,8 @@ type Word = c_ushort;
         // then:
         assert_eq!(cpu.A, 0x37);
         assert_eq!(cycles_used, 6);
-        assert_eq!(cpu.Z, 0);
-        assert_eq!(cpu.N, 0);
+        assert_eq!(cpu.PS.1, 0);
+        assert_eq!(cpu.PS.7, 0);
         verify_unmodified_flags_from_lda(cpu, cpu_copy);
     }
 
@@ -711,10 +711,10 @@ type Word = c_ushort;
 
 
     fn verify_unmodified_flags_from_lda(cpu: CPU, cpu_copy: CPU) {
-        assert_eq!(cpu.C, cpu_copy.C);
-        assert_eq!(cpu.I, cpu_copy.I);
-        assert_eq!(cpu.D, cpu_copy.D);
-        assert_eq!(cpu.B, cpu_copy.B);
-        assert_eq!(cpu.V, cpu_copy.V);
+        assert_eq!(cpu.PS.0, cpu_copy.PS.0);
+        assert_eq!(cpu.PS.2, cpu_copy.PS.2);
+        assert_eq!(cpu.PS.3, cpu_copy.PS.3);
+        assert_eq!(cpu.PS.4, cpu_copy.PS.4);
+        assert_eq!(cpu.PS.6, cpu_copy.PS.6);
     }
 }

@@ -28,7 +28,7 @@ type Word = c_ushort;
         // then:
         assert_eq!(mem.Data[0x0080], 0x2F);
         assert_eq!(actual_cycles, 3);
-        verify_unmodified_flags_from_store(cpu, cpu_copy);
+        assert_eq!(cpu.PS, cpu_copy.PS);
     }
 
     fn test_sta_zpx(opcode_to_test: Byte) {
@@ -52,7 +52,7 @@ type Word = c_ushort;
         // then:
         assert_eq!(actual_cycles, 4);
         assert_eq!(mem.Data[0x008F], 0x42);
-        verify_unmodified_flags_from_store(cpu, cpu_copy);
+        assert_eq!(cpu.PS, cpu_copy.PS);
     }
 
    fn test_sty_zpx(opcode_to_test: Byte) {
@@ -76,7 +76,7 @@ type Word = c_ushort;
         // then:
         assert_eq!(actual_cycles, 4);
         assert_eq!(mem.Data[0x008F], 0x42);
-        verify_unmodified_flags_from_store(cpu, cpu_copy);
+        assert_eq!(cpu.PS, cpu_copy.PS);
     }
 
     fn test_stx_zp(opcode_to_test: Byte) {
@@ -99,7 +99,7 @@ type Word = c_ushort;
         // then:
         assert_eq!(actual_cycles, 3);
         assert_eq!(mem.Data[0x0080], 0x2F);
-        verify_unmodified_flags_from_store(cpu, cpu_copy);
+        assert_eq!(cpu.PS, cpu_copy.PS);
     }
 
     fn test_sty_zp(opcode_to_test: Byte) {
@@ -122,7 +122,7 @@ type Word = c_ushort;
         // then:
         assert_eq!(actual_cycles, 3);
         assert_eq!(mem.Data[0x0080], 0x2F);
-        verify_unmodified_flags_from_store(cpu, cpu_copy);
+        assert_eq!(cpu.PS, cpu_copy.PS);
     }
 
 
@@ -147,7 +147,7 @@ type Word = c_ushort;
         // then:
         assert_eq!(actual_cycles, 4);
         assert_eq!(mem.Data[0x8000], 0x2F);
-        verify_unmodified_flags_from_store(cpu, cpu_copy);
+        assert_eq!(cpu.PS, cpu_copy.PS);
     }
 
     fn test_stx_abs(opcode_to_test: Byte) {
@@ -171,7 +171,7 @@ type Word = c_ushort;
         // then:
         assert_eq!(actual_cycles, 4);
         assert_eq!(mem.Data[0x8000], 0x2F);
-        verify_unmodified_flags_from_store(cpu, cpu_copy);
+        assert_eq!(cpu.PS, cpu_copy.PS);
     }
 
     fn test_sty_abs(opcode_to_test: Byte) {
@@ -195,7 +195,7 @@ type Word = c_ushort;
         // then:
         assert_eq!(actual_cycles, 4);
         assert_eq!(mem.Data[0x8000], 0x2F);
-        verify_unmodified_flags_from_store(cpu, cpu_copy);
+        assert_eq!(cpu.PS, cpu_copy.PS);
     }
 
     #[test]
@@ -269,7 +269,7 @@ type Word = c_ushort;
         // then:
         assert_eq!(actual_cycles, 5);
         assert_eq!(mem.Data[0x2092], 0x2F);
-        verify_unmodified_flags_from_store(cpu, cpu_copy);
+        assert_eq!(cpu.PS, cpu_copy.PS);
     }
 
     #[test]
@@ -294,7 +294,7 @@ type Word = c_ushort;
         // then:
         assert_eq!(actual_cycles, 5);
         assert_eq!(mem.Data[0x2092], 0x2F);
-        verify_unmodified_flags_from_store(cpu, cpu_copy);
+        assert_eq!(cpu.PS, cpu_copy.PS);
     }
 
     #[test]
@@ -321,7 +321,7 @@ type Word = c_ushort;
         // then:
         assert_eq!(actual_cycles, 6);
         assert_eq!(mem.Data[0x8000], 0x42);
-        verify_unmodified_flags_from_store(cpu, cpu_copy);
+        assert_eq!(cpu.PS, cpu_copy.PS);
     }
 
     #[test]
@@ -348,7 +348,7 @@ type Word = c_ushort;
         // then:
         assert_eq!(actual_cycles, 6);
         assert_eq!(mem.Data[0x8000 + 0x0F], 0x42);
-        verify_unmodified_flags_from_store(cpu, cpu_copy);
+        assert_eq!(cpu.PS, cpu_copy.PS);
     }
 
 
@@ -356,15 +356,15 @@ type Word = c_ushort;
 
 
 
-    fn verify_unmodified_flags_from_store(cpu: CPU, cpu_copy: CPU) {
-        assert_eq!(cpu.C, cpu_copy.C);
-        assert_eq!(cpu.Z, cpu_copy.Z);
-        assert_eq!(cpu.I, cpu_copy.I);
-        assert_eq!(cpu.D, cpu_copy.D);
-        assert_eq!(cpu.B, cpu_copy.B);
-        assert_eq!(cpu.V, cpu_copy.V);
-        assert_eq!(cpu.N, cpu_copy.N);
-    }
+    // fn verify_unmodified_flags_from_store(cpu: CPU, cpu_copy: CPU) {
+    //     assert_eq!(cpu.C, cpu_copy.C);
+    //     assert_eq!(cpu.Z, cpu_copy.Z);
+    //     assert_eq!(cpu.I, cpu_copy.I);
+    //     assert_eq!(cpu.D, cpu_copy.D);
+    //     assert_eq!(cpu.B, cpu_copy.B);
+    //     assert_eq!(cpu.V, cpu_copy.V);
+    //     assert_eq!(cpu.N, cpu_copy.N);
+    // }
 }
 
 

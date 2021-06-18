@@ -2,6 +2,7 @@ mod mos6502;
 mod load_tests;
 mod store_tests;
 mod jumps_and_calls_tests;
+mod stack_operations_tests;
 
 use mos6502::*;
 

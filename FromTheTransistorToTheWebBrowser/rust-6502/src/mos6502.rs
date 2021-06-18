@@ -10,10 +10,15 @@ pub struct Mem {
     pub Data: Vec<Byte>,
 }
 
+pub struct StatusFlags {
+
+}
+
 #[derive(Debug)]
 pub struct CPU {
     pub PC: Word, // program counter
     pub SP: Byte, // stack pointer
+    // pub PS: Byte, // process status
 
     // Registers
     pub A: Byte, // Accumulator
@@ -21,14 +26,15 @@ pub struct CPU {
     pub Y: Byte,
 
     // Status flags
-    pub C: Byte,
-    pub Z: Byte,
-    pub I: Byte,
-    pub D: Byte,
-    pub B: Byte,
-    pub Unused: Byte,
-    pub V: Byte,
-    pub N: Byte,
+    pub PS: (Byte, Byte, Byte, Byte, Byte, Byte, Byte, Byte),
+    // pub C: Byte,
+    // pub Z: Byte,
+    // pub I: Byte,
+    // pub D: Byte,
+    // pub B: Byte,
+    // pub Unused: Byte,
+    // pub V: Byte,
+    // pub N: Byte,
 
     // Opcodes
 
@@ -80,6 +86,12 @@ pub struct CPU {
     pub INS_JMP_IND: Byte,
     pub INS_JSR: Byte,
     pub INS_RTS: Byte,
+
+    // Stack Operations
+    pub INS_TSX: Byte,
+    pub INS_TXS: Byte,
+    pub INS_PHA: Byte,
+    pub INS_PHP: Byte,
 }
 
 impl Mem {
@@ -107,14 +119,15 @@ impl CPU {
             X: 0,
             Y: 0,
 
-            C: 1,
-            Z: 1,
-            I: 1,
-            D: 1,
-            B: 1,
-            Unused: 1,
-            V: 1,
-            N: 1,
+            PS: (1,1,1,1,1,1,1,1),
+            // C: 1,
+            // Z: 1,
+            // I: 1,
+            // D: 1,
+            // B: 1,
+            // Unused: 1,
+            // V: 1,
+            // N: 1,
 
             // Opcodes
 
@@ -166,6 +179,12 @@ impl CPU {
             INS_JMP_IND: 0x6C,
             INS_JSR: 0x20,
             INS_RTS: 0x60,
+
+            // Stack Operations
+            INS_TSX: 0xBA, 
+            INS_TXS: 0x9A, 
+            INS_PHA: 0x48, 
+            INS_PHP: 0x08, 
         }
     }
 
@@ -177,13 +196,14 @@ impl CPU {
         self.X = 0;
         self.Y = 0;
 
-        self.C = 1;
-        self.Z = 1;
-        self.I = 1;
-        self.D = 1;
-        self.B = 1;
-        self.V = 1;
-        self.N = 1;
+        self.PS = (1,1,1,1,1,1,1,1);
+//         self.C = 1;
+//         self.Z = 1;
+//         self.I = 1;
+//         self.D = 1;
+//         self.B = 1;
+//         self.V = 1;
+//         self.N = 1;
 
         memory.initialize();
     }
@@ -196,13 +216,14 @@ impl CPU {
         self.X = 0;
         self.Y = 0;
 
-        self.C = 1;
-        self.Z = 1;
-        self.I = 1;
-        self.D = 1;
-        self.B = 1;
-        self.V = 1;
-        self.N = 1;
+        self.PS = (1,1,1,1,1,1,1,1);
+        // self.C = 1;
+        // self.Z = 1;
+        // self.I = 1;
+        // self.D = 1;
+        // self.B = 1;
+        // self.V = 1;
+        // self.N = 1;
 
         memory.initialize();
     }
@@ -259,8 +280,15 @@ impl CPU {
     }
 
     // return the stack pointer as a full 16-bit address
-    fn sp_to_address(&mut self) -> Word {
+    pub fn sp_to_address(&mut self) -> Word {
         0x100 as u16 | self.SP as u16
+    }
+
+    fn push_byte_to_stack(&mut self, cycles: &mut usize, memory: &mut Mem, value: Byte) {
+        memory.Data[self.sp_to_address() as usize] = value;
+        *cycles -= 1;
+        self.SP -= 1;
+        *cycles -= 1;
     }
 
     fn push_word_to_stack(&mut self, cycles: &mut usize, memory: &mut Mem, value: Word) {
@@ -587,6 +615,32 @@ impl CPU {
                     *cycles -= 2;
                 }
 
+                // Stack Operations
+                0xBA => {
+                    println!("Instruction TSX");
+                    self.X = self.SP;
+                    *cycles -= 1;
+                    self.ldx_register_set_status();
+                }
+
+                0x9A => {
+                    println!("Instruction TXS");
+                    self.SP = self.X;
+                    *cycles -= 1
+
+                }
+
+                0x48 => {
+                    println!("Instruction PHA");
+                    self.push_byte_to_stack(cycles, memory, self.A);
+
+                }
+
+                // FIXME
+                0x08 => {
+                    println!("Instruction PHP");
+                    // self.push_byte_to_stack(cycles, memory, self.PS);
+                }
                 _ => {
                     unimplemented!("Instruction not handled {}", ins);
                 }
@@ -597,36 +651,36 @@ impl CPU {
     }
 
     fn lda_register_set_status(&mut self) {
-        self.Z = match self.A == 0 {
+        self.PS.1 = match self.A == 0 {
             false => 0,
             true => 1,
         };
 
-        self.N = match (self.A & 0b10000000) > 0 {
+        self.PS.7 = match (self.A & 0b10000000) > 0 {
             false => 0,
             true => 1,
         };
     }
 
     fn ldx_register_set_status(&mut self) {
-        self.Z = match self.X == 0 {
+        self.PS.1 = match self.X == 0 {
             false => 0,
             true => 1,
         };
 
-        self.N = match (self.X & 0b10000000) > 0 {
+        self.PS.7 = match (self.X & 0b10000000) > 0 {
             false => 0,
             true => 1,
         };
     }
 
     fn ldy_register_set_status(&mut self) {
-        self.Z = match self.Y == 0 {
+        self.PS.1 = match self.Y == 0 {
             false => 0,
             true => 1,
         };
 
-        self.N = match (self.Y & 0b10000000) > 0 {
+        self.PS.7 = match (self.Y & 0b10000000) > 0 {
             false => 0,
             true => 1,
         };

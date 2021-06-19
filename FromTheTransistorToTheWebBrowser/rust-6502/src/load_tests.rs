@@ -3,6 +3,7 @@ mod load_tests {
 
 use crate::mos6502::*;
 use std::os::raw::*;
+use bit_field::BitField;
 
 type Byte = c_uchar;
 type Word = c_ushort;
@@ -91,8 +92,8 @@ type Word = c_ushort;
         let cycles_used = cpu.execute(&mut 2, &mut mem);
 
         // then:
-        assert_eq!(cpu.PS.1, 1);
-        assert_eq!(cpu.PS.7, 0);
+        assert_eq!(cpu.PS.get_bit(1), true);
+        assert_eq!(cpu.PS.get_bit(7), false);
         verify_unmodified_flags_from_lda(cpu, cpu_copy);
     }
 
@@ -404,8 +405,8 @@ type Word = c_ushort;
         // then:
         assert_eq!(cpu.A, 0x37);
         assert_eq!(cycles_used, 4);
-        assert_eq!(cpu.PS.1, 0);
-        assert_eq!(cpu.PS.7, 0);
+        assert_eq!(cpu.PS.get_bit(1), false);
+        assert_eq!(cpu.PS.get_bit(7), false);
         verify_unmodified_flags_from_lda(cpu, cpu_copy);
     }
 
@@ -431,8 +432,8 @@ type Word = c_ushort;
         // then:
         assert_eq!(cpu.X, 0x37);
         assert_eq!(cycles_used, 4);
-        assert_eq!(cpu.PS.1, 0);
-        assert_eq!(cpu.PS.7, 0);
+        assert_eq!(cpu.PS.get_bit(1), false);
+        assert_eq!(cpu.PS.get_bit(7), false);
         verify_unmodified_flags_from_lda(cpu, cpu_copy);
     }
 
@@ -458,8 +459,8 @@ type Word = c_ushort;
         // then:
         assert_eq!(cpu.X, 0x37);
         assert_eq!(cycles_used, 5);
-        assert_eq!(cpu.PS.1, 0);
-        assert_eq!(cpu.PS.7, 0);
+        assert_eq!(cpu.PS.get_bit(1), false);
+        assert_eq!(cpu.PS.get_bit(7), false);
         verify_unmodified_flags_from_lda(cpu, cpu_copy);
     }
 
@@ -486,8 +487,8 @@ type Word = c_ushort;
         // then:
         assert_eq!(cpu.Y, 0x37);
         assert_eq!(cycles_used, 4);
-        assert_eq!(cpu.PS.1, 0);
-        assert_eq!(cpu.PS.7, 0);
+        assert_eq!(cpu.PS.get_bit(1), false);
+        assert_eq!(cpu.PS.get_bit(7), false);
         verify_unmodified_flags_from_lda(cpu, cpu_copy);
     }
 
@@ -502,8 +503,8 @@ type Word = c_ushort;
         cpu_copy.reset(&mut mem);
 
         cpu.X = 0xFF;
-        cpu.PS.1 = 1;
-        cpu.PS.7 = 1;
+        cpu.PS.set_bit(1, true);
+        cpu.PS.set_bit(7, true);
         mem.Data[0xFFFC] = cpu.INS_LDY_ABSX;
         mem.Data[0xFFFD] = 0x02;
         mem.Data[0xFFFE] = 0x44;  // 0x4402
@@ -515,8 +516,8 @@ type Word = c_ushort;
         // then:
         assert_eq!(cpu.Y, 0x37);
         assert_eq!(cycles_used, 5);
-        assert_eq!(cpu.PS.1, 0);
-        assert_eq!(cpu.PS.7, 0);
+        assert_eq!(cpu.PS.get_bit(1), false);
+        assert_eq!(cpu.PS.get_bit(7), false);
         verify_unmodified_flags_from_lda(cpu, cpu_copy);
     }
 
@@ -543,8 +544,8 @@ type Word = c_ushort;
         // then:
         assert_eq!(cpu.A, 0x37);
         assert_eq!(cycles_used, 5);
-        assert_eq!(cpu.PS.1, 0);
-        assert_eq!(cpu.PS.7, 0);
+        assert_eq!(cpu.PS.get_bit(1), false);
+        assert_eq!(cpu.PS.get_bit(7), false);
         verify_unmodified_flags_from_lda(cpu, cpu_copy);
     }
 
@@ -570,8 +571,8 @@ type Word = c_ushort;
         // then:
         assert_eq!(cpu.A, 0x37);
         assert_eq!(cycles_used, 4);
-        assert_eq!(cpu.PS.1, 0);
-        assert_eq!(cpu.PS.7, 0);
+        assert_eq!(cpu.PS.get_bit(1), false);
+        assert_eq!(cpu.PS.get_bit(7), false);
         verify_unmodified_flags_from_lda(cpu, cpu_copy);
     }
     
@@ -597,8 +598,8 @@ type Word = c_ushort;
         // then:
         assert_eq!(cpu.A, 0x37);
         assert_eq!(cycles_used, 5);
-        assert_eq!(cpu.PS.1, 0);
-        assert_eq!(cpu.PS.7, 0);
+        assert_eq!(cpu.PS.get_bit(1), false);
+        assert_eq!(cpu.PS.get_bit(7), false);
         verify_unmodified_flags_from_lda(cpu, cpu_copy);
     }
 
@@ -625,8 +626,8 @@ type Word = c_ushort;
         // then:
         assert_eq!(cpu.A, 0x37);
         assert_eq!(cycles_used, 6);
-        assert_eq!(cpu.PS.1, 0);
-        assert_eq!(cpu.PS.7, 0);
+        assert_eq!(cpu.PS.get_bit(1), false);
+        assert_eq!(cpu.PS.get_bit(7), false);
         verify_unmodified_flags_from_lda(cpu, cpu_copy);
     }
 
@@ -653,8 +654,8 @@ type Word = c_ushort;
         // then:
         assert_eq!(cpu.A, 0x37);
         assert_eq!(cycles_used, 5);
-        assert_eq!(cpu.PS.1, 0);
-        assert_eq!(cpu.PS.7, 0);
+        assert_eq!(cpu.PS.get_bit(1), false);
+        assert_eq!(cpu.PS.get_bit(7), false);
         verify_unmodified_flags_from_lda(cpu, cpu_copy);
     }
 
@@ -681,8 +682,8 @@ type Word = c_ushort;
         // then:
         assert_eq!(cpu.A, 0x37);
         assert_eq!(cycles_used, 6);
-        assert_eq!(cpu.PS.1, 0);
-        assert_eq!(cpu.PS.7, 0);
+        assert_eq!(cpu.PS.get_bit(1), false);
+        assert_eq!(cpu.PS.get_bit(7), false);
         verify_unmodified_flags_from_lda(cpu, cpu_copy);
     }
 
@@ -711,10 +712,10 @@ type Word = c_ushort;
 
 
     fn verify_unmodified_flags_from_lda(cpu: CPU, cpu_copy: CPU) {
-        assert_eq!(cpu.PS.0, cpu_copy.PS.0);
-        assert_eq!(cpu.PS.2, cpu_copy.PS.2);
-        assert_eq!(cpu.PS.3, cpu_copy.PS.3);
-        assert_eq!(cpu.PS.4, cpu_copy.PS.4);
-        assert_eq!(cpu.PS.6, cpu_copy.PS.6);
+        assert_eq!(cpu.PS.get_bit(0), cpu_copy.PS.get_bit(0));
+        assert_eq!(cpu.PS.get_bit(2), cpu_copy.PS.get_bit(2));
+        assert_eq!(cpu.PS.get_bit(3), cpu_copy.PS.get_bit(3));
+        assert_eq!(cpu.PS.get_bit(4), cpu_copy.PS.get_bit(4));
+        assert_eq!(cpu.PS.get_bit(6), cpu_copy.PS.get_bit(6));
     }
 }

@@ -4,6 +4,7 @@ mod stack_and_operations_tests {
 
 use crate::mos6502::*;
 use std::os::raw::*;
+use bit_field::BitField;
 
 type Byte = c_uchar;
 type Word = c_ushort;
@@ -17,8 +18,8 @@ type Word = c_ushort;
         // given: 
         cpu.reset_vector(&mut mem, 0xFF00);
         cpu_copy.reset_vector(&mut mem, 0xFF00);
-        cpu.PS.1 = 1;
-        cpu.PS.7 = 1;
+        cpu.PS.set_bit(1, true);
+        cpu.PS.set_bit(7, true);
         cpu.X = 0x00;
         cpu.SP = 0x01;
         mem.Data[0xFF00] = cpu.INS_TSX;
@@ -30,8 +31,8 @@ type Word = c_ushort;
         // then:
         assert_eq!(actual_cycles, 2);
         assert_eq!(cpu.X, 0x01);
-        assert_eq!(cpu.PS.1, 0);
-        assert_eq!(cpu.PS.7, 0);
+        assert_eq!(cpu.PS.get_bit(1), false);
+        assert_eq!(cpu.PS.get_bit(7), false);
     }
 
     #[test]
@@ -43,8 +44,8 @@ type Word = c_ushort;
         // given: 
         cpu.reset_vector(&mut mem, 0xFF00);
         cpu_copy.reset_vector(&mut mem, 0xFF00);
-        cpu.PS.1 = 1;
-        cpu.PS.7 = 1;
+        cpu.PS.set_bit(1, true);
+        cpu.PS.set_bit(7, true);
         cpu.X = 0x00;
         cpu.SP = 0x00;
         mem.Data[0xFF00] = cpu.INS_TSX;
@@ -56,8 +57,8 @@ type Word = c_ushort;
         // then:
         assert_eq!(actual_cycles, 2);
         assert_eq!(cpu.X, 0x00);
-        assert_eq!(cpu.PS.1, 1);
-        assert_eq!(cpu.PS.7, 0);
+        assert_eq!(cpu.PS.get_bit(1), true);
+        assert_eq!(cpu.PS.get_bit(7), false);
     }
 
     #[test]
@@ -69,8 +70,8 @@ type Word = c_ushort;
         // given: 
         cpu.reset_vector(&mut mem, 0xFF00);
         cpu_copy.reset_vector(&mut mem, 0xFF00);
-        cpu.PS.1 = 0;
-        cpu.PS.7 = 0;
+        cpu.PS.set_bit(1, false);
+        cpu.PS.set_bit(7, false);
         cpu.X = 0x00;
         cpu.SP = 0b10000000;
         mem.Data[0xFF00] = cpu.INS_TSX;
@@ -82,8 +83,8 @@ type Word = c_ushort;
         // then:
         assert_eq!(actual_cycles, 2);
         assert_eq!(cpu.X, 0b10000000);
-        assert_eq!(cpu.PS.1, 0);
-        assert_eq!(cpu.PS.7, 1);
+        assert_eq!(cpu.PS.get_bit(1), false);
+        assert_eq!(cpu.PS.get_bit(7), true);
     }
 
     #[test]
@@ -128,6 +129,30 @@ type Word = c_ushort;
         // then:
         assert_eq!(actual_cycles, 3);
         assert_eq!(mem.Data[cpu.sp_to_address() as usize + 1 as usize], cpu.A);
+        // verify_unmodified_flags_from_store(cpu, cpu_copy);
+    }
+
+    #[test]
+    fn php_can_push_ps_onto_the_stack() {
+        let mut mem = Mem::new();
+        let mut cpu = CPU::new();
+        let mut cpu_copy = CPU::new();
+
+        // given: 
+        cpu.reset_vector(&mut mem, 0xFF00);
+        cpu_copy.reset_vector(&mut mem, 0xFF00);
+        cpu.PS = 0xCC;
+        mem.Data[0xFF00] = cpu.INS_PHP;
+
+        let mut expected_cycles = 3;
+        cpu_copy = cpu;
+
+        let actual_cycles = cpu.execute(&mut expected_cycles, &mut mem);
+
+        // then:
+        assert_eq!(actual_cycles, 3);
+        assert_eq!(mem.Data[cpu.sp_to_address() as usize + 1 as usize], 0xCC);
+        assert_eq!(cpu.PS, cpu_copy.PS);
         // verify_unmodified_flags_from_store(cpu, cpu_copy);
     }
 

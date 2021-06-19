@@ -1,5 +1,6 @@
 use num_traits::{WrappingShl, WrappingShr};
 use std::os::raw::*;
+use bit_field::BitField;
 
 type Byte = c_uchar;
 type Word = c_ushort;
@@ -10,11 +11,8 @@ pub struct Mem {
     pub Data: Vec<Byte>,
 }
 
-pub struct StatusFlags {
 
-}
-
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct CPU {
     pub PC: Word, // program counter
     pub SP: Byte, // stack pointer
@@ -26,7 +24,9 @@ pub struct CPU {
     pub Y: Byte,
 
     // Status flags
-    pub PS: (Byte, Byte, Byte, Byte, Byte, Byte, Byte, Byte),
+    // pub PS: (Byte, Byte, Byte, Byte, Byte, Byte, Byte, Byte),
+    pub PS: Byte,
+
     // pub C: Byte,
     // pub Z: Byte,
     // pub I: Byte,
@@ -119,7 +119,8 @@ impl CPU {
             X: 0,
             Y: 0,
 
-            PS: (1,1,1,1,1,1,1,1),
+            // PS: (1,1,1,1,1,1,1,1),            
+            PS: 0b11111111,
             // C: 1,
             // Z: 1,
             // I: 1,
@@ -196,7 +197,8 @@ impl CPU {
         self.X = 0;
         self.Y = 0;
 
-        self.PS = (1,1,1,1,1,1,1,1);
+        // self.PS = (1,1,1,1,1,1,1,1);
+        self.PS = 0b11111111;
 //         self.C = 1;
 //         self.Z = 1;
 //         self.I = 1;
@@ -216,7 +218,8 @@ impl CPU {
         self.X = 0;
         self.Y = 0;
 
-        self.PS = (1,1,1,1,1,1,1,1);
+        // self.PS = (1,1,1,1,1,1,1,1);
+        self.PS =  0b11111111;
         // self.C = 1;
         // self.Z = 1;
         // self.I = 1;
@@ -639,7 +642,7 @@ impl CPU {
                 // FIXME
                 0x08 => {
                     println!("Instruction PHP");
-                    // self.push_byte_to_stack(cycles, memory, self.PS);
+                    self.push_byte_to_stack(cycles, memory, self.PS);
                 }
                 _ => {
                     unimplemented!("Instruction not handled {}", ins);
@@ -651,38 +654,39 @@ impl CPU {
     }
 
     fn lda_register_set_status(&mut self) {
-        self.PS.1 = match self.A == 0 {
-            false => 0,
-            true => 1,
+        self.PS = match self.A == 0 {
+            false => *self.PS.set_bit(1, false),
+            true => *self.PS.set_bit(1, true),
+        
         };
 
-        self.PS.7 = match (self.A & 0b10000000) > 0 {
-            false => 0,
-            true => 1,
+        self.PS = match (self.A & 0b10000000) > 0 {
+            false => *self.PS.set_bit(7, false),
+            true => *self.PS.set_bit(7, true),
         };
     }
 
     fn ldx_register_set_status(&mut self) {
-        self.PS.1 = match self.X == 0 {
-            false => 0,
-            true => 1,
+        self.PS = match self.X == 0 {
+            false => *self.PS.set_bit(1, false),
+            true => *self.PS.set_bit(1, true),
         };
 
-        self.PS.7 = match (self.X & 0b10000000) > 0 {
-            false => 0,
-            true => 1,
+        self.PS = match (self.X & 0b10000000) > 0 {
+            false => *self.PS.set_bit(7, false),
+            true => *self.PS.set_bit(7, true),
         };
     }
 
     fn ldy_register_set_status(&mut self) {
-        self.PS.1 = match self.Y == 0 {
-            false => 0,
-            true => 1,
+        self.PS = match self.Y == 0 {
+            false => *self.PS.set_bit(1, false),
+            true => *self.PS.set_bit(1, true),
         };
 
-        self.PS.7 = match (self.Y & 0b10000000) > 0 {
-            false => 0,
-            true => 1,
+        self.PS = match (self.Y & 0b10000000) > 0 {
+            false => *self.PS.set_bit(7, false),
+            true => *self.PS.set_bit(7, true),
         };
     }
 }

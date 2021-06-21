@@ -94,6 +94,41 @@ pub struct CPU {
     pub INS_PHP: Byte,
     pub INS_PLA: Byte,
     pub INS_PLP: Byte,
+
+    // Logical Operations
+    pub INS_AND_IM: Byte,
+    pub INS_AND_ZP: Byte,
+    pub INS_AND_ZPX: Byte,
+    pub INS_AND_ABS: Byte,
+    pub INS_AND_ABSX: Byte,
+    pub INS_AND_ABSY: Byte,
+    pub INS_AND_INDX: Byte,
+    pub INS_AND_INDY: Byte,
+
+    pub INS_EOR_IM: Byte,
+    pub INS_EOR_ZP: Byte,
+    pub INS_EOR_ZPX: Byte,
+    pub INS_EOR_ABS: Byte,
+    pub INS_EOR_ABSX: Byte,
+    pub INS_EOR_ABSY: Byte,
+    pub INS_EOR_INDX: Byte,
+    pub INS_EOR_INDY: Byte,
+
+    pub INS_ORA_IM: Byte,
+    pub INS_ORA_ZP: Byte,
+    pub INS_ORA_ZPX: Byte,
+    pub INS_ORA_ABS: Byte,
+    pub INS_ORA_ABSX: Byte,
+    pub INS_ORA_ABSY: Byte,
+    pub INS_ORA_INDX: Byte,
+    pub INS_ORA_INDY: Byte,
+
+
+
+
+
+
+
 }
 
 impl Mem {
@@ -190,6 +225,34 @@ impl CPU {
             INS_PHP: 0x08, 
             INS_PLA: 0x68, 
             INS_PLP: 0x28, 
+
+            // Logical Operations
+            INS_AND_IM: 0x29,
+            INS_AND_ZP: 0x25,
+            INS_AND_ZPX: 0x35,
+            INS_AND_ABS: 0x2D,
+            INS_AND_ABSX: 0x3D,
+            INS_AND_ABSY: 0x39,
+            INS_AND_INDX: 0x21,
+            INS_AND_INDY: 0x31,
+
+            INS_EOR_IM: 0x49,
+            INS_EOR_ZP: 0x45,
+            INS_EOR_ZPX: 0x55,
+            INS_EOR_ABS: 0x4D,
+            INS_EOR_ABSX: 0x5D,
+            INS_EOR_ABSY: 0x59,
+            INS_EOR_INDX: 0x41,
+            INS_EOR_INDY: 0x51,
+
+            INS_ORA_IM: 0x09,
+            INS_ORA_ZP: 0x05,
+            INS_ORA_ZPX: 0x15,
+            INS_ORA_ABS: 0x0D,
+            INS_ORA_ABSX: 0x1D,
+            INS_ORA_ABSY: 0x19,
+            INS_ORA_INDX: 0x01,
+            INS_ORA_INDY: 0x11,
         }
     }
 

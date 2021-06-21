@@ -92,6 +92,8 @@ pub struct CPU {
     pub INS_TXS: Byte,
     pub INS_PHA: Byte,
     pub INS_PHP: Byte,
+    pub INS_PLA: Byte,
+    pub INS_PLP: Byte,
 }
 
 impl Mem {
@@ -186,6 +188,8 @@ impl CPU {
             INS_TXS: 0x9A, 
             INS_PHA: 0x48, 
             INS_PHP: 0x08, 
+            INS_PLA: 0x68, 
+            INS_PLP: 0x28, 
         }
     }
 
@@ -292,6 +296,15 @@ impl CPU {
         *cycles -= 1;
         self.SP -= 1;
         *cycles -= 1;
+    }
+
+    fn pop_byte_from_stack(&mut self, cycles: &mut usize, memory: &mut Mem) -> Byte {
+        self.SP += 1;
+        let sp_word: Word = self.sp_to_address();
+        let value: Byte = memory.Data[sp_word as usize];
+        *cycles -= 3;
+
+        value
     }
 
     fn push_word_to_stack(&mut self, cycles: &mut usize, memory: &mut Mem, value: Word) {
@@ -639,11 +652,22 @@ impl CPU {
 
                 }
 
-                // FIXME
                 0x08 => {
                     println!("Instruction PHP");
                     self.push_byte_to_stack(cycles, memory, self.PS);
                 }
+
+                0x68 => {
+                    println!("Instructin PLA");
+                    self.A = self.pop_byte_from_stack(cycles, memory);
+                    self.lda_register_set_status();
+                } 
+
+                0x28 => {
+                    println!("Instructin PLP");
+                    self.PS = self.pop_byte_from_stack(cycles, memory);
+                }
+
                 _ => {
                     unimplemented!("Instruction not handled {}", ins);
                 }

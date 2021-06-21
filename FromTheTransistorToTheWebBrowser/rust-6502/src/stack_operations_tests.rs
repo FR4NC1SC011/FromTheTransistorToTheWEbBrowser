@@ -133,6 +133,89 @@ type Word = c_ushort;
     }
 
     #[test]
+    fn pla_can_pull_a_value_from_the_stack_to_the_a_register() {
+        let mut mem = Mem::new();
+        let mut cpu = CPU::new();
+        let mut cpu_copy = CPU::new();
+
+        // given: 
+        cpu.reset_vector(&mut mem, 0xFF00);
+        cpu_copy.reset_vector(&mut mem, 0xFF00);
+        cpu.A = 0x00;
+        cpu.SP = 0xFE;
+        mem.Data[0x01FF] = 0x42;
+        mem.Data[0xFF00] = cpu.INS_PLA;
+
+        let mut expected_cycles = 4;
+
+        let actual_cycles = cpu.execute(&mut expected_cycles, &mut mem);
+
+        // then:
+        assert_eq!(actual_cycles, 4);
+        assert_eq!(cpu.A, 0x42);
+        assert_eq!(cpu.SP, 0xFF);
+        // verify_unmodified_flags_from_store(cpu, cpu_copy);
+    }
+
+   #[test]
+    fn pla_can_pull_zerovalue_from_the_stack() {
+        let mut mem = Mem::new();
+        let mut cpu = CPU::new();
+        let mut cpu_copy = CPU::new();
+
+        // given: 
+        cpu.reset_vector(&mut mem, 0xFF00);
+        cpu_copy.reset_vector(&mut mem, 0xFF00);
+        cpu.PS.set_bit(1, false);
+        cpu.PS.set_bit(7, true);
+        cpu.A = 0x42;
+        cpu.SP = 0xFE;
+        mem.Data[0x01FF] = 0x00;
+        mem.Data[0xFF00] = cpu.INS_PLA;
+
+        let mut expected_cycles = 4;
+
+        let actual_cycles = cpu.execute(&mut expected_cycles, &mut mem);
+
+        // then:
+        assert_eq!(actual_cycles, 4);
+        assert_eq!(cpu.A, 0x00);
+        assert_eq!(cpu.PS.get_bit(1), true);
+        assert_eq!(cpu.PS.get_bit(7), false);
+        assert_eq!(cpu.SP, 0xFF);
+        // verify_unmodified_flags_from_store(cpu, cpu_copy);
+    }
+
+   #[test]
+    fn pla_can_pull_negative_value_from_the_stack() {
+        let mut mem = Mem::new();
+        let mut cpu = CPU::new();
+        let mut cpu_copy = CPU::new();
+
+        // given: 
+        cpu.reset_vector(&mut mem, 0xFF00);
+        cpu_copy.reset_vector(&mut mem, 0xFF00);
+        cpu.PS.set_bit(7, false);
+        cpu.PS.set_bit(1, true);
+        cpu.A = 0x42;
+        cpu.SP = 0xFE;
+        mem.Data[0x01FF] = 0b10000001;
+        mem.Data[0xFF00] = cpu.INS_PLA;
+
+        let mut expected_cycles = 4;
+
+        let actual_cycles = cpu.execute(&mut expected_cycles, &mut mem);
+
+        // then:
+        assert_eq!(actual_cycles, 4);
+        assert_eq!(cpu.A, 0b10000001);
+        assert_eq!(cpu.PS.get_bit(1), false);
+        assert_eq!(cpu.PS.get_bit(7), true);
+        assert_eq!(cpu.SP, 0xFF);
+        // verify_unmodified_flags_from_store(cpu, cpu_copy);
+    }
+
+    #[test]
     fn php_can_push_ps_onto_the_stack() {
         let mut mem = Mem::new();
         let mut cpu = CPU::new();
@@ -153,6 +236,31 @@ type Word = c_ushort;
         assert_eq!(actual_cycles, 3);
         assert_eq!(mem.Data[cpu.sp_to_address() as usize + 1 as usize], 0xCC);
         assert_eq!(cpu.PS, cpu_copy.PS);
+        assert_eq!(cpu.SP, 0xFE);
+        // verify_unmodified_flags_from_store(cpu, cpu_copy);
+    }
+
+    #[test]
+    fn plp_can_pull_a_value_from_the_stack_into_the_ps() {
+        let mut mem = Mem::new();
+        let mut cpu = CPU::new();
+        let mut cpu_copy = CPU::new();
+
+        // given: 
+        cpu.reset_vector(&mut mem, 0xFF00);
+        cpu_copy.reset_vector(&mut mem, 0xFF00);
+        cpu.PS = 0;
+        cpu.SP = 0xFE;
+        mem.Data[0x01FF] = 0x42;
+        mem.Data[0xFF00] = cpu.INS_PLP;
+
+        let mut expected_cycles = 4;
+
+        let actual_cycles = cpu.execute(&mut expected_cycles, &mut mem);
+
+        // then:
+        assert_eq!(actual_cycles, 4);
+        assert_eq!(cpu.PS, 0x42);
         // verify_unmodified_flags_from_store(cpu, cpu_copy);
     }
 

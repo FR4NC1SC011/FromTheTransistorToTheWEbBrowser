@@ -729,15 +729,176 @@ type Word = c_ushort;
     }
 
 
+    #[test]
+    fn test_bit_zero_page() {
+         // LDAInmediateCanLoadAValueIntoTheAReg
+        let mut mem = Mem::new();
+        let mut cpu = CPU::new();
+        let mut cpu_copy = CPU::new();
+
+        // given:
+        cpu.reset(&mut mem);
+        cpu_copy.reset(&mut mem);
+
+        cpu.PS.set_bit(6, false);
+        cpu.PS.set_bit(7, false);
+        cpu.A = 0xCC;
+        mem.Data[0xFFFC] = cpu.INS_BIT_ZP;
+        mem.Data[0xFFFD] = 0x42;
+        mem.Data[0x0042] = 0xCC;
+
+        // when:
+        let cycles_used = cpu.execute(&mut 3, &mut mem);
+
+        // then:
+        assert_eq!(cpu.A, 0xCC);
+        assert_eq!(cycles_used, 3);
+        assert_eq!(cpu.PS.get_bit(1), false);
+        assert_eq!(cpu.PS.get_bit(6), true);
+        assert_eq!(cpu.PS.get_bit(7), true);
+    }
+
+    #[test]
+    fn test_bit_zero_page_zero_result_zero() {
+         // LDAInmediateCanLoadAValueIntoTheAReg
+        let mut mem = Mem::new();
+        let mut cpu = CPU::new();
+        let mut cpu_copy = CPU::new();
+
+        // given:
+        cpu.reset(&mut mem);
+        cpu_copy.reset(&mut mem);
+
+        cpu.PS.set_bit(6, true);
+        cpu.PS.set_bit(7, true);
+        cpu.A = 0xCC;
+        mem.Data[0xFFFC] = cpu.INS_BIT_ZP;
+        mem.Data[0xFFFD] = 0x42;
+        mem.Data[0x0042] = 0x33;
+
+        // when:
+        let cycles_used = cpu.execute(&mut 3, &mut mem);
+
+        // then:
+        assert_eq!(cpu.A, 0xCC);
+        assert_eq!(cycles_used, 3);
+        assert_eq!(cpu.PS.get_bit(1), true);
+        assert_eq!(cpu.PS.get_bit(6), false);
+        assert_eq!(cpu.PS.get_bit(7), false);
+    }
+
+    #[test]
+    fn test_bit_zero_page_zero_result_zero_bits_6_and_7() {
+         // LDAInmediateCanLoadAValueIntoTheAReg
+        let mut mem = Mem::new();
+        let mut cpu = CPU::new();
+        let mut cpu_copy = CPU::new();
+
+        // given:
+        cpu.reset(&mut mem);
+        cpu_copy.reset(&mut mem);
+
+        cpu.PS.set_bit(6, false);
+        cpu.PS.set_bit(7, false);
+        cpu.A = 0x33;
+        mem.Data[0xFFFC] = cpu.INS_BIT_ZP;
+        mem.Data[0xFFFD] = 0x42;
+        mem.Data[0x0042] = 0xCC;
+
+        // when:
+        let cycles_used = cpu.execute(&mut 3, &mut mem);
+
+        // then:
+        assert_eq!(cpu.A, 0x33);
+        assert_eq!(cycles_used, 3);
+        assert_eq!(cpu.PS.get_bit(1), true);
+        assert_eq!(cpu.PS.get_bit(6), true);
+        assert_eq!(cpu.PS.get_bit(7), true);
+    }
 
 
+ #[test]
+    fn test_bit_absolute() {
+         // LDAInmediateCanLoadAValueIntoTheAReg
+        let mut mem = Mem::new();
+        let mut cpu = CPU::new();
+        let mut cpu_copy = CPU::new();
 
+        // given:
+        cpu.reset(&mut mem);
+        cpu_copy.reset(&mut mem);
 
+        cpu.A = 0xCC;
+        mem.Data[0xFFFC] = cpu.INS_BIT_ABS;
+        mem.Data[0xFFFD] = 0x00;
+        mem.Data[0xFFFE] = 0x80;
+        mem.Data[0x8000] = 0xCC;
 
+        // when:
+        let cycles_used = cpu.execute(&mut 4, &mut mem);
 
+        // then:
+        assert_eq!(cpu.A, 0xCC);
+        assert_eq!(cycles_used, 4);
+        assert_eq!(cpu.PS.get_bit(1), false);
+        assert_eq!(cpu.PS.get_bit(6), true);
+        assert_eq!(cpu.PS.get_bit(7), true);
+    }
 
+ #[test]
+    fn test_bit_absolute_result_zero() {
+         // LDAInmediateCanLoadAValueIntoTheAReg
+        let mut mem = Mem::new();
+        let mut cpu = CPU::new();
+        let mut cpu_copy = CPU::new();
 
+        // given:
+        cpu.reset(&mut mem);
+        cpu_copy.reset(&mut mem);
 
+        cpu.A = 0xCC;
+        mem.Data[0xFFFC] = cpu.INS_BIT_ABS;
+        mem.Data[0xFFFD] = 0x00;
+        mem.Data[0xFFFE] = 0x80;
+        mem.Data[0x8000] = 0x33;
 
+        // when:
+        let cycles_used = cpu.execute(&mut 4, &mut mem);
+
+        // then:
+        assert_eq!(cpu.A, 0xCC);
+        assert_eq!(cycles_used, 4);
+        assert_eq!(cpu.PS.get_bit(1), true);
+        assert_eq!(cpu.PS.get_bit(6), true);
+        assert_eq!(cpu.PS.get_bit(7), true);
+    }
+
+    #[test]
+    fn test_bit_absolute_result_zero_bits_6_and_7() {
+         // LDAInmediateCanLoadAValueIntoTheAReg
+        let mut mem = Mem::new();
+        let mut cpu = CPU::new();
+        let mut cpu_copy = CPU::new();
+
+        // given:
+        cpu.reset(&mut mem);
+        cpu_copy.reset(&mut mem);
+
+        cpu.A = 0x33;
+        mem.Data[0xFFFC] = cpu.INS_BIT_ABS;
+        mem.Data[0xFFFD] = 0x00;
+        mem.Data[0xFFFE] = 0x80;
+        mem.Data[0x8000] = 0xCC;
+
+        // when:
+        let cycles_used = cpu.execute(&mut 4, &mut mem);
+
+        // then:
+        assert_eq!(cpu.A, 0x33);
+        assert_eq!(cycles_used, 4);
+        assert_eq!(cpu.PS.get_bit(1), true);
+        assert_eq!(cpu.PS.get_bit(6), false);
+        assert_eq!(cpu.PS.get_bit(7), false);
+    }
 }
 

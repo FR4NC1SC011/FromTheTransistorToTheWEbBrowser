@@ -123,6 +123,10 @@ pub struct CPU {
     pub INS_ORA_INDX: Byte,
     pub INS_ORA_INDY: Byte,
 
+    pub INS_BIT_ZP: Byte,
+    pub INS_BIT_ABS: Byte,
+
+
 }
 
 impl Mem {
@@ -247,6 +251,9 @@ impl CPU {
             INS_ORA_ABSY: 0x19,
             INS_ORA_INDX: 0x01,
             INS_ORA_INDY: 0x11,
+
+            INS_BIT_ZP: 0x24,
+            INS_BIT_ABS: 0x2C,
         }
     }
 
@@ -951,6 +958,34 @@ impl CPU {
                         *cycles -= 1;
                     }
                     self.lda_register_set_status();
+                }
+
+                0x24 => {
+                    println!("Instruction BIT ZP");
+                    let zero_page_address: Byte = self.fetch_byte(cycles, memory);
+                    let value = self.read_byte(cycles, zero_page_address as u16, memory);
+                    
+                    // let z: bool = !(self.A & value) != 0;
+                    let z = self.A & value;
+                    let z_bool: bool;
+                    if z == 0 {
+                        z_bool = true;
+                    } else {
+                        z_bool = false;
+                    }
+
+                    self.PS.set_bit(1, z_bool);
+
+                    let n = (value & 0b10000000) != 0;
+                    self.PS.set_bit(7, n);
+
+                    let v = (value & 0b01000000) != 0;
+                    self.PS.set_bit(6, v);
+                }
+
+                0x2C => {
+                    println!("Instruction BIT ABS");
+
                 }
 
 

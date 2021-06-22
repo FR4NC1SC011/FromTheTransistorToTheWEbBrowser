@@ -869,8 +869,8 @@ type Word = c_ushort;
         assert_eq!(cpu.A, 0xCC);
         assert_eq!(cycles_used, 4);
         assert_eq!(cpu.PS.get_bit(1), true);
-        assert_eq!(cpu.PS.get_bit(6), true);
-        assert_eq!(cpu.PS.get_bit(7), true);
+        assert_eq!(cpu.PS.get_bit(6), false);
+        assert_eq!(cpu.PS.get_bit(7), false);
     }
 
     #[test]
@@ -897,8 +897,8 @@ type Word = c_ushort;
         assert_eq!(cpu.A, 0x33);
         assert_eq!(cycles_used, 4);
         assert_eq!(cpu.PS.get_bit(1), true);
-        assert_eq!(cpu.PS.get_bit(6), false);
-        assert_eq!(cpu.PS.get_bit(7), false);
+        assert_eq!(cpu.PS.get_bit(6), true);
+        assert_eq!(cpu.PS.get_bit(7), true);
     }
 }
 

@@ -985,7 +985,24 @@ impl CPU {
 
                 0x2C => {
                     println!("Instruction BIT ABS");
+                    let abs_addrress: Word = self.fetch_word(cycles, memory);
+                    let value = self.read_byte(cycles, abs_addrress as u16, memory);
 
+                    let z = self.A & value;
+                    let z_bool: bool;
+                    if z == 0 {
+                        z_bool = true;
+                    } else {
+                        z_bool = false;
+                    }
+
+                    self.PS.set_bit(1, z_bool);
+
+                    let n = (value & 0b10000000) != 0;
+                    self.PS.set_bit(7, n);
+
+                    let v = (value & 0b01000000) != 0;
+                    self.PS.set_bit(6, v);
                 }
 
 

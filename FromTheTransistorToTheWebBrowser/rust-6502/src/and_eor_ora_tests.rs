@@ -20,10 +20,10 @@ type Word = c_ushort;
                 return x & y
             },
             ELogicalOp::Eor => {
-                return x | y
+                return x ^ y
             },
             ELogicalOp::Or => {
-                return x ^ y
+                return x | y
             },
         }
     }
@@ -139,7 +139,7 @@ type Word = c_ushort;
         }
 
         mem.Data[0xFFFD] = 0x42;
-        mem.Data[0x0042] = 0x37;
+        mem.Data[0x0047] = 0x37;
 
         // when:
         let cycles_used = cpu.execute(&mut 4, &mut mem);
@@ -402,7 +402,7 @@ type Word = c_ushort;
         let expected_result: Byte = do_logical_op(0xCC, 0x37, logical_op);
         let expected_negative: bool = (expected_result & 0b10000000) > 0;
         assert_eq!(cpu.A, expected_result);
-        assert_eq!(cycles_used, 5);
+        assert_eq!(cycles_used, 6);
         assert_eq!(cpu.PS.get_bit(1), false);              // Z
         assert_eq!(cpu.PS.get_bit(7), expected_negative);  // N
         verify_unmodified_flags_from_logical_op_ins(cpu, cpu_copy);
@@ -506,8 +506,6 @@ type Word = c_ushort;
         cpu.reset(&mut mem);
         cpu_copy.reset(&mut mem);
 
-        cpu.PS.set_bit(1, true); // Z
-        cpu.PS.set_bit(7, true); // N
         cpu.A = 0xCC;
         cpu.X = 0xFF;
         match logical_op {
@@ -522,19 +520,17 @@ type Word = c_ushort;
             },
         }
 
-        mem.Data[0xFFFD] = 0x02;
-        mem.Data[0x0002] = 0x00;
-        mem.Data[0x0003] = 0x80;
-        mem.Data[0x8004] = 0x37;
+        mem.Data[0xFFFD] = 0x80;
+        mem.Data[0x007F] = 0x37;
 
         // when:
-        let cycles_used = cpu.execute(&mut 5, &mut mem);
+        let cycles_used = cpu.execute(&mut 4, &mut mem);
 
         // then:
         let expected_result: Byte = do_logical_op(0xCC, 0x37, logical_op);
         let expected_negative: bool = (expected_result & 0b10000000) > 0;
         assert_eq!(cpu.A, expected_result);
-        assert_eq!(cycles_used, 5);
+        assert_eq!(cycles_used, 4);
         assert_eq!(cpu.PS.get_bit(1), false);              // Z
         assert_eq!(cpu.PS.get_bit(7), expected_negative);  // N
         verify_unmodified_flags_from_logical_op_ins(cpu, cpu_copy);

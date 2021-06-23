@@ -305,7 +305,7 @@ impl CPU {
         memory.initialize();
     }
 
-    fn fetch_word(&mut self, cycles: &mut usize, memory: &mut Mem) -> Word {
+    fn fetch_word(&mut self, cycles: &mut isize, memory: &mut Mem) -> Word {
         // 6502 is little endian
         let mut data: Word = memory.Data[self.PC as usize] as Word;
         self.PC += 1;
@@ -317,22 +317,22 @@ impl CPU {
         data
     }
 
-    fn fetch_byte(&mut self, cycles: &mut usize, memory: &mut Mem) -> Byte {
+    fn fetch_byte(&mut self, cycles: &mut isize, memory: &mut Mem) -> Byte {
         let data: Byte = memory.Data[self.PC as usize];
         // self.PC += 1;
         self.PC = self.PC.wrapping_add(1);
-        *cycles -= 1;
+        *cycles = cycles.wrapping_sub(1);
         data
     }
 
-    fn read_byte(&mut self, cycles: &mut usize, address: Word, memory: &mut Mem) -> Byte {
+    fn read_byte(&mut self, cycles: &mut isize, address: Word, memory: &mut Mem) -> Byte {
         let data: Byte = memory.Data[address as usize];
         // *cycles -= 1;
         *cycles = cycles.wrapping_sub(1);
         data
     }
 
-    fn read_word(&mut self, cycles: &mut usize, address: Word, memory: &mut Mem) -> Word {
+    fn read_word(&mut self, cycles: &mut isize, address: Word, memory: &mut Mem) -> Word {
         let lo_byte: Byte = self.read_byte(cycles, address, memory);
         let hi_byte: Byte = self.read_byte(cycles, address + 1, memory);
 
@@ -342,13 +342,13 @@ impl CPU {
         data
     }
 
-    fn write_byte(&mut self, value: Byte, cycles: &mut usize, address: Word, memory: &mut Mem) {
+    fn write_byte(&mut self, value: Byte, cycles: &mut isize, address: Word, memory: &mut Mem) {
         memory.Data[address as usize] = value;
         *cycles = cycles.wrapping_sub(1);
     }
 
     // write 2 bytes
-    fn write_word(&mut self, value: Byte, cycles: &mut usize, address: Word, memory: &mut Mem) {
+    fn write_word(&mut self, value: Byte, cycles: &mut isize, address: Word, memory: &mut Mem) {
         memory.Data[address as usize] = (value & 0xFF) as u8;
         let mut x: u16 = value as u16;
         x = x.wrapping_shl(8);
@@ -361,14 +361,14 @@ impl CPU {
         0x100 as u16 | self.SP as u16
     }
 
-    fn push_byte_to_stack(&mut self, cycles: &mut usize, memory: &mut Mem, value: Byte) {
+    fn push_byte_to_stack(&mut self, cycles: &mut isize, memory: &mut Mem, value: Byte) {
         memory.Data[self.sp_to_address() as usize] = value;
         *cycles -= 1;
         self.SP -= 1;
         *cycles -= 1;
     }
 
-    fn pop_byte_from_stack(&mut self, cycles: &mut usize, memory: &mut Mem) -> Byte {
+    fn pop_byte_from_stack(&mut self, cycles: &mut isize, memory: &mut Mem) -> Byte {
         self.SP += 1;
         let sp_word: Word = self.sp_to_address();
         let value: Byte = memory.Data[sp_word as usize];
@@ -377,7 +377,7 @@ impl CPU {
         value
     }
 
-    fn push_word_to_stack(&mut self, cycles: &mut usize, memory: &mut Mem, value: Word) {
+    fn push_word_to_stack(&mut self, cycles: &mut isize, memory: &mut Mem, value: Word) {
         let mut sp_16_bit = self.sp_to_address();
         self.write_byte(value.wrapping_shr(8) as u8, cycles, sp_16_bit, memory);
         self.SP -= 1;
@@ -387,7 +387,7 @@ impl CPU {
     }
 
     // push the PC - 1 onto the stack
-    fn push_pc_to_stack(&mut self, cycles: &mut usize, memory: &mut Mem) {
+    fn push_pc_to_stack(&mut self, cycles: &mut isize, memory: &mut Mem) {
         //         let sp_16_bit = self.sp_to_address();
         //         self.write_word((self.PC - 1) as u8, cycles, sp_16_bit - 1, memory);
         //         self.PC -= 2;
@@ -396,7 +396,7 @@ impl CPU {
         self.push_word_to_stack(cycles, memory, self.PC);
     }
 
-    fn pop_word_from_stack(&mut self, cycles: &mut usize, memory: &mut Mem) -> Word {
+    fn pop_word_from_stack(&mut self, cycles: &mut isize, memory: &mut Mem) -> Word {
         let sp_16_bit = self.sp_to_address();
         // let value_from_stack: Word = self.read_word(cycles, sp_16_bit + 1, memory);
         dbg!(sp_16_bit);
@@ -409,7 +409,9 @@ impl CPU {
         value_from_stack
     }
 
-    pub fn load_prg(&mut self, program: [Byte; 14], num_bytes: u32, memory: &mut Mem) {
+    pub fn load_prg(&mut self, program: [Byte; 14], num_bytes: u32, memory: &mut Mem) -> Word {
+        let mut load_address: Word = 0;
+
         if !program.is_empty() && num_bytes > 2 {
             let mut at: u32 = 0;
 
@@ -420,7 +422,7 @@ impl CPU {
 
             let hi: Word = hi_byte.wrapping_shl(8) as Word;
 
-            let load_address: Word = lo | hi;
+            load_address = lo | hi;
 
             let mut i = load_address;
             loop {
@@ -433,9 +435,11 @@ impl CPU {
                 i += 1;
             }
         }
+
+        load_address
     }
 
-    pub fn execute(&mut self, cycles: &mut usize, memory: &mut Mem) -> usize {
+    pub fn execute(&mut self, cycles: &mut isize, memory: &mut Mem) -> isize {
         let cycles_requested = *cycles;
         while cycles > &mut 0 {
             let ins: Byte = self.fetch_byte(cycles, memory);

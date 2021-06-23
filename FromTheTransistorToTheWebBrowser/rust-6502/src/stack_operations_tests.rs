@@ -2,12 +2,12 @@
 
 mod stack_and_operations_tests {
 
-use crate::mos6502::*;
-use std::os::raw::*;
-use bit_field::BitField;
+    use crate::mos6502::*;
+    use bit_field::BitField;
+    use std::os::raw::*;
 
-type Byte = c_uchar;
-type Word = c_ushort;
+    type Byte = c_uchar;
+    type Word = c_ushort;
 
     #[test]
     fn tsx_can_transfer_the_stack_pointer_to_the_x_register() {
@@ -15,7 +15,7 @@ type Word = c_ushort;
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
 
-        // given: 
+        // given:
         cpu.reset_vector(&mut mem, 0xFF00);
         cpu_copy.reset_vector(&mut mem, 0xFF00);
         cpu.PS.set_bit(1, true);
@@ -41,7 +41,7 @@ type Word = c_ushort;
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
 
-        // given: 
+        // given:
         cpu.reset_vector(&mut mem, 0xFF00);
         cpu_copy.reset_vector(&mut mem, 0xFF00);
         cpu.PS.set_bit(1, true);
@@ -67,7 +67,7 @@ type Word = c_ushort;
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
 
-        // given: 
+        // given:
         cpu.reset_vector(&mut mem, 0xFF00);
         cpu_copy.reset_vector(&mut mem, 0xFF00);
         cpu.PS.set_bit(1, false);
@@ -93,7 +93,7 @@ type Word = c_ushort;
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
 
-        // given: 
+        // given:
         cpu.reset_vector(&mut mem, 0xFF00);
         cpu_copy.reset_vector(&mut mem, 0xFF00);
         cpu.X = 0xFF;
@@ -116,7 +116,7 @@ type Word = c_ushort;
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
 
-        // given: 
+        // given:
         cpu.reset_vector(&mut mem, 0xFF00);
         cpu_copy.reset_vector(&mut mem, 0xFF00);
         cpu.A = 0x42;
@@ -138,7 +138,7 @@ type Word = c_ushort;
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
 
-        // given: 
+        // given:
         cpu.reset_vector(&mut mem, 0xFF00);
         cpu_copy.reset_vector(&mut mem, 0xFF00);
         cpu.A = 0x00;
@@ -157,13 +157,13 @@ type Word = c_ushort;
         // verify_unmodified_flags_from_store(cpu, cpu_copy);
     }
 
-   #[test]
+    #[test]
     fn pla_can_pull_zerovalue_from_the_stack() {
         let mut mem = Mem::new();
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
 
-        // given: 
+        // given:
         cpu.reset_vector(&mut mem, 0xFF00);
         cpu_copy.reset_vector(&mut mem, 0xFF00);
         cpu.PS.set_bit(1, false);
@@ -186,13 +186,13 @@ type Word = c_ushort;
         // verify_unmodified_flags_from_store(cpu, cpu_copy);
     }
 
-   #[test]
+    #[test]
     fn pla_can_pull_negative_value_from_the_stack() {
         let mut mem = Mem::new();
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
 
-        // given: 
+        // given:
         cpu.reset_vector(&mut mem, 0xFF00);
         cpu_copy.reset_vector(&mut mem, 0xFF00);
         cpu.PS.set_bit(7, false);
@@ -221,7 +221,7 @@ type Word = c_ushort;
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
 
-        // given: 
+        // given:
         cpu.reset_vector(&mut mem, 0xFF00);
         cpu_copy.reset_vector(&mut mem, 0xFF00);
         cpu.PS = 0xCC;
@@ -246,7 +246,7 @@ type Word = c_ushort;
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
 
-        // given: 
+        // given:
         cpu.reset_vector(&mut mem, 0xFF00);
         cpu_copy.reset_vector(&mut mem, 0xFF00);
         cpu.PS = 0;
@@ -264,7 +264,6 @@ type Word = c_ushort;
         // verify_unmodified_flags_from_store(cpu, cpu_copy);
     }
 
-   
     // fn verify_unmodified_flags_from_store(cpu: CPU, cpu_copy: CPU) {
     //     assert_eq!(cpu.C, cpu_copy.C);
     //     assert_eq!(cpu.PS.1, cpu_copy.Z);
@@ -274,7 +273,4 @@ type Word = c_ushort;
     //     assert_eq!(cpu.V, cpu_copy.V);
     //     assert_eq!(cpu.PS.7, cpu_copy.N);
     // }
-
 }
-
-

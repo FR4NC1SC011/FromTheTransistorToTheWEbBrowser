@@ -1,12 +1,12 @@
 #[cfg(test)]
 mod and_eor_ora_tests {
 
-use crate::mos6502::*;
-use std::os::raw::*;
-use bit_field::BitField;
+    use crate::mos6502::*;
+    use bit_field::BitField;
+    use std::os::raw::*;
 
-type Byte = c_uchar;
-type Word = c_ushort;
+    type Byte = c_uchar;
+    type Word = c_ushort;
 
     enum ELogicalOp {
         And,
@@ -16,15 +16,9 @@ type Word = c_ushort;
 
     fn do_logical_op(x: Byte, y: Byte, logical_op: ELogicalOp) -> Byte {
         match logical_op {
-            ELogicalOp::And => {
-                return x & y
-            },
-            ELogicalOp::Eor => {
-                return x ^ y
-            },
-            ELogicalOp::Or => {
-                return x | y
-            },
+            ELogicalOp::And => return x & y,
+            ELogicalOp::Eor => return x ^ y,
+            ELogicalOp::Or => return x | y,
         }
     }
 
@@ -36,9 +30,8 @@ type Word = c_ushort;
         assert_eq!(cpu.PS.get_bit(6), cpu_copy.PS.get_bit(6));
     }
 
-
     fn test_logical_op_inmediate(logical_op: ELogicalOp) {
-         // LDAInmediateCanLoadAValueIntoTheAReg
+        // LDAInmediateCanLoadAValueIntoTheAReg
         let mut mem = Mem::new();
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
@@ -50,14 +43,14 @@ type Word = c_ushort;
         cpu.A = 0xCC;
         match logical_op {
             ELogicalOp::And => {
-            mem.Data[0xFFFC] = cpu.INS_AND_IM;
-            },
+                mem.Data[0xFFFC] = cpu.INS_AND_IM;
+            }
             ELogicalOp::Eor => {
-            mem.Data[0xFFFC] = cpu.INS_EOR_IM;
-            },
+                mem.Data[0xFFFC] = cpu.INS_EOR_IM;
+            }
             ELogicalOp::Or => {
-            mem.Data[0xFFFC] = cpu.INS_ORA_IM;
-            },
+                mem.Data[0xFFFC] = cpu.INS_ORA_IM;
+            }
         }
 
         mem.Data[0xFFFD] = 0x84;
@@ -76,7 +69,7 @@ type Word = c_ushort;
     }
 
     fn test_logical_op_zeropage(logical_op: ELogicalOp) {
-         // LDAInmediateCanLoadAValueIntoTheAReg
+        // LDAInmediateCanLoadAValueIntoTheAReg
         let mut mem = Mem::new();
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
@@ -88,14 +81,14 @@ type Word = c_ushort;
         cpu.A = 0xCC;
         match logical_op {
             ELogicalOp::And => {
-            mem.Data[0xFFFC] = cpu.INS_AND_ZP;
-            },
+                mem.Data[0xFFFC] = cpu.INS_AND_ZP;
+            }
             ELogicalOp::Eor => {
-            mem.Data[0xFFFC] = cpu.INS_EOR_ZP;
-            },
+                mem.Data[0xFFFC] = cpu.INS_EOR_ZP;
+            }
             ELogicalOp::Or => {
-            mem.Data[0xFFFC] = cpu.INS_ORA_ZP;
-            },
+                mem.Data[0xFFFC] = cpu.INS_ORA_ZP;
+            }
         }
 
         mem.Data[0xFFFD] = 0x42;
@@ -114,8 +107,8 @@ type Word = c_ushort;
         verify_unmodified_flags_from_logical_op_ins(cpu, cpu_copy);
     }
 
-     fn test_logical_op_zeropage_x(logical_op: ELogicalOp) {
-         // LDAInmediateCanLoadAValueIntoTheAReg
+    fn test_logical_op_zeropage_x(logical_op: ELogicalOp) {
+        // LDAInmediateCanLoadAValueIntoTheAReg
         let mut mem = Mem::new();
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
@@ -128,14 +121,14 @@ type Word = c_ushort;
         cpu.X = 5;
         match logical_op {
             ELogicalOp::And => {
-            mem.Data[0xFFFC] = cpu.INS_AND_ZPX;
-            },
+                mem.Data[0xFFFC] = cpu.INS_AND_ZPX;
+            }
             ELogicalOp::Eor => {
-            mem.Data[0xFFFC] = cpu.INS_EOR_ZPX;
-            },
+                mem.Data[0xFFFC] = cpu.INS_EOR_ZPX;
+            }
             ELogicalOp::Or => {
-            mem.Data[0xFFFC] = cpu.INS_ORA_ZPX;
-            },
+                mem.Data[0xFFFC] = cpu.INS_ORA_ZPX;
+            }
         }
 
         mem.Data[0xFFFD] = 0x42;
@@ -154,8 +147,8 @@ type Word = c_ushort;
         verify_unmodified_flags_from_logical_op_ins(cpu, cpu_copy);
     }
 
-     fn test_logical_op_absolute(logical_op: ELogicalOp) {
-         // LDAInmediateCanLoadAValueIntoTheAReg
+    fn test_logical_op_absolute(logical_op: ELogicalOp) {
+        // LDAInmediateCanLoadAValueIntoTheAReg
         let mut mem = Mem::new();
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
@@ -169,14 +162,14 @@ type Word = c_ushort;
         cpu.A = 0xCC;
         match logical_op {
             ELogicalOp::And => {
-            mem.Data[0xFFFC] = cpu.INS_AND_ABS;
-            },
+                mem.Data[0xFFFC] = cpu.INS_AND_ABS;
+            }
             ELogicalOp::Eor => {
-            mem.Data[0xFFFC] = cpu.INS_EOR_ABS;
-            },
+                mem.Data[0xFFFC] = cpu.INS_EOR_ABS;
+            }
             ELogicalOp::Or => {
-            mem.Data[0xFFFC] = cpu.INS_ORA_ABS;
-            },
+                mem.Data[0xFFFC] = cpu.INS_ORA_ABS;
+            }
         }
 
         mem.Data[0xFFFD] = 0x80;
@@ -191,13 +184,13 @@ type Word = c_ushort;
         let expected_negative: bool = (expected_result & 0b10000000) > 0;
         assert_eq!(cpu.A, expected_result);
         assert_eq!(cycles_used, 4);
-        assert_eq!(cpu.PS.get_bit(1), false);              // Z
-        assert_eq!(cpu.PS.get_bit(7), expected_negative);  // N
+        assert_eq!(cpu.PS.get_bit(1), false); // Z
+        assert_eq!(cpu.PS.get_bit(7), expected_negative); // N
         verify_unmodified_flags_from_logical_op_ins(cpu, cpu_copy);
     }
 
-     fn test_logical_op_absolute_x(logical_op: ELogicalOp) {
-         // LDAInmediateCanLoadAValueIntoTheAReg
+    fn test_logical_op_absolute_x(logical_op: ELogicalOp) {
+        // LDAInmediateCanLoadAValueIntoTheAReg
         let mut mem = Mem::new();
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
@@ -212,14 +205,14 @@ type Word = c_ushort;
         cpu.X = 1;
         match logical_op {
             ELogicalOp::And => {
-            mem.Data[0xFFFC] = cpu.INS_AND_ABSX;
-            },
+                mem.Data[0xFFFC] = cpu.INS_AND_ABSX;
+            }
             ELogicalOp::Eor => {
-            mem.Data[0xFFFC] = cpu.INS_EOR_ABSX;
-            },
+                mem.Data[0xFFFC] = cpu.INS_EOR_ABSX;
+            }
             ELogicalOp::Or => {
-            mem.Data[0xFFFC] = cpu.INS_ORA_ABSX;
-            },
+                mem.Data[0xFFFC] = cpu.INS_ORA_ABSX;
+            }
         }
 
         mem.Data[0xFFFD] = 0x80;
@@ -234,13 +227,13 @@ type Word = c_ushort;
         let expected_negative: bool = (expected_result & 0b10000000) > 0;
         assert_eq!(cpu.A, expected_result);
         assert_eq!(cycles_used, 4);
-        assert_eq!(cpu.PS.get_bit(1), false);              // Z
-        assert_eq!(cpu.PS.get_bit(7), expected_negative);  // N
+        assert_eq!(cpu.PS.get_bit(1), false); // Z
+        assert_eq!(cpu.PS.get_bit(7), expected_negative); // N
         verify_unmodified_flags_from_logical_op_ins(cpu, cpu_copy);
     }
 
     fn test_logical_op_absolute_y(logical_op: ELogicalOp) {
-         // LDAInmediateCanLoadAValueIntoTheAReg
+        // LDAInmediateCanLoadAValueIntoTheAReg
         let mut mem = Mem::new();
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
@@ -255,14 +248,14 @@ type Word = c_ushort;
         cpu.Y = 1;
         match logical_op {
             ELogicalOp::And => {
-            mem.Data[0xFFFC] = cpu.INS_AND_ABSY;
-            },
+                mem.Data[0xFFFC] = cpu.INS_AND_ABSY;
+            }
             ELogicalOp::Eor => {
-            mem.Data[0xFFFC] = cpu.INS_EOR_ABSY;
-            },
+                mem.Data[0xFFFC] = cpu.INS_EOR_ABSY;
+            }
             ELogicalOp::Or => {
-            mem.Data[0xFFFC] = cpu.INS_ORA_ABSY;
-            },
+                mem.Data[0xFFFC] = cpu.INS_ORA_ABSY;
+            }
         }
 
         mem.Data[0xFFFD] = 0x80;
@@ -277,13 +270,13 @@ type Word = c_ushort;
         let expected_negative: bool = (expected_result & 0b10000000) > 0;
         assert_eq!(cpu.A, expected_result);
         assert_eq!(cycles_used, 4);
-        assert_eq!(cpu.PS.get_bit(1), false);              // Z
-        assert_eq!(cpu.PS.get_bit(7), expected_negative);  // N
+        assert_eq!(cpu.PS.get_bit(1), false); // Z
+        assert_eq!(cpu.PS.get_bit(7), expected_negative); // N
         verify_unmodified_flags_from_logical_op_ins(cpu, cpu_copy);
     }
 
-     fn test_load_register_absolute_y_when_crossing_page(logical_op: ELogicalOp) {
-         // LDAInmediateCanLoadAValueIntoTheAReg
+    fn test_load_register_absolute_y_when_crossing_page(logical_op: ELogicalOp) {
+        // LDAInmediateCanLoadAValueIntoTheAReg
         let mut mem = Mem::new();
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
@@ -296,14 +289,14 @@ type Word = c_ushort;
         cpu.Y = 0xFF;
         match logical_op {
             ELogicalOp::And => {
-            mem.Data[0xFFFC] = cpu.INS_AND_ABSY;
-            },
+                mem.Data[0xFFFC] = cpu.INS_AND_ABSY;
+            }
             ELogicalOp::Eor => {
-            mem.Data[0xFFFC] = cpu.INS_EOR_ABSY;
-            },
+                mem.Data[0xFFFC] = cpu.INS_EOR_ABSY;
+            }
             ELogicalOp::Or => {
-            mem.Data[0xFFFC] = cpu.INS_ORA_ABSY;
-            },
+                mem.Data[0xFFFC] = cpu.INS_ORA_ABSY;
+            }
         }
 
         mem.Data[0xFFFD] = 0x02;
@@ -318,13 +311,13 @@ type Word = c_ushort;
         let expected_negative: bool = (expected_result & 0b10000000) > 0;
         assert_eq!(cpu.A, expected_result);
         assert_eq!(cycles_used, 5);
-        assert_eq!(cpu.PS.get_bit(1), false);              // Z
-        assert_eq!(cpu.PS.get_bit(7), expected_negative);  // N
+        assert_eq!(cpu.PS.get_bit(1), false); // Z
+        assert_eq!(cpu.PS.get_bit(7), expected_negative); // N
         verify_unmodified_flags_from_logical_op_ins(cpu, cpu_copy);
     }
 
     fn test_load_register_absolute_x_when_crossing_page(logical_op: ELogicalOp) {
-         // LDAInmediateCanLoadAValueIntoTheAReg
+        // LDAInmediateCanLoadAValueIntoTheAReg
         let mut mem = Mem::new();
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
@@ -337,14 +330,14 @@ type Word = c_ushort;
         cpu.X = 0xFF;
         match logical_op {
             ELogicalOp::And => {
-            mem.Data[0xFFFC] = cpu.INS_AND_ABSX;
-            },
+                mem.Data[0xFFFC] = cpu.INS_AND_ABSX;
+            }
             ELogicalOp::Eor => {
-            mem.Data[0xFFFC] = cpu.INS_EOR_ABSX;
-            },
+                mem.Data[0xFFFC] = cpu.INS_EOR_ABSX;
+            }
             ELogicalOp::Or => {
-            mem.Data[0xFFFC] = cpu.INS_ORA_ABSX;
-            },
+                mem.Data[0xFFFC] = cpu.INS_ORA_ABSX;
+            }
         }
 
         mem.Data[0xFFFD] = 0x02;
@@ -359,13 +352,13 @@ type Word = c_ushort;
         let expected_negative: bool = (expected_result & 0b10000000) > 0;
         assert_eq!(cpu.A, expected_result);
         assert_eq!(cycles_used, 5);
-        assert_eq!(cpu.PS.get_bit(1), false);              // Z
-        assert_eq!(cpu.PS.get_bit(7), expected_negative);  // N
+        assert_eq!(cpu.PS.get_bit(1), false); // Z
+        assert_eq!(cpu.PS.get_bit(7), expected_negative); // N
         verify_unmodified_flags_from_logical_op_ins(cpu, cpu_copy);
     }
 
     fn test_logical_op_indirect_x(logical_op: ELogicalOp) {
-         // LDAInmediateCanLoadAValueIntoTheAReg
+        // LDAInmediateCanLoadAValueIntoTheAReg
         let mut mem = Mem::new();
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
@@ -380,14 +373,14 @@ type Word = c_ushort;
         cpu.X = 0x04;
         match logical_op {
             ELogicalOp::And => {
-            mem.Data[0xFFFC] = cpu.INS_AND_INDX;
-            },
+                mem.Data[0xFFFC] = cpu.INS_AND_INDX;
+            }
             ELogicalOp::Eor => {
-            mem.Data[0xFFFC] = cpu.INS_EOR_INDX;
-            },
+                mem.Data[0xFFFC] = cpu.INS_EOR_INDX;
+            }
             ELogicalOp::Or => {
-            mem.Data[0xFFFC] = cpu.INS_ORA_INDX;
-            },
+                mem.Data[0xFFFC] = cpu.INS_ORA_INDX;
+            }
         }
 
         mem.Data[0xFFFD] = 0x02;
@@ -403,13 +396,13 @@ type Word = c_ushort;
         let expected_negative: bool = (expected_result & 0b10000000) > 0;
         assert_eq!(cpu.A, expected_result);
         assert_eq!(cycles_used, 6);
-        assert_eq!(cpu.PS.get_bit(1), false);              // Z
-        assert_eq!(cpu.PS.get_bit(7), expected_negative);  // N
+        assert_eq!(cpu.PS.get_bit(1), false); // Z
+        assert_eq!(cpu.PS.get_bit(7), expected_negative); // N
         verify_unmodified_flags_from_logical_op_ins(cpu, cpu_copy);
     }
 
     fn test_logical_op_indirect_y(logical_op: ELogicalOp) {
-         // LDAInmediateCanLoadAValueIntoTheAReg
+        // LDAInmediateCanLoadAValueIntoTheAReg
         let mut mem = Mem::new();
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
@@ -424,14 +417,14 @@ type Word = c_ushort;
         cpu.Y = 0x04;
         match logical_op {
             ELogicalOp::And => {
-            mem.Data[0xFFFC] = cpu.INS_AND_INDY;
-            },
+                mem.Data[0xFFFC] = cpu.INS_AND_INDY;
+            }
             ELogicalOp::Eor => {
-            mem.Data[0xFFFC] = cpu.INS_EOR_INDY;
-            },
+                mem.Data[0xFFFC] = cpu.INS_EOR_INDY;
+            }
             ELogicalOp::Or => {
-            mem.Data[0xFFFC] = cpu.INS_ORA_INDY;
-            },
+                mem.Data[0xFFFC] = cpu.INS_ORA_INDY;
+            }
         }
 
         mem.Data[0xFFFD] = 0x02;
@@ -447,13 +440,13 @@ type Word = c_ushort;
         let expected_negative: bool = (expected_result & 0b10000000) > 0;
         assert_eq!(cpu.A, expected_result);
         assert_eq!(cycles_used, 5);
-        assert_eq!(cpu.PS.get_bit(1), false);              // Z
-        assert_eq!(cpu.PS.get_bit(7), expected_negative);  // N
+        assert_eq!(cpu.PS.get_bit(1), false); // Z
+        assert_eq!(cpu.PS.get_bit(7), expected_negative); // N
         verify_unmodified_flags_from_logical_op_ins(cpu, cpu_copy);
     }
 
     fn test_logical_op_indirect_y_when_it_crosses_a_page(logical_op: ELogicalOp) {
-         // LDAInmediateCanLoadAValueIntoTheAReg
+        // LDAInmediateCanLoadAValueIntoTheAReg
         let mut mem = Mem::new();
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
@@ -468,14 +461,14 @@ type Word = c_ushort;
         cpu.Y = 0xFF;
         match logical_op {
             ELogicalOp::And => {
-            mem.Data[0xFFFC] = cpu.INS_AND_INDY;
-            },
+                mem.Data[0xFFFC] = cpu.INS_AND_INDY;
+            }
             ELogicalOp::Eor => {
-            mem.Data[0xFFFC] = cpu.INS_EOR_INDY;
-            },
+                mem.Data[0xFFFC] = cpu.INS_EOR_INDY;
+            }
             ELogicalOp::Or => {
-            mem.Data[0xFFFC] = cpu.INS_ORA_INDY;
-            },
+                mem.Data[0xFFFC] = cpu.INS_ORA_INDY;
+            }
         }
 
         mem.Data[0xFFFD] = 0x02;
@@ -491,13 +484,13 @@ type Word = c_ushort;
         let expected_negative: bool = (expected_result & 0b10000000) > 0;
         assert_eq!(cpu.A, expected_result);
         assert_eq!(cycles_used, 6);
-        assert_eq!(cpu.PS.get_bit(1), false);              // Z
-        assert_eq!(cpu.PS.get_bit(7), expected_negative);  // N
+        assert_eq!(cpu.PS.get_bit(1), false); // Z
+        assert_eq!(cpu.PS.get_bit(7), expected_negative); // N
         verify_unmodified_flags_from_logical_op_ins(cpu, cpu_copy);
     }
 
     fn test_logical_op_zeropage_x_when_it_wraps(logical_op: ELogicalOp) {
-         // LDAInmediateCanLoadAValueIntoTheAReg
+        // LDAInmediateCanLoadAValueIntoTheAReg
         let mut mem = Mem::new();
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
@@ -510,14 +503,12 @@ type Word = c_ushort;
         cpu.X = 0xFF;
         match logical_op {
             ELogicalOp::And => {
-            mem.Data[0xFFFC] = cpu.INS_AND_ZPX;
-            },
-            ELogicalOp::Eor => {
-            mem.Data[0xFFFC] = cpu.INS_EOR_ZPX
-            },
+                mem.Data[0xFFFC] = cpu.INS_AND_ZPX;
+            }
+            ELogicalOp::Eor => mem.Data[0xFFFC] = cpu.INS_EOR_ZPX,
             ELogicalOp::Or => {
-            mem.Data[0xFFFC] = cpu.INS_ORA_ZPX;
-            },
+                mem.Data[0xFFFC] = cpu.INS_ORA_ZPX;
+            }
         }
 
         mem.Data[0xFFFD] = 0x80;
@@ -531,12 +522,10 @@ type Word = c_ushort;
         let expected_negative: bool = (expected_result & 0b10000000) > 0;
         assert_eq!(cpu.A, expected_result);
         assert_eq!(cycles_used, 4);
-        assert_eq!(cpu.PS.get_bit(1), false);              // Z
-        assert_eq!(cpu.PS.get_bit(7), expected_negative);  // N
+        assert_eq!(cpu.PS.get_bit(1), false); // Z
+        assert_eq!(cpu.PS.get_bit(7), expected_negative); // N
         verify_unmodified_flags_from_logical_op_ins(cpu, cpu_copy);
     }
-
-
 
     #[test]
     fn test_logicalop_and_on_a_register_inmediate() {
@@ -575,7 +564,6 @@ type Word = c_ushort;
         assert_eq!(cpu.PS.get_bit(1), true);
         assert_eq!(cpu.PS.get_bit(7), false);
         verify_unmodified_flags_from_logical_op_ins(cpu, cpu_copy);
-
     }
 
     #[test]
@@ -728,10 +716,9 @@ type Word = c_ushort;
         test_logical_op_indirect_y_when_it_crosses_a_page(ELogicalOp::Eor);
     }
 
-
     #[test]
     fn test_bit_zero_page() {
-         // LDAInmediateCanLoadAValueIntoTheAReg
+        // LDAInmediateCanLoadAValueIntoTheAReg
         let mut mem = Mem::new();
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
@@ -760,7 +747,7 @@ type Word = c_ushort;
 
     #[test]
     fn test_bit_zero_page_zero_result_zero() {
-         // LDAInmediateCanLoadAValueIntoTheAReg
+        // LDAInmediateCanLoadAValueIntoTheAReg
         let mut mem = Mem::new();
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
@@ -789,7 +776,7 @@ type Word = c_ushort;
 
     #[test]
     fn test_bit_zero_page_zero_result_zero_bits_6_and_7() {
-         // LDAInmediateCanLoadAValueIntoTheAReg
+        // LDAInmediateCanLoadAValueIntoTheAReg
         let mut mem = Mem::new();
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
@@ -816,10 +803,9 @@ type Word = c_ushort;
         assert_eq!(cpu.PS.get_bit(7), true);
     }
 
-
- #[test]
+    #[test]
     fn test_bit_absolute() {
-         // LDAInmediateCanLoadAValueIntoTheAReg
+        // LDAInmediateCanLoadAValueIntoTheAReg
         let mut mem = Mem::new();
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
@@ -845,9 +831,9 @@ type Word = c_ushort;
         assert_eq!(cpu.PS.get_bit(7), true);
     }
 
- #[test]
+    #[test]
     fn test_bit_absolute_result_zero() {
-         // LDAInmediateCanLoadAValueIntoTheAReg
+        // LDAInmediateCanLoadAValueIntoTheAReg
         let mut mem = Mem::new();
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
@@ -875,7 +861,7 @@ type Word = c_ushort;
 
     #[test]
     fn test_bit_absolute_result_zero_bits_6_and_7() {
-         // LDAInmediateCanLoadAValueIntoTheAReg
+        // LDAInmediateCanLoadAValueIntoTheAReg
         let mut mem = Mem::new();
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
@@ -901,4 +887,3 @@ type Word = c_ushort;
         assert_eq!(cpu.PS.get_bit(7), true);
     }
 }
-

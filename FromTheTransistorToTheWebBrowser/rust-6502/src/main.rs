@@ -1,9 +1,10 @@
-mod mos6502; 
-mod load_tests;
-mod store_tests;
-mod jumps_and_calls_tests;
-mod stack_operations_tests;
 mod and_eor_ora_tests;
+mod jumps_and_calls_tests;
+mod load_tests;
+mod mos6502;
+mod programs_tests;
+mod stack_operations_tests;
+mod store_tests;
 
 use mos6502::*;
 
@@ -46,7 +47,7 @@ fn main() {
     let mut cpu = CPU::new();
     let mut cpu_copy = CPU::new();
 
-    // given: 
+    // given:
     cpu.reset_vector(&mut mem, 0xFF00);
     cpu_copy.reset_vector(&mut mem, 0xFF00);
     mem.Data[0xFF00] = cpu.INS_JSR;
@@ -64,37 +65,33 @@ fn main() {
     assert_eq!(actual_cycles, 6 + 6 + 2);
     assert_eq!(cpu.A, 0x42);
 
-
-
-
-
-//     cpu.reset(&mut mem);
-//     cpu.reset(&mut mem_copy);
-//     assert_eq!(mem.Data[0xFFFC], mem_copy.Data[0xFFFC]);
-//     assert_eq!(mem.Data[0xFFFD], mem_copy.Data[0xFFFD]);
-//     assert_eq!(mem.Data[0xFFFE], mem_copy.Data[0xFFFE]);
-//     assert_eq!(mem.Data[0x4242], mem_copy.Data[0x4242]);
-//     assert_eq!(mem.Data[0x4243], mem_copy.Data[0x4243]);
-//     // println!("{:x?}, {:x?}", cpu, mem);
-//     mem.Data[0xFFFC] = cpu.INS_JSR;
-//     mem.Data[0xFFFD] = 0x42;
-//     mem.Data[0xFFFE] = 0x42;
-//     println!(
-//         "0xFFFC: {} |  0xFFFD: {}",
-//         mem.Data[0xFFFD], mem.Data[0xFFFE]
-//     );
-//     println!("PC: {}", cpu.PC);
-//     mem.Data[0x4242] = cpu.INS_LDA_IM;
-//     mem.Data[0x4243] = 0x84;
-//     cpu.execute(&mut 9, &mut mem);
-//     // println!("{:x?}, {:x?}", cpu, mem);
-//     assert_ne!(mem.Data[0xFFFC], mem_copy.Data[0xFFFC]);
-//     assert_ne!(mem.Data[0xFFFD], mem_copy.Data[0xFFFD]);
-//     assert_ne!(mem.Data[0xFFFE], mem_copy.Data[0xFFFE]);
-//     assert_ne!(mem.Data[0x4242], mem_copy.Data[0x4242]);
-//     assert_ne!(mem.Data[0x4243], mem_copy.Data[0x4243]);
-// 
-//     assert_eq!(cpu.A, 0x84);
-// 
-//     println!("A: {}", cpu.A);
+    //     cpu.reset(&mut mem);
+    //     cpu.reset(&mut mem_copy);
+    //     assert_eq!(mem.Data[0xFFFC], mem_copy.Data[0xFFFC]);
+    //     assert_eq!(mem.Data[0xFFFD], mem_copy.Data[0xFFFD]);
+    //     assert_eq!(mem.Data[0xFFFE], mem_copy.Data[0xFFFE]);
+    //     assert_eq!(mem.Data[0x4242], mem_copy.Data[0x4242]);
+    //     assert_eq!(mem.Data[0x4243], mem_copy.Data[0x4243]);
+    //     // println!("{:x?}, {:x?}", cpu, mem);
+    //     mem.Data[0xFFFC] = cpu.INS_JSR;
+    //     mem.Data[0xFFFD] = 0x42;
+    //     mem.Data[0xFFFE] = 0x42;
+    //     println!(
+    //         "0xFFFC: {} |  0xFFFD: {}",
+    //         mem.Data[0xFFFD], mem.Data[0xFFFE]
+    //     );
+    //     println!("PC: {}", cpu.PC);
+    //     mem.Data[0x4242] = cpu.INS_LDA_IM;
+    //     mem.Data[0x4243] = 0x84;
+    //     cpu.execute(&mut 9, &mut mem);
+    //     // println!("{:x?}, {:x?}", cpu, mem);
+    //     assert_ne!(mem.Data[0xFFFC], mem_copy.Data[0xFFFC]);
+    //     assert_ne!(mem.Data[0xFFFD], mem_copy.Data[0xFFFD]);
+    //     assert_ne!(mem.Data[0xFFFE], mem_copy.Data[0xFFFE]);
+    //     assert_ne!(mem.Data[0x4242], mem_copy.Data[0x4242]);
+    //     assert_ne!(mem.Data[0x4243], mem_copy.Data[0x4243]);
+    //
+    //     assert_eq!(cpu.A, 0x84);
+    //
+    //     println!("A: {}", cpu.A);
 }

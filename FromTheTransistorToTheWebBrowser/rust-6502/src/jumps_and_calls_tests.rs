@@ -2,11 +2,11 @@
 
 mod jumps_and_calls_tests {
 
-use crate::mos6502::*;
-use std::os::raw::*;
+    use crate::mos6502::*;
+    use std::os::raw::*;
 
-type Byte = c_uchar;
-type Word = c_ushort;
+    type Byte = c_uchar;
+    type Word = c_ushort;
 
     #[test]
     fn can_jump_to_subroutine_and_jump_back_again() {
@@ -14,7 +14,7 @@ type Word = c_ushort;
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
 
-        // given: 
+        // given:
         cpu.reset_vector(&mut mem, 0xFF00);
         cpu_copy.reset_vector(&mut mem, 0xFF00);
         mem.Data[0xFF00] = cpu.INS_JSR;
@@ -34,20 +34,20 @@ type Word = c_ushort;
         assert_eq!(cpu.SP, cpu_copy.SP);
     }
 
-   #[test]
-fn jsr_does_not_affect_the_processor_status() {
+    #[test]
+    fn jsr_does_not_affect_the_processor_status() {
         let mut mem = Mem::new();
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
 
-        // given: 
+        // given:
         cpu.reset_vector(&mut mem, 0xFF00);
         cpu_copy.reset_vector(&mut mem, 0xFF00);
         mem.Data[0xFF00] = cpu.INS_JSR;
         mem.Data[0xFF01] = 0x00;
         mem.Data[0xFF02] = 0x80;
 
-        let mut expected_cycles = 6; 
+        let mut expected_cycles = 6;
 
         let actual_cycles = cpu.execute(&mut expected_cycles, &mut mem);
 
@@ -58,13 +58,13 @@ fn jsr_does_not_affect_the_processor_status() {
         assert_eq!(cpu.PS, cpu.PS);
     }
 
-   #[test]
+    #[test]
     fn rts_does_not_affect_the_processor_status() {
         let mut mem = Mem::new();
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
 
-        // given: 
+        // given:
         cpu.reset_vector(&mut mem, 0xFF00);
         cpu_copy.reset_vector(&mut mem, 0xFF00);
         mem.Data[0xFF00] = cpu.INS_JSR;
@@ -72,7 +72,7 @@ fn jsr_does_not_affect_the_processor_status() {
         mem.Data[0xFF02] = 0x80;
         mem.Data[0x8000] = cpu.INS_RTS;
 
-        let mut expected_cycles = 6 + 6; 
+        let mut expected_cycles = 6 + 6;
 
         let actual_cycles = cpu.execute(&mut expected_cycles, &mut mem);
 
@@ -82,21 +82,20 @@ fn jsr_does_not_affect_the_processor_status() {
         assert_eq!(cpu.PS, cpu.PS);
     }
 
-
-   #[test]
+    #[test]
     fn jmp_abs_can_jump_to_a_new_location() {
         let mut mem = Mem::new();
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
 
-        // given: 
+        // given:
         cpu.reset_vector(&mut mem, 0xFF00);
         cpu_copy.reset_vector(&mut mem, 0xFF00);
         mem.Data[0xFF00] = cpu.INS_JMP_ABS;
         mem.Data[0xFF01] = 0x00;
         mem.Data[0xFF02] = 0x80;
 
-        let mut expected_cycles = 3; 
+        let mut expected_cycles = 3;
 
         let actual_cycles = cpu.execute(&mut expected_cycles, &mut mem);
 
@@ -107,13 +106,13 @@ fn jsr_does_not_affect_the_processor_status() {
         assert_eq!(cpu.PS, cpu.PS);
     }
 
-   #[test]
+    #[test]
     fn jmp_ind_can_jump_to_a_new_location() {
         let mut mem = Mem::new();
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
 
-        // given: 
+        // given:
         cpu.reset_vector(&mut mem, 0xFF00);
         cpu_copy.reset_vector(&mut mem, 0xFF00);
         mem.Data[0xFF00] = cpu.INS_JMP_IND;
@@ -122,7 +121,7 @@ fn jsr_does_not_affect_the_processor_status() {
         mem.Data[0x8000] = 0x00;
         mem.Data[0x8001] = 0x90;
 
-        let mut expected_cycles = 5; 
+        let mut expected_cycles = 5;
 
         let actual_cycles = cpu.execute(&mut expected_cycles, &mut mem);
 
@@ -133,10 +132,6 @@ fn jsr_does_not_affect_the_processor_status() {
         assert_eq!(cpu.PS, cpu.PS);
     }
 
-
-
-
-
     // fn verify_unmodified_flags_from_store(cpu: CPU, cpu_copy: CPU) {
     //     assert_eq!(cpu.C, cpu_copy.C);
     //     assert_eq!(cpu.Z, cpu_copy.Z);
@@ -146,5 +141,4 @@ fn jsr_does_not_affect_the_processor_status() {
     //     assert_eq!(cpu.V, cpu_copy.V);
     //     assert_eq!(cpu.N, cpu_copy.N);
     // }
-
 }

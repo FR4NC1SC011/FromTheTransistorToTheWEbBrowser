@@ -1,19 +1,18 @@
 #[cfg(test)]
 mod store_tests {
 
-use crate::mos6502::*;
-use std::os::raw::*;
+    use crate::mos6502::*;
+    use std::os::raw::*;
 
-type Byte = c_uchar;
-type Word = c_ushort;
-
+    type Byte = c_uchar;
+    type Word = c_ushort;
 
     fn test_sta_zp(opcode_to_test: Byte) {
         let mut mem = Mem::new();
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
 
-        // given: 
+        // given:
         cpu.reset(&mut mem);
         cpu_copy.reset(&mut mem);
         cpu.A = 0x2F;
@@ -36,7 +35,7 @@ type Word = c_ushort;
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
 
-        // given: 
+        // given:
         cpu.reset(&mut mem);
         cpu_copy.reset(&mut mem);
         cpu.A = 0x42;
@@ -55,12 +54,12 @@ type Word = c_ushort;
         assert_eq!(cpu.PS, cpu_copy.PS);
     }
 
-   fn test_sty_zpx(opcode_to_test: Byte) {
+    fn test_sty_zpx(opcode_to_test: Byte) {
         let mut mem = Mem::new();
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
 
-        // given: 
+        // given:
         cpu.reset(&mut mem);
         cpu_copy.reset(&mut mem);
         cpu.Y = 0x42;
@@ -84,7 +83,7 @@ type Word = c_ushort;
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
 
-        // given: 
+        // given:
         cpu.reset(&mut mem);
         cpu_copy.reset(&mut mem);
         cpu.X = 0x2F;
@@ -107,7 +106,7 @@ type Word = c_ushort;
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
 
-        // given: 
+        // given:
         cpu.reset(&mut mem);
         cpu_copy.reset(&mut mem);
         cpu.Y = 0x2F;
@@ -125,13 +124,12 @@ type Word = c_ushort;
         assert_eq!(cpu.PS, cpu_copy.PS);
     }
 
-
     fn test_sta_abs(opcode_to_test: Byte) {
         let mut mem = Mem::new();
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
 
-        // given: 
+        // given:
         cpu.reset(&mut mem);
         cpu_copy.reset(&mut mem);
         cpu.A = 0x2F;
@@ -155,7 +153,7 @@ type Word = c_ushort;
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
 
-        // given: 
+        // given:
         cpu.reset(&mut mem);
         cpu_copy.reset(&mut mem);
         cpu.X = 0x2F;
@@ -179,7 +177,7 @@ type Word = c_ushort;
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
 
-        // given: 
+        // given:
         cpu.reset(&mut mem);
         cpu_copy.reset(&mut mem);
         cpu.Y = 0x2F;
@@ -246,14 +244,13 @@ type Word = c_ushort;
         test_sty_abs(cpu.INS_STY_ABS);
     }
 
-
     #[test]
     fn test_sta_absx_can_store_the_a_register_into_memory() {
         let mut mem = Mem::new();
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
 
-        // given: 
+        // given:
         cpu.reset(&mut mem);
         cpu_copy.reset(&mut mem);
         cpu.A = 0x2F;
@@ -278,7 +275,7 @@ type Word = c_ushort;
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
 
-        // given: 
+        // given:
         cpu.reset(&mut mem);
         cpu_copy.reset(&mut mem);
         cpu.A = 0x2F;
@@ -303,7 +300,7 @@ type Word = c_ushort;
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
 
-        // given: 
+        // given:
         cpu.reset(&mut mem);
         cpu_copy.reset(&mut mem);
         cpu.A = 0x42;
@@ -330,7 +327,7 @@ type Word = c_ushort;
         let mut cpu = CPU::new();
         let mut cpu_copy = CPU::new();
 
-        // given: 
+        // given:
         cpu.reset(&mut mem);
         cpu_copy.reset(&mut mem);
         cpu.A = 0x42;
@@ -351,11 +348,6 @@ type Word = c_ushort;
         assert_eq!(cpu.PS, cpu_copy.PS);
     }
 
-
-
-
-
-
     // fn verify_unmodified_flags_from_store(cpu: CPU, cpu_copy: CPU) {
     //     assert_eq!(cpu.C, cpu_copy.C);
     //     assert_eq!(cpu.Z, cpu_copy.Z);
@@ -366,5 +358,3 @@ type Word = c_ushort;
     //     assert_eq!(cpu.N, cpu_copy.N);
     // }
 }
-
-

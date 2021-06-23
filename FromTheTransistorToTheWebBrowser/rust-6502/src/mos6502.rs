@@ -1,6 +1,6 @@
+use bit_field::BitField;
 use num_traits::{WrappingShl, WrappingShr};
 use std::os::raw::*;
-use bit_field::BitField;
 
 type Byte = c_uchar;
 type Word = c_ushort;
@@ -11,6 +11,14 @@ pub struct Mem {
     pub Data: Vec<Byte>,
 }
 
+enum Flags {
+    NegativeFlagBit = 0b10000000,
+    OverflowFlagBit = 0b01000000,
+    BreakFlagBit = 0b000010000,
+    UnusedFlagBit = 0b000100000,
+    InterruptDisableFlagBit = 0b000000100,
+    ZeroBit = 0b00000001,
+}
 
 #[derive(Debug, Clone, Copy)]
 pub struct CPU {
@@ -125,8 +133,6 @@ pub struct CPU {
 
     pub INS_BIT_ZP: Byte,
     pub INS_BIT_ABS: Byte,
-
-
 }
 
 impl Mem {
@@ -154,7 +160,7 @@ impl CPU {
             X: 0,
             Y: 0,
 
-            // PS: (1,1,1,1,1,1,1,1),            
+            // PS: (1,1,1,1,1,1,1,1),
             PS: 0b11111111,
             // C: 1,
             // Z: 1,
@@ -217,12 +223,12 @@ impl CPU {
             INS_RTS: 0x60,
 
             // Stack Operations
-            INS_TSX: 0xBA, 
-            INS_TXS: 0x9A, 
-            INS_PHA: 0x48, 
-            INS_PHP: 0x08, 
-            INS_PLA: 0x68, 
-            INS_PLP: 0x28, 
+            INS_TSX: 0xBA,
+            INS_TXS: 0x9A,
+            INS_PHA: 0x48,
+            INS_PHP: 0x08,
+            INS_PLA: 0x68,
+            INS_PLP: 0x28,
 
             // Logical Operations
             INS_AND_IM: 0x29,
@@ -267,13 +273,13 @@ impl CPU {
 
         // self.PS = (1,1,1,1,1,1,1,1);
         self.PS = 0b11111111;
-//         self.C = 1;
-//         self.Z = 1;
-//         self.I = 1;
-//         self.D = 1;
-//         self.B = 1;
-//         self.V = 1;
-//         self.N = 1;
+        //         self.C = 1;
+        //         self.Z = 1;
+        //         self.I = 1;
+        //         self.D = 1;
+        //         self.B = 1;
+        //         self.V = 1;
+        //         self.N = 1;
 
         memory.initialize();
     }
@@ -287,7 +293,7 @@ impl CPU {
         self.Y = 0;
 
         // self.PS = (1,1,1,1,1,1,1,1);
-        self.PS =  0b11111111;
+        self.PS = 0b11111111;
         // self.C = 1;
         // self.Z = 1;
         // self.I = 1;
@@ -401,6 +407,32 @@ impl CPU {
 
         *cycles -= 1;
         value_from_stack
+    }
+
+    pub fn load_prg(&mut self, program: [Byte; 14], num_bytes: u32, memory: &mut Mem) {
+        if !program.is_empty() && num_bytes > 2 {
+            let mut at: u32 = 0;
+
+            let lo: Word = program[at as usize] as Word;
+
+            at = at + 1;
+            let hi_byte: Word = program[at as usize] as Word;
+
+            let hi: Word = hi_byte.wrapping_shl(8) as Word;
+
+            let load_address: Word = lo | hi;
+
+            let mut i = load_address;
+            loop {
+                if u32::from(i) >= load_address as u32 + num_bytes - 2 {
+                    break;
+                }
+
+                at = at + 1;
+                memory.Data[i as usize] = program[at as usize];
+                i += 1;
+            }
+        }
     }
 
     pub fn execute(&mut self, cycles: &mut usize, memory: &mut Mem) -> usize {
@@ -656,15 +688,14 @@ impl CPU {
 
                 // Jumps and Calls
 
-            // NB:
-        //      An original 6502 has does not correctly fetch the target address
-        //      if the indirect vector falls on a page boundary
-        //      (e.g. $xxFF where xx is any value from $00 to $FF).
-        //      In this case fetches the LSB from $xxFF as expected but takes
-        //      the MSB from $xx00. This is fixed in some later chips like
-        //      the 65SC02 so for compatibility always ensure the indirect vector
-        //      is not at the end of the page.
-
+                // NB:
+                //      An original 6502 has does not correctly fetch the target address
+                //      if the indirect vector falls on a page boundary
+                //      (e.g. $xxFF where xx is any value from $00 to $FF).
+                //      In this case fetches the LSB from $xxFF as expected but takes
+                //      the MSB from $xx00. This is fixed in some later chips like
+                //      the 65SC02 so for compatibility always ensure the indirect vector
+                //      is not at the end of the page.
                 0x4C => {
                     println!("Instruction JMP Absolute");
                     let abs_addrress: Word = self.fetch_word(cycles, memory);
@@ -707,7 +738,6 @@ impl CPU {
                     println!("Instruction TXS");
                     self.SP = self.X;
                     *cycles -= 1
-
                 }
 
                 0x48 => {
@@ -724,7 +754,7 @@ impl CPU {
                     println!("Instructin PLA");
                     self.A = self.pop_byte_from_stack(cycles, memory);
                     self.lda_register_set_status();
-                } 
+                }
 
                 0x28 => {
                     println!("Instructin PLP");
@@ -818,7 +848,7 @@ impl CPU {
                     self.A ^= self.read_byte(cycles, abs_addrress as u16, memory);
                     self.lda_register_set_status();
                 }
-                                    
+
                 0x3D => {
                     println!("Instruction AND Absolute X");
                     let abs_addrress: Word = self.fetch_word(cycles, memory);
@@ -851,8 +881,6 @@ impl CPU {
                     }
                     self.lda_register_set_status();
                 }
-
-
 
                 0x39 => {
                     println!("Instruction AND Absolute Y");
@@ -920,7 +948,6 @@ impl CPU {
                     self.lda_register_set_status();
                 }
 
-
                 0x31 => {
                     println!("Instruction AND Indirect Y");
                     let zero_page_address: Byte = self.fetch_byte(cycles, memory);
@@ -964,7 +991,7 @@ impl CPU {
                     println!("Instruction BIT ZP");
                     let zero_page_address: Byte = self.fetch_byte(cycles, memory);
                     let value = self.read_byte(cycles, zero_page_address as u16, memory);
-                    
+
                     // let z: bool = !(self.A & value) != 0;
                     let z = self.A & value;
                     let z_bool: bool;
@@ -976,10 +1003,10 @@ impl CPU {
 
                     self.PS.set_bit(1, z_bool);
 
-                    let n = (value & 0b10000000) != 0;
+                    let n = (value & Flags::NegativeFlagBit as u8) != 0;
                     self.PS.set_bit(7, n);
 
-                    let v = (value & 0b01000000) != 0;
+                    let v = (value & Flags::OverflowFlagBit as u8) != 0;
                     self.PS.set_bit(6, v);
                 }
 
@@ -998,14 +1025,12 @@ impl CPU {
 
                     self.PS.set_bit(1, z_bool);
 
-                    let n = (value & 0b10000000) != 0;
+                    let n = (value & Flags::NegativeFlagBit as u8) != 0;
                     self.PS.set_bit(7, n);
 
-                    let v = (value & 0b01000000) != 0;
+                    let v = (value & Flags::OverflowFlagBit as u8) != 0;
                     self.PS.set_bit(6, v);
                 }
-
-
 
                 _ => {
                     unimplemented!("Instruction not handled {}", ins);
@@ -1020,7 +1045,6 @@ impl CPU {
         self.PS = match self.A == 0 {
             false => *self.PS.set_bit(1, false),
             true => *self.PS.set_bit(1, true),
-        
         };
 
         self.PS = match (self.A & 0b10000000) > 0 {

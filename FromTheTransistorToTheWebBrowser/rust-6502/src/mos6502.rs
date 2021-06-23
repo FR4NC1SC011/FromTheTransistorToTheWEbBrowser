@@ -133,6 +133,12 @@ pub struct CPU {
 
     pub INS_BIT_ZP: Byte,
     pub INS_BIT_ABS: Byte,
+
+    // Register Transfers
+    pub INS_TAX: Byte,
+    pub INS_TAY: Byte,
+    pub INS_TXA: Byte,
+    pub INS_TYA: Byte,
 }
 
 impl Mem {
@@ -260,6 +266,12 @@ impl CPU {
 
             INS_BIT_ZP: 0x24,
             INS_BIT_ABS: 0x2C,
+
+            // Register Transfers
+            INS_TAX: 0xAA,
+            INS_TAY: 0xA8,
+            INS_TXA: 0x8A,
+            INS_TYA: 0x98,
         }
     }
 
@@ -1034,6 +1046,34 @@ impl CPU {
 
                     let v = (value & Flags::OverflowFlagBit as u8) != 0;
                     self.PS.set_bit(6, v);
+                }
+
+                0xAA => {
+                    println!("Instruction TAX");
+                    self.X = self.A;
+                    *cycles -= 1;
+                    self.ldx_register_set_status();
+                }
+
+                0xA8 => {
+                    println!("Instruction TAY");
+                    self.Y = self.A;
+                    *cycles -= 1;
+                    self.ldy_register_set_status();
+                }
+
+                0x8A => {
+                    println!("Instruction TXA");
+                    self.A = self.X;
+                    *cycles -= 1;
+                    self.lda_register_set_status();
+                }
+
+                0x98 => {
+                    println!("Instruction TYA");
+                    self.A = self.Y;
+                    *cycles -= 1;
+                    self.lda_register_set_status();
                 }
 
                 _ => {

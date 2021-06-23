@@ -5,6 +5,7 @@ mod mos6502;
 mod programs_tests;
 mod stack_operations_tests;
 mod store_tests;
+mod transfer_register_tests;
 
 use mos6502::*;
 

@@ -1114,11 +1114,89 @@ impl CPU {
                 }
 
                 0xE6 => {
-                    println!("Instruction Increment Memory");
+                    println!("Instruction Increment Memory ZP");
                     let zero_page_address: Byte = self.fetch_byte(cycles, memory);
-                    let mut mem_location = self.read_byte(cycles, zero_page_address as u16, memory);
-                    mem_location += 1;
-                    self.lda_register_set_status();
+                    let mut value = self.read_byte(cycles, zero_page_address as u16, memory);
+                    value += 1;
+                    *cycles -= 1;
+                    self.write_byte(value, cycles, zero_page_address.into(), memory);
+                    self.ldm_register_set_status(value);
+                }
+
+                0xF6 => {
+                    println!("Instruction Increment Memory ZPX");
+                    let mut zero_page_address: Byte = self.fetch_byte(cycles, memory);
+                    zero_page_address = zero_page_address.wrapping_add(self.X);
+                    *cycles -= 1;
+                    let mut value = self.read_byte(cycles, zero_page_address as u16, memory);
+                    value += 1;
+                    *cycles -= 1;
+                    self.write_byte(value, cycles, zero_page_address.into(), memory);
+                    self.ldm_register_set_status(value);
+                }
+
+                0xEE => {
+                    println!("Instruction Increment Memory Absolute");
+                    let abs_address: Word = self.fetch_word(cycles, memory);
+                    let mut value = self.read_byte(cycles, abs_address as u16, memory);
+                    value += 1;
+                    *cycles -= 1;
+                    self.write_byte(value, cycles, abs_address.into(), memory);
+                    self.ldm_register_set_status(value);
+                }
+
+                0xFE => {
+                    println!("Instruction Increment Memory Absolute X");
+                    let abs_address: Word = self.fetch_word(cycles, memory);
+                    let abs_address_plus_x = abs_address + self.X as Word;
+                    let mut value = self.read_byte(cycles, abs_address_plus_x, memory);
+                    value += 1;
+                    *cycles -= 1;
+                    self.write_byte(value, cycles, abs_address_plus_x.into(), memory);
+                    self.ldm_register_set_status(value);
+                }
+
+                0xC6 => {
+                    println!("Instruction Decrement Memory ZP");
+                    let zero_page_address: Byte = self.fetch_byte(cycles, memory);
+                    let mut value = self.read_byte(cycles, zero_page_address as u16, memory);
+                    value -= 1;
+                    *cycles -= 1;
+                    self.write_byte(value, cycles, zero_page_address.into(), memory);
+                    self.ldm_register_set_status(value);
+                }
+
+                0xD6 => {
+                    println!("Instruction Decrement Memory ZPX");
+                    let mut zero_page_address: Byte = self.fetch_byte(cycles, memory);
+                    zero_page_address = zero_page_address.wrapping_add(self.X);
+                    *cycles -= 1;
+                    let mut value = self.read_byte(cycles, zero_page_address as u16, memory);
+                    value -= 1;
+                    *cycles -= 1;
+                    self.write_byte(value, cycles, zero_page_address.into(), memory);
+                    self.ldm_register_set_status(value);
+                }
+
+                0xCE => {
+                    println!("Instruction Decrement Memory Absolute");
+                    let abs_address: Word = self.fetch_word(cycles, memory);
+                    let mut value = self.read_byte(cycles, abs_address as u16, memory);
+                    value -= 1;
+                    *cycles -= 1;
+                    self.write_byte(value, cycles, abs_address.into(), memory);
+                    self.ldm_register_set_status(value);
+                }
+
+                0xDE => {
+                    println!("Instruction Decrement Memory Absolute X");
+                    let abs_address: Word = self.fetch_word(cycles, memory);
+                    let abs_address_plus_x = abs_address + self.X as Word;
+                    let mut value = self.read_byte(cycles, abs_address_plus_x, memory);
+                    value -= 1;
+                    *cycles -= 1;
+                    self.write_byte(value, cycles, abs_address_plus_x.into(), memory);
+                    self.ldm_register_set_status(value);
                 }
 
                 0xE8 => {
@@ -1189,6 +1267,18 @@ impl CPU {
         };
 
         self.PS = match (self.Y & 0b10000000) > 0 {
+            false => *self.PS.set_bit(7, false),
+            true => *self.PS.set_bit(7, true),
+        };
+    }
+
+    fn ldm_register_set_status(&mut self, m: Byte) {
+        self.PS = match m == 0 {
+            false => *self.PS.set_bit(1, false),
+            true => *self.PS.set_bit(1, true),
+        };
+
+        self.PS = match (m & 0b10000000) > 0 {
             false => *self.PS.set_bit(7, false),
             true => *self.PS.set_bit(7, true),
         };

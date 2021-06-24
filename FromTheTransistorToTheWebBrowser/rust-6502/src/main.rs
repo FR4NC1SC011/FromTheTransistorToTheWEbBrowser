@@ -1,4 +1,5 @@
 mod and_eor_ora_tests;
+mod increments_and_decrements_tests;
 mod jumps_and_calls_tests;
 mod load_tests;
 mod mos6502;

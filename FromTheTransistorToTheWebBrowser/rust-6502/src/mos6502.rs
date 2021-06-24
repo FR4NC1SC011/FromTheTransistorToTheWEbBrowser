@@ -139,6 +139,23 @@ pub struct CPU {
     pub INS_TAY: Byte,
     pub INS_TXA: Byte,
     pub INS_TYA: Byte,
+
+    // Increments & Decrements
+    pub INS_INC_ABS: Byte,
+    pub INS_INC_ABSX: Byte,
+    pub INS_INC_ZP: Byte,
+    pub INS_INC_ZPX: Byte,
+
+    pub INS_INX: Byte,
+    pub INS_INY: Byte,
+
+    pub INS_DEC_ABS: Byte,
+    pub INS_DEC_ABSX: Byte,
+    pub INS_DEC_ZP: Byte,
+    pub INS_DEC_ZPX: Byte,
+
+    pub INS_DEX: Byte,
+    pub INS_DEY: Byte,
 }
 
 impl Mem {
@@ -272,6 +289,25 @@ impl CPU {
             INS_TAY: 0xA8,
             INS_TXA: 0x8A,
             INS_TYA: 0x98,
+
+            // Increments & Decrements
+            INS_INC_ZP: 0xE6,
+            INS_INC_ZPX: 0xF6,
+            INS_INC_ABS: 0xEE,
+            INS_INC_ABSX: 0xFE,
+
+            INS_INX: 0xE8,
+
+            INS_INY: 0xC8,
+
+            INS_DEC_ZP: 0xC6,
+            INS_DEC_ZPX: 0xD6,
+            INS_DEC_ABS: 0xCE,
+            INS_DEC_ABSX: 0xDE,
+
+            INS_DEX: 0xCA,
+
+            INS_DEY: 0x88,
         }
     }
 
@@ -421,6 +457,7 @@ impl CPU {
         value_from_stack
     }
 
+    // load program into memory
     pub fn load_prg(&mut self, program: [Byte; 14], num_bytes: u32, memory: &mut Mem) -> Word {
         let mut load_address: Word = 0;
 
@@ -1074,6 +1111,42 @@ impl CPU {
                     self.A = self.Y;
                     *cycles -= 1;
                     self.lda_register_set_status();
+                }
+
+                0xE6 => {
+                    println!("Instruction Increment Memory");
+                    let zero_page_address: Byte = self.fetch_byte(cycles, memory);
+                    let mut mem_location = self.read_byte(cycles, zero_page_address as u16, memory);
+                    mem_location += 1;
+                    self.lda_register_set_status();
+                }
+
+                0xE8 => {
+                    println!("Instruction Inc X");
+                    self.X = self.X.wrapping_add(1);
+                    self.ldx_register_set_status();
+                    *cycles -= 1;
+                }
+
+                0xC8 => {
+                    println!("Instruction Inc Y");
+                    self.Y = self.Y.wrapping_add(1);
+                    self.ldy_register_set_status();
+                    *cycles -= 1;
+                }
+
+                0xCA => {
+                    println!("Instruction Dec X");
+                    self.X = self.X.wrapping_sub(1);
+                    self.ldx_register_set_status();
+                    *cycles -= 1;
+                }
+
+                0x88 => {
+                    println!("Instruction Dec Y");
+                    self.Y = self.Y.wrapping_sub(1);
+                    self.ldy_register_set_status();
+                    *cycles -= 1;
                 }
 
                 _ => {

@@ -17,9 +17,9 @@ mod transfer_register_tests {
         // given:
         cpu.reset(&mut mem);
         cpu_copy.reset(&mut mem);
-        
-        cpu.PS.set_bit(1, true);  // Zero Flag
-        cpu.PS.set_bit(7, true);  // Negative Flag
+
+        cpu.PS.set_bit(1, true); // Zero Flag
+        cpu.PS.set_bit(7, true); // Negative Flag
         cpu.A = 0x42;
         cpu.X = 0x32;
 
@@ -29,7 +29,6 @@ mod transfer_register_tests {
 
         // when
         let actual_cycles = cpu.execute(&mut expected_cycles, &mut mem);
-
 
         //then
         assert_eq!(actual_cycles, 2);
@@ -49,9 +48,9 @@ mod transfer_register_tests {
         // given:
         cpu.reset(&mut mem);
         cpu_copy.reset(&mut mem);
-        
-        cpu.PS.set_bit(1, false);  // Zero Flag
-        cpu.PS.set_bit(7, true);  // Negative Flag
+
+        cpu.PS.set_bit(1, false); // Zero Flag
+        cpu.PS.set_bit(7, true); // Negative Flag
         cpu.A = 0x0;
         cpu.X = 0x32;
 
@@ -61,7 +60,6 @@ mod transfer_register_tests {
 
         // when
         let actual_cycles = cpu.execute(&mut expected_cycles, &mut mem);
-
 
         //then
         assert_eq!(actual_cycles, 2);
@@ -81,9 +79,9 @@ mod transfer_register_tests {
         // given:
         cpu.reset(&mut mem);
         cpu_copy.reset(&mut mem);
-        
-        cpu.PS.set_bit(1, true);  // Zero Flag
-        cpu.PS.set_bit(7, false);  // Negative Flag
+
+        cpu.PS.set_bit(1, true); // Zero Flag
+        cpu.PS.set_bit(7, false); // Negative Flag
         cpu.A = 0b10000000;
         cpu.X = 0x32;
 
@@ -94,7 +92,6 @@ mod transfer_register_tests {
         // when
         let actual_cycles = cpu.execute(&mut expected_cycles, &mut mem);
 
-
         //then
         assert_eq!(actual_cycles, 2);
         assert_eq!(cpu.A, 0b10000000);
@@ -103,7 +100,6 @@ mod transfer_register_tests {
         assert_eq!(cpu.PS.get_bit(7), true);
         verify_unmodified_flags(cpu, cpu_copy);
     }
-
 
     #[test]
     fn tay_of_can_transfer_non_negative_non_zero_value() {
@@ -114,9 +110,9 @@ mod transfer_register_tests {
         // given:
         cpu.reset(&mut mem);
         cpu_copy.reset(&mut mem);
-        
-        cpu.PS.set_bit(1, true);  // Zero Flag
-        cpu.PS.set_bit(7, true);  // Negative Flag
+
+        cpu.PS.set_bit(1, true); // Zero Flag
+        cpu.PS.set_bit(7, true); // Negative Flag
         cpu.A = 0x42;
         cpu.Y = 0x32;
 
@@ -126,7 +122,6 @@ mod transfer_register_tests {
 
         // when
         let actual_cycles = cpu.execute(&mut expected_cycles, &mut mem);
-
 
         //then
         assert_eq!(actual_cycles, 2);
@@ -146,9 +141,9 @@ mod transfer_register_tests {
         // given:
         cpu.reset(&mut mem);
         cpu_copy.reset(&mut mem);
-        
-        cpu.PS.set_bit(1, false);  // Zero Flag
-        cpu.PS.set_bit(7, true);  // Negative Flag
+
+        cpu.PS.set_bit(1, false); // Zero Flag
+        cpu.PS.set_bit(7, true); // Negative Flag
         cpu.A = 0x0;
         cpu.Y = 0x32;
 
@@ -158,7 +153,6 @@ mod transfer_register_tests {
 
         // when
         let actual_cycles = cpu.execute(&mut expected_cycles, &mut mem);
-
 
         //then
         assert_eq!(actual_cycles, 2);
@@ -178,9 +172,9 @@ mod transfer_register_tests {
         // given:
         cpu.reset(&mut mem);
         cpu_copy.reset(&mut mem);
-        
-        cpu.PS.set_bit(1, true);  // Zero Flag
-        cpu.PS.set_bit(7, false);  // Negative Flag
+
+        cpu.PS.set_bit(1, true); // Zero Flag
+        cpu.PS.set_bit(7, false); // Negative Flag
         cpu.A = 0b10000000;
         cpu.Y = 0x32;
 
@@ -191,7 +185,6 @@ mod transfer_register_tests {
         // when
         let actual_cycles = cpu.execute(&mut expected_cycles, &mut mem);
 
-
         //then
         assert_eq!(actual_cycles, 2);
         assert_eq!(cpu.A, 0b10000000);
@@ -200,12 +193,6 @@ mod transfer_register_tests {
         assert_eq!(cpu.PS.get_bit(7), true);
         verify_unmodified_flags(cpu, cpu_copy);
     }
-
-
-
-
-
-
 
     #[test]
     fn txa_of_can_transfer_non_negative_non_zero_value() {
@@ -216,9 +203,9 @@ mod transfer_register_tests {
         // given:
         cpu.reset(&mut mem);
         cpu_copy.reset(&mut mem);
-        
-        cpu.PS.set_bit(1, true);  // Zero Flag
-        cpu.PS.set_bit(7, true);  // Negative Flag
+
+        cpu.PS.set_bit(1, true); // Zero Flag
+        cpu.PS.set_bit(7, true); // Negative Flag
         cpu.X = 0x42;
         cpu.A = 0x32;
 
@@ -228,7 +215,6 @@ mod transfer_register_tests {
 
         // when
         let actual_cycles = cpu.execute(&mut expected_cycles, &mut mem);
-
 
         //then
         assert_eq!(actual_cycles, 2);
@@ -248,9 +234,9 @@ mod transfer_register_tests {
         // given:
         cpu.reset(&mut mem);
         cpu_copy.reset(&mut mem);
-        
-        cpu.PS.set_bit(1, false);  // Zero Flag
-        cpu.PS.set_bit(7, true);  // Negative Flag
+
+        cpu.PS.set_bit(1, false); // Zero Flag
+        cpu.PS.set_bit(7, true); // Negative Flag
         cpu.X = 0x0;
         cpu.A = 0x32;
 
@@ -260,7 +246,6 @@ mod transfer_register_tests {
 
         // when
         let actual_cycles = cpu.execute(&mut expected_cycles, &mut mem);
-
 
         //then
         assert_eq!(actual_cycles, 2);
@@ -280,9 +265,9 @@ mod transfer_register_tests {
         // given:
         cpu.reset(&mut mem);
         cpu_copy.reset(&mut mem);
-        
-        cpu.PS.set_bit(1, true);  // Zero Flag
-        cpu.PS.set_bit(7, false);  // Negative Flag
+
+        cpu.PS.set_bit(1, true); // Zero Flag
+        cpu.PS.set_bit(7, false); // Negative Flag
         cpu.X = 0b10000000;
         cpu.A = 0x32;
 
@@ -293,7 +278,6 @@ mod transfer_register_tests {
         // when
         let actual_cycles = cpu.execute(&mut expected_cycles, &mut mem);
 
-
         //then
         assert_eq!(actual_cycles, 2);
         assert_eq!(cpu.X, 0b10000000);
@@ -302,10 +286,6 @@ mod transfer_register_tests {
         assert_eq!(cpu.PS.get_bit(7), true);
         verify_unmodified_flags(cpu, cpu_copy);
     }
-
-
-
-
 
     #[test]
     fn tya_of_can_transfer_non_negative_non_zero_value() {
@@ -316,9 +296,9 @@ mod transfer_register_tests {
         // given:
         cpu.reset(&mut mem);
         cpu_copy.reset(&mut mem);
-        
-        cpu.PS.set_bit(1, true);  // Zero Flag
-        cpu.PS.set_bit(7, true);  // Negative Flag
+
+        cpu.PS.set_bit(1, true); // Zero Flag
+        cpu.PS.set_bit(7, true); // Negative Flag
         cpu.Y = 0x42;
         cpu.A = 0x32;
 
@@ -328,7 +308,6 @@ mod transfer_register_tests {
 
         // when
         let actual_cycles = cpu.execute(&mut expected_cycles, &mut mem);
-
 
         //then
         assert_eq!(actual_cycles, 2);
@@ -348,9 +327,9 @@ mod transfer_register_tests {
         // given:
         cpu.reset(&mut mem);
         cpu_copy.reset(&mut mem);
-        
-        cpu.PS.set_bit(1, false);  // Zero Flag
-        cpu.PS.set_bit(7, true);  // Negative Flag
+
+        cpu.PS.set_bit(1, false); // Zero Flag
+        cpu.PS.set_bit(7, true); // Negative Flag
         cpu.Y = 0x0;
         cpu.A = 0x32;
 
@@ -360,7 +339,6 @@ mod transfer_register_tests {
 
         // when
         let actual_cycles = cpu.execute(&mut expected_cycles, &mut mem);
-
 
         //then
         assert_eq!(actual_cycles, 2);
@@ -380,9 +358,9 @@ mod transfer_register_tests {
         // given:
         cpu.reset(&mut mem);
         cpu_copy.reset(&mut mem);
-        
-        cpu.PS.set_bit(1, true);  // Zero Flag
-        cpu.PS.set_bit(7, false);  // Negative Flag
+
+        cpu.PS.set_bit(1, true); // Zero Flag
+        cpu.PS.set_bit(7, false); // Negative Flag
         cpu.Y = 0b10000000;
         cpu.A = 0x32;
 
@@ -393,7 +371,6 @@ mod transfer_register_tests {
         // when
         let actual_cycles = cpu.execute(&mut expected_cycles, &mut mem);
 
-
         //then
         assert_eq!(actual_cycles, 2);
         assert_eq!(cpu.Y, 0b10000000);
@@ -403,10 +380,6 @@ mod transfer_register_tests {
         verify_unmodified_flags(cpu, cpu_copy);
     }
 
-
-
-
-
     fn verify_unmodified_flags(cpu: CPU, cpu_copy: CPU) {
         assert_eq!(cpu.PS.get_bit(0), cpu_copy.PS.get_bit(0));
         assert_eq!(cpu.PS.get_bit(2), cpu_copy.PS.get_bit(2));
@@ -414,5 +387,4 @@ mod transfer_register_tests {
         assert_eq!(cpu.PS.get_bit(4), cpu_copy.PS.get_bit(4));
         assert_eq!(cpu.PS.get_bit(6), cpu_copy.PS.get_bit(6));
     }
-
 }

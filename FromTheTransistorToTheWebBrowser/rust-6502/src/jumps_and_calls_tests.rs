@@ -2,11 +2,13 @@
 
 mod jumps_and_calls_tests {
 
-    use crate::mos6502::*;
     use std::os::raw::*;
 
     type Byte = c_uchar;
     type Word = c_ushort;
+
+    use crate::Mem;
+    use crate::CPU;
 
     #[test]
     fn can_jump_to_subroutine_and_jump_back_again() {

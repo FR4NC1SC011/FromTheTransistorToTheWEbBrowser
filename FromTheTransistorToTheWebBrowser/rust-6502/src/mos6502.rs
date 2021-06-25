@@ -2,161 +2,12 @@ use bit_field::BitField;
 use num_traits::{WrappingShl, WrappingShr};
 use std::os::raw::*;
 
+use crate::Flags;
+use crate::Mem;
+use crate::CPU;
+
 type Byte = c_uchar;
 type Word = c_ushort;
-
-#[derive(Debug)]
-pub struct Mem {
-    pub MAX_MEM: u32,
-    pub Data: Vec<Byte>,
-}
-
-enum Flags {
-    NegativeFlagBit = 0b10000000,
-    OverflowFlagBit = 0b01000000,
-    BreakFlagBit = 0b000010000,
-    UnusedFlagBit = 0b000100000,
-    InterruptDisableFlagBit = 0b000000100,
-    ZeroBit = 0b00000001,
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct CPU {
-    pub PC: Word, // program counter
-    pub SP: Byte, // stack pointer
-    // pub PS: Byte, // process status
-
-    // Registers
-    pub A: Byte, // Accumulator
-    pub X: Byte,
-    pub Y: Byte,
-
-    // Status flags
-    // pub PS: (Byte, Byte, Byte, Byte, Byte, Byte, Byte, Byte),
-    pub PS: Byte,
-
-    // pub C: Byte,
-    // pub Z: Byte,
-    // pub I: Byte,
-    // pub D: Byte,
-    // pub B: Byte,
-    // pub Unused: Byte,
-    // pub V: Byte,
-    // pub N: Byte,
-
-    // Opcodes
-
-    // LDA
-    pub INS_LDA_IM: Byte,
-    pub INS_LDA_ZP: Byte,
-    pub INS_LDA_ZPX: Byte,
-    pub INS_LDA_ABS: Byte,
-    pub INS_LDA_ABSX: Byte,
-    pub INS_LDA_ABSY: Byte,
-    pub INS_LDA_INDX: Byte,
-    pub INS_LDA_INDY: Byte,
-
-    // LDX
-    pub INS_LDX_IM: Byte,
-    pub INS_LDX_ZP: Byte,
-    pub INS_LDX_ZPY: Byte,
-    pub INS_LDX_ABS: Byte,
-    pub INS_LDX_ABSY: Byte,
-
-    // LDY
-    pub INS_LDY_IM: Byte,
-    pub INS_LDY_ZP: Byte,
-    pub INS_LDY_ZPX: Byte,
-    pub INS_LDY_ABS: Byte,
-    pub INS_LDY_ABSX: Byte,
-
-    // STA
-    pub INS_STA_ZP: Byte,
-    pub INS_STA_ZPX: Byte,
-    pub INS_STA_ABS: Byte,
-    pub INS_STA_ABSX: Byte,
-    pub INS_STA_ABSY: Byte,
-    pub INS_STA_INDX: Byte,
-    pub INS_STA_INDY: Byte,
-
-    // STX
-    pub INS_STX_ZP: Byte,
-    pub INS_STX_ZPY: Byte,
-    pub INS_STX_ABS: Byte,
-
-    // STY
-    pub INS_STY_ZP: Byte,
-    pub INS_STY_ZPX: Byte,
-    pub INS_STY_ABS: Byte,
-
-    // Jumps And Calls
-    pub INS_JMP_ABS: Byte,
-    pub INS_JMP_IND: Byte,
-    pub INS_JSR: Byte,
-    pub INS_RTS: Byte,
-
-    // Stack Operations
-    pub INS_TSX: Byte,
-    pub INS_TXS: Byte,
-    pub INS_PHA: Byte,
-    pub INS_PHP: Byte,
-    pub INS_PLA: Byte,
-    pub INS_PLP: Byte,
-
-    // Logical Operations
-    pub INS_AND_IM: Byte,
-    pub INS_AND_ZP: Byte,
-    pub INS_AND_ZPX: Byte,
-    pub INS_AND_ABS: Byte,
-    pub INS_AND_ABSX: Byte,
-    pub INS_AND_ABSY: Byte,
-    pub INS_AND_INDX: Byte,
-    pub INS_AND_INDY: Byte,
-
-    pub INS_EOR_IM: Byte,
-    pub INS_EOR_ZP: Byte,
-    pub INS_EOR_ZPX: Byte,
-    pub INS_EOR_ABS: Byte,
-    pub INS_EOR_ABSX: Byte,
-    pub INS_EOR_ABSY: Byte,
-    pub INS_EOR_INDX: Byte,
-    pub INS_EOR_INDY: Byte,
-
-    pub INS_ORA_IM: Byte,
-    pub INS_ORA_ZP: Byte,
-    pub INS_ORA_ZPX: Byte,
-    pub INS_ORA_ABS: Byte,
-    pub INS_ORA_ABSX: Byte,
-    pub INS_ORA_ABSY: Byte,
-    pub INS_ORA_INDX: Byte,
-    pub INS_ORA_INDY: Byte,
-
-    pub INS_BIT_ZP: Byte,
-    pub INS_BIT_ABS: Byte,
-
-    // Register Transfers
-    pub INS_TAX: Byte,
-    pub INS_TAY: Byte,
-    pub INS_TXA: Byte,
-    pub INS_TYA: Byte,
-
-    // Increments & Decrements
-    pub INS_INC_ABS: Byte,
-    pub INS_INC_ABSX: Byte,
-    pub INS_INC_ZP: Byte,
-    pub INS_INC_ZPX: Byte,
-
-    pub INS_INX: Byte,
-    pub INS_INY: Byte,
-
-    pub INS_DEC_ABS: Byte,
-    pub INS_DEC_ABSX: Byte,
-    pub INS_DEC_ZP: Byte,
-    pub INS_DEC_ZPX: Byte,
-
-    pub INS_DEX: Byte,
-    pub INS_DEY: Byte,
-}
 
 impl Mem {
     fn initialize(&mut self) {
@@ -176,23 +27,23 @@ impl Mem {
 impl CPU {
     pub fn new() -> Self {
         CPU {
-            PC: 0,
-            SP: 0,
+            PC: 0, // Program Counter
+            SP: 0, // Stack Pointer
 
-            A: 0,
-            X: 0,
-            Y: 0,
+            A: 0, // Accumulator
+            X: 0, // Index Register X
+            Y: 0, // Index Register Y
 
-            // PS: (1,1,1,1,1,1,1,1),
-            PS: 0b11111111,
-            // C: 1,
-            // Z: 1,
-            // I: 1,
-            // D: 1,
-            // B: 1,
-            // Unused: 1,
-            // V: 1,
-            // N: 1,
+            PS: 0b11111111, // Processor Status
+            //  0bCZIDBUVN
+            // C: Carry Flag,
+            // Z: Zero Flag,
+            // I: Interrupt Disable,
+            // D: Decimal Mode,
+            // B: Break Command,
+            // U: Unused,
+            // V: Overflow Flag,
+            // N: Negative Flag,
 
             // Opcodes
 
@@ -308,6 +159,9 @@ impl CPU {
             INS_DEX: 0xCA,
 
             INS_DEY: 0x88,
+
+            // Branches
+            INS_BEQ: 0xF0,
         }
     }
 
@@ -319,15 +173,7 @@ impl CPU {
         self.X = 0;
         self.Y = 0;
 
-        // self.PS = (1,1,1,1,1,1,1,1);
         self.PS = 0b11111111;
-        //         self.C = 1;
-        //         self.Z = 1;
-        //         self.I = 1;
-        //         self.D = 1;
-        //         self.B = 1;
-        //         self.V = 1;
-        //         self.N = 1;
 
         memory.initialize();
     }
@@ -340,15 +186,7 @@ impl CPU {
         self.X = 0;
         self.Y = 0;
 
-        // self.PS = (1,1,1,1,1,1,1,1);
         self.PS = 0b11111111;
-        // self.C = 1;
-        // self.Z = 1;
-        // self.I = 1;
-        // self.D = 1;
-        // self.B = 1;
-        // self.V = 1;
-        // self.N = 1;
 
         memory.initialize();
     }
@@ -367,7 +205,6 @@ impl CPU {
 
     fn fetch_byte(&mut self, cycles: &mut isize, memory: &mut Mem) -> Byte {
         let data: Byte = memory.Data[self.PC as usize];
-        // self.PC += 1;
         self.PC = self.PC.wrapping_add(1);
         *cycles = cycles.wrapping_sub(1);
         data
@@ -375,7 +212,6 @@ impl CPU {
 
     fn read_byte(&mut self, cycles: &mut isize, address: Word, memory: &mut Mem) -> Byte {
         let data: Byte = memory.Data[address as usize];
-        // *cycles -= 1;
         *cycles = cycles.wrapping_sub(1);
         data
     }
@@ -399,7 +235,7 @@ impl CPU {
     fn write_word(&mut self, value: Byte, cycles: &mut isize, address: Word, memory: &mut Mem) {
         memory.Data[address as usize] = (value & 0xFF) as u8;
         let mut x: u16 = value as u16;
-        x = x.wrapping_shl(8);
+        x = x.wrapping_shr(8);
         memory.Data[(address + 1) as usize] = x as u8;
         *cycles -= 2;
     }
@@ -436,21 +272,13 @@ impl CPU {
 
     // push the PC - 1 onto the stack
     fn push_pc_to_stack(&mut self, cycles: &mut isize, memory: &mut Mem) {
-        //         let sp_16_bit = self.sp_to_address();
-        //         self.write_word((self.PC - 1) as u8, cycles, sp_16_bit - 1, memory);
-        //         self.PC -= 2;
-        //         dbg!(sp_16_bit);
-
         self.push_word_to_stack(cycles, memory, self.PC);
     }
 
     fn pop_word_from_stack(&mut self, cycles: &mut isize, memory: &mut Mem) -> Word {
         let sp_16_bit = self.sp_to_address();
-        // let value_from_stack: Word = self.read_word(cycles, sp_16_bit + 1, memory);
-        dbg!(sp_16_bit);
 
         let value_from_stack: Word = self.read_word(cycles, sp_16_bit + 1, memory);
-        dbg!(value_from_stack);
         self.SP = self.SP.wrapping_add(2);
 
         *cycles -= 1;
@@ -1045,7 +873,6 @@ impl CPU {
                     let zero_page_address: Byte = self.fetch_byte(cycles, memory);
                     let value = self.read_byte(cycles, zero_page_address as u16, memory);
 
-                    // let z: bool = !(self.A & value) != 0;
                     let z = self.A & value;
                     let z_bool: bool;
                     if z == 0 {
@@ -1225,6 +1052,16 @@ impl CPU {
                     self.Y = self.Y.wrapping_sub(1);
                     self.ldy_register_set_status();
                     *cycles -= 1;
+                }
+
+                // Branches
+                0xF0 => {
+                    println!("Instruction BEQ");
+                    let offset: Byte = self.fetch_byte(cycles, memory);
+                    if self.PS.get_bit(1) {
+                        self.PC += offset as Word;
+                        *cycles -= 1;
+                    }
                 }
 
                 _ => {

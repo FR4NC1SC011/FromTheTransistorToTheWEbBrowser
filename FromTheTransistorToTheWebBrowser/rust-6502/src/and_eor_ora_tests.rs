@@ -1,12 +1,14 @@
 #[cfg(test)]
 mod and_eor_ora_tests {
 
-    use crate::mos6502::*;
     use bit_field::BitField;
     use std::os::raw::*;
 
     type Byte = c_uchar;
     type Word = c_ushort;
+
+    use crate::Mem;
+    use crate::CPU;
 
     enum ELogicalOp {
         And,

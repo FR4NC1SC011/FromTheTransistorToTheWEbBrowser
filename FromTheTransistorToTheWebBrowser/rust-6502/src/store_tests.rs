@@ -1,11 +1,13 @@
 #[cfg(test)]
 mod store_tests {
 
-    use crate::mos6502::*;
     use std::os::raw::*;
 
     type Byte = c_uchar;
     type Word = c_ushort;
+
+    use crate::Mem;
+    use crate::CPU;
 
     fn test_sta_zp(opcode_to_test: Byte) {
         let mut mem = Mem::new();

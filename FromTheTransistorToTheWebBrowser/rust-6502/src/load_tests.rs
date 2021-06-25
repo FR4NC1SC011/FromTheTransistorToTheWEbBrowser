@@ -1,9 +1,11 @@
 #[cfg(test)]
 mod load_tests {
 
-    use crate::mos6502::*;
     use bit_field::BitField;
     use std::os::raw::*;
+
+    use crate::Mem;
+    use crate::CPU;
 
     type Byte = c_uchar;
     type Word = c_ushort;

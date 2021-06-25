@@ -1,12 +1,13 @@
 #[cfg(test)]
 mod programs_tests {
 
-    use crate::mos6502::*;
-    use bit_field::BitField;
     use std::os::raw::*;
 
     type Byte = c_uchar;
     type Word = c_ushort;
+
+    use crate::Mem;
+    use crate::CPU;
 
     #[test]
     fn test_load_a_program_into_the_correct_area_of_memory() {

@@ -1,12 +1,14 @@
 #[cfg(test)]
 mod transfer_register_tests {
 
-    use crate::mos6502::*;
     use bit_field::BitField;
     use std::os::raw::*;
 
     type Byte = c_uchar;
     type Word = c_ushort;
+
+    use crate::Mem;
+    use crate::CPU;
 
     #[test]
     fn tax_of_can_transfer_non_negative_non_zero_value() {

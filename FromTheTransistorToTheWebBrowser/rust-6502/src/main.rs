@@ -8,6 +8,7 @@ mod programs_tests;
 mod stack_operations_tests;
 mod store_tests;
 mod transfer_register_tests;
+mod address;
 
 use mos6502::*;
 
@@ -177,31 +178,46 @@ pub struct CPU {
 fn main() {
     println!("6502 Emulator with rust");
 
-    let mut mem = Mem::new();
-    let mut cpu = CPU::new();
-    let mut cpu_copy = CPU::new();
+//     let mut mem = Mem::new();
+//     let mut cpu = CPU::new();
+//     let mut cpu_copy = CPU::new();
+// 
+//     // given:
+//     cpu.reset(&mut mem);
+//     cpu_copy.reset(&mut mem);
+// 
+//     let prg: [Byte; 14] = [
+//         0x00, 0x10, 0xA9, 0xFF, 0x85, 0x90, 0x8D, 0x00, 0x80, 0x49, 0xCC, 0x4C, 0x02, 0x10,
+//     ];
+// 
+//     // when
+//     let start_address = cpu.load_prg(prg, 14, &mut mem);
+//     cpu.PC = start_address;
+// 
+//     let mut clock: i32 = 1000;
+//     loop {
+//         if clock <= 0 {
+//             break;
+//         }
+// 
+//         clock -= cpu.execute(&mut 1, &mut mem) as i32;
+//         println!("A: {}, X: {}, Y: {}", cpu.A, cpu.X, cpu.Y);
+//         println!("PC: {}, SP: {}", cpu.PC, cpu.SP);
+//         println!("PS: {}", cpu.PS);
+//     }
 
-    // given:
-    cpu.reset(&mut mem);
-    cpu_copy.reset(&mut mem);
+        let x: u8 = 10;
+        println!("X: {:#8b}", x);
+        println!("X: {}", x);
 
-    let prg: [Byte; 14] = [
-        0x00, 0x10, 0xA9, 0xFF, 0x85, 0x90, 0x8D, 0x00, 0x80, 0x49, 0xCC, 0x4C, 0x02, 0x10,
-    ];
+        let y: u8 = !10;
+        println!("Y: {:#8b}", y);
+        println!("Y: {}", y);
 
-    // when
-    let start_address = cpu.load_prg(prg, 14, &mut mem);
-    cpu.PC = start_address;
-
-    let mut clock: i32 = 1000;
-    loop {
-        if clock <= 0 {
-            break;
-        }
-
-        clock -= cpu.execute(&mut 1, &mut mem) as i32;
-        println!("A: {}, X: {}, Y: {}", cpu.A, cpu.X, cpu.Y);
-        println!("PC: {}, SP: {}", cpu.PC, cpu.SP);
-        println!("PS: {}", cpu.PS);
-    }
+        let z: u8 = !10_u8.wrapping_shr(8);
+        println!("Z: {:#8b}", z);
+        println!("Z: {}", z);
+        
+        let u: u8 = 0x10_u8.wrapping_neg();
+        println!("U: {}", u);
 }

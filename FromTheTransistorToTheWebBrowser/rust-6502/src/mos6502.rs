@@ -5,8 +5,11 @@ use std::os::raw::*;
 use crate::Flags;
 use crate::Mem;
 use crate::CPU;
+use crate::address::{Address, AddressDiff};
 
 type Byte = c_uchar;
+// type SByte = c_schar;
+
 type Word = c_ushort;
 
 impl Mem {
@@ -272,7 +275,7 @@ impl CPU {
 
     // push the PC - 1 onto the stack
     fn push_pc_to_stack(&mut self, cycles: &mut isize, memory: &mut Mem) {
-        self.push_word_to_stack(cycles, memory, self.PC);
+        self.push_word_to_stack(cycles, memory, self.PC as Word);
     }
 
     fn pop_word_from_stack(&mut self, cycles: &mut isize, memory: &mut Mem) -> Word {
@@ -316,6 +319,13 @@ impl CPU {
         load_address
     }
 
+    fn zero_page_address(&mut self, cycles: &mut isize, memory: &mut Mem) -> Byte {
+        let zero_page_address: Byte = self.fetch_byte(cycles, memory);
+        let value: Byte = self.read_byte(cycles, zero_page_address as u16, memory);
+
+        value
+    }
+
     pub fn execute(&mut self, cycles: &mut isize, memory: &mut Mem) -> isize {
         let cycles_requested = *cycles;
         while cycles > &mut 0 {
@@ -343,22 +353,19 @@ impl CPU {
 
                 0xA5 => {
                     println!("Instruction LDA ZP");
-                    let zero_page_address: Byte = self.fetch_byte(cycles, memory);
-                    self.A = self.read_byte(cycles, zero_page_address as u16, memory);
+                    self.A = self.zero_page_address(cycles, memory);
                     self.lda_register_set_status();
                 }
 
                 0xA6 => {
                     println!("Instruction LDX ZP");
-                    let zero_page_address: Byte = self.fetch_byte(cycles, memory);
-                    self.X = self.read_byte(cycles, zero_page_address as u16, memory);
+                    self.X = self.zero_page_address(cycles, memory);
                     self.ldx_register_set_status();
                 }
 
                 0xA4 => {
                     println!("Instruction LDY ZP");
-                    let zero_page_address: Byte = self.fetch_byte(cycles, memory);
-                    self.Y = self.read_byte(cycles, zero_page_address as u16, memory);
+                    self.Y = self.zero_page_address(cycles, memory);
                     self.ldy_register_set_status();
                 }
 
@@ -481,8 +488,8 @@ impl CPU {
                 // Store Instructions
                 0x85 => {
                     println!("Instruction STA Zero Page");
-                    let zero_page_address: Byte = self.fetch_byte(cycles, memory);
-                    self.write_byte(self.A, cycles, zero_page_address as u16, memory);
+                    let zp_address: Byte = self.fetch_byte(cycles, memory);
+                    self.write_byte(self.A, cycles, zp_address as u16, memory);
                 }
 
                 0x95 => {
@@ -495,14 +502,14 @@ impl CPU {
 
                 0x86 => {
                     println!("Instruction STX Zero Page");
-                    let zero_page_address: Byte = self.fetch_byte(cycles, memory);
-                    self.write_byte(self.X, cycles, zero_page_address as u16, memory);
+                    let zp_address: Byte = self.fetch_byte(cycles, memory);
+                    self.write_byte(self.X, cycles, zp_address as u16, memory);
                 }
 
                 0x84 => {
                     println!("Instruction STY Zero Page");
-                    let zero_page_address: Byte = self.fetch_byte(cycles, memory);
-                    self.write_byte(self.Y, cycles, zero_page_address as u16, memory);
+                    let zp_address: Byte = self.fetch_byte(cycles, memory);
+                    self.write_byte(self.Y, cycles, zp_address as u16, memory);
                 }
 
                 0x94 => {
@@ -663,23 +670,21 @@ impl CPU {
 
                 0x25 => {
                     println!("Instruction AND ZP");
-                    let zero_page_address: Byte = self.fetch_byte(cycles, memory);
-                    self.A &= self.read_byte(cycles, zero_page_address as u16, memory);
+                    self.A &= self.zero_page_address(cycles, memory);                    
                     self.lda_register_set_status();
                 }
 
                 0x05 => {
                     println!("Instruction ORA ZP");
-                    let zero_page_address: Byte = self.fetch_byte(cycles, memory);
-                    self.A |= self.read_byte(cycles, zero_page_address as u16, memory);
+                    self.A |= self.zero_page_address(cycles, memory);                    
                     self.lda_register_set_status();
                 }
 
                 0x45 => {
                     println!("Instruction EOR ZP");
-                    let zero_page_address: Byte = self.fetch_byte(cycles, memory);
-                    self.A ^= self.read_byte(cycles, zero_page_address as u16, memory);
+                    self.A ^= self.zero_page_address(cycles, memory);                    
                     self.lda_register_set_status();
+
                 }
 
                 0x35 => {
@@ -1056,11 +1061,22 @@ impl CPU {
 
                 // Branches
                 0xF0 => {
+                    // TODO: review this function
                     println!("Instruction BEQ");
                     let offset: Byte = self.fetch_byte(cycles, memory);
+                    let address = CPU::signed_8_bit_to_16(offset).wrapping_add(self.PC); 
                     if self.PS.get_bit(1) {
-                        self.PC += offset as Word;
+                        let old_pc: Word = self.PC;
+                        // self.PC = self.PC as Address + AddressDiff(i32::from(offset));
+                        // self.PC = (self.PC as i16 + offset as i16) as u16 ;
+                        self.PC = address;
                         *cycles -= 1;
+
+                        let page_changed: bool = self.PC >> 8 != old_pc >> 8;
+
+                        if page_changed {
+                            *cycles -= 2;
+                        }
                     }
                 }
 
@@ -1119,5 +1135,14 @@ impl CPU {
             false => *self.PS.set_bit(7, false),
             true => *self.PS.set_bit(7, true),
         };
+    }
+
+    // function to convert a byte to a u16 when the value is signed
+    fn signed_8_bit_to_16(value: u8) -> u16 {
+        let mut value = u16::from(value);
+        if value & 0x80 > 0 {
+            value |= 0xff00;
+        }
+        return value;
     }
 }

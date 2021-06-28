@@ -38,7 +38,7 @@ impl CPU {
             Y: 0, // Index Register Y
 
             PS: 0b11111111, // Processor Status
-            //  0bCZIDBUVN
+            //  0bNVUBDIZC
             // C: Carry Flag,
             // Z: Zero Flag,
             // I: Interrupt Disable,
@@ -164,7 +164,14 @@ impl CPU {
             INS_DEY: 0x88,
 
             // Branches
+            INS_BCC: 0x90,
+            INS_BCS: 0xB0,
             INS_BEQ: 0xF0,
+            INS_BMI: 0x30,
+            INS_BNE: 0xD0,
+            INS_BPL: 0x10,
+            INS_BVC: 0x50,
+            INS_BVS: 0x70,
         }
     }
 
@@ -325,6 +332,26 @@ impl CPU {
 
         value
     }
+
+    fn branch_if(&mut self, cycles: &mut isize, memory: &mut Mem, value: bool, condition: bool) {
+         // TODO: review this function
+        let offset: Byte = self.fetch_byte(cycles, memory);
+        let address = CPU::signed_8_bit_to_16(offset).wrapping_add(self.PC); 
+        if value == condition {
+            let old_pc: Word = self.PC;
+            // self.PC = self.PC as Address + AddressDiff(i32::from(offset));
+            // self.PC = (self.PC as i16 + offset as i16) as u16 ;
+            self.PC = address;
+            *cycles -= 1;
+
+            let page_changed: bool = self.PC >> 8 != old_pc >> 8;
+
+            if page_changed {
+                *cycles -= 2;
+            }
+        }
+    }
+
 
     pub fn execute(&mut self, cycles: &mut isize, memory: &mut Mem) -> isize {
         let cycles_requested = *cycles;
@@ -1060,25 +1087,49 @@ impl CPU {
                 }
 
                 // Branches
+                0x90 => {
+                    println!("Instruction BCC");
+                    self.branch_if(cycles, memory, self.PS.get_bit(0), false);
+                }
+
+                0xB0 => {
+                    println!("Instruction BCS");
+                    self.branch_if(cycles, memory, self.PS.get_bit(0), true);
+                }
+
                 0xF0 => {
                     // TODO: review this function
                     println!("Instruction BEQ");
-                    let offset: Byte = self.fetch_byte(cycles, memory);
-                    let address = CPU::signed_8_bit_to_16(offset).wrapping_add(self.PC); 
-                    if self.PS.get_bit(1) {
-                        let old_pc: Word = self.PC;
-                        // self.PC = self.PC as Address + AddressDiff(i32::from(offset));
-                        // self.PC = (self.PC as i16 + offset as i16) as u16 ;
-                        self.PC = address;
-                        *cycles -= 1;
-
-                        let page_changed: bool = self.PC >> 8 != old_pc >> 8;
-
-                        if page_changed {
-                            *cycles -= 2;
-                        }
-                    }
+                    self.branch_if(cycles, memory, self.PS.get_bit(1), true);
                 }
+
+               0xD0 => {
+                    println!("Instruction BNE");
+                    self.branch_if(cycles, memory, self.PS.get_bit(1), false);
+                }
+
+                0x30 => {
+                    println!("Instruction BMI");
+                    self.branch_if(cycles, memory, self.PS.get_bit(7), true);
+                }
+
+                0x10 => {
+                    println!("Instruction BPL");
+                    self.branch_if(cycles, memory, self.PS.get_bit(7), false);
+                }
+
+                0x50 => {
+                    println!("Instruction BVC");
+                    self.branch_if(cycles, memory, self.PS.get_bit(6), false);
+                }
+
+                0x70 => {
+                    println!("Instruction BVS");
+                    self.branch_if(cycles, memory, self.PS.get_bit(6), true);
+                }
+
+
+ 
 
                 _ => {
                     unimplemented!("Instruction not handled {}", ins);

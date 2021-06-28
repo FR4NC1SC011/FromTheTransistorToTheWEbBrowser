@@ -172,7 +172,14 @@ pub struct CPU {
     pub INS_DEY: Byte,
 
     // Branches
+    pub INS_BCC: Byte,
+    pub INS_BCS: Byte,
     pub INS_BEQ: Byte,
+    pub INS_BMI: Byte,
+    pub INS_BNE: Byte,
+    pub INS_BPL: Byte,
+    pub INS_BVC: Byte,
+    pub INS_BVS: Byte,
 }
 
 fn main() {

@@ -9,6 +9,7 @@ mod stack_operations_tests;
 mod store_tests;
 mod transfer_register_tests;
 mod address;
+mod status_flags_tests;
 
 use mos6502::*;
 
@@ -180,6 +181,16 @@ pub struct CPU {
     pub INS_BPL: Byte,
     pub INS_BVC: Byte,
     pub INS_BVS: Byte,
+
+    // Status Flags Changes
+    pub INS_CLC: Byte,
+    pub INS_CLD: Byte,
+    pub INS_CLI: Byte,
+    pub INS_CLV: Byte,
+    pub INS_SEC: Byte,
+    pub INS_SED: Byte,
+    pub INS_SEI: Byte,
+
 }
 
 fn main() {

@@ -172,6 +172,16 @@ impl CPU {
             INS_BPL: 0x10,
             INS_BVC: 0x50,
             INS_BVS: 0x70,
+
+            // Status Flags Changes
+            INS_CLC: 0x18,
+            INS_CLD: 0xD8,
+            INS_CLI: 0x58,
+            INS_CLV: 0xB8,
+            INS_SEC: 0x38,
+            INS_SED: 0xF8,
+            INS_SEI: 0x78,
+ 
         }
     }
 
@@ -333,6 +343,20 @@ impl CPU {
         value
     }
 
+    fn zero_page_address_x(&mut self, cycles: &mut isize, memory: &mut Mem) -> Byte {
+//         let zero_page_address: Byte = self.fetch_byte(cycles, memory);
+//         let value: Byte = self.read_byte(cycles, zero_page_address as u16, memory);
+// 
+//         value
+
+        let mut zero_page_address_x: Byte = self.fetch_byte(cycles, memory);
+        zero_page_address_x = zero_page_address_x.wrapping_add(self.X);
+        *cycles -= 1;
+        let value: Byte = self.read_byte(cycles, zero_page_address_x as u16, memory);
+
+        value
+    }
+
     fn branch_if(&mut self, cycles: &mut isize, memory: &mut Mem, value: bool, condition: bool) {
          // TODO: review this function
         let offset: Byte = self.fetch_byte(cycles, memory);
@@ -398,19 +422,13 @@ impl CPU {
 
                 0xB4 => {
                     println!("Instruction LDY ZPX");
-                    let mut zero_page_address: Byte = self.fetch_byte(cycles, memory);
-                    zero_page_address = zero_page_address.wrapping_add(self.X);
-                    *cycles -= 1;
-                    self.Y = self.read_byte(cycles, zero_page_address as u16, memory);
+                    self.Y = self.zero_page_address_x(cycles, memory);
                     self.ldy_register_set_status();
                 }
 
                 0xB5 => {
                     println!("Instruction LDA ZPX");
-                    let mut zero_page_address: Byte = self.fetch_byte(cycles, memory);
-                    zero_page_address = zero_page_address.wrapping_add(self.X);
-                    *cycles -= 1;
-                    self.A = self.read_byte(cycles, zero_page_address as u16, memory);
+                    self.A = self.zero_page_address_x(cycles, memory);
                     self.lda_register_set_status();
                 }
 
@@ -716,28 +734,19 @@ impl CPU {
 
                 0x35 => {
                     println!("Instruction AND ZPX");
-                    let mut zero_page_address: Byte = self.fetch_byte(cycles, memory);
-                    zero_page_address = zero_page_address.wrapping_add(self.X);
-                    *cycles -= 1;
-                    self.A &= self.read_byte(cycles, zero_page_address as u16, memory);
+                    self.A &= self.zero_page_address_x(cycles, memory); 
                     self.lda_register_set_status();
                 }
 
                 0x15 => {
                     println!("Instruction ORA ZPX");
-                    let mut zero_page_address: Byte = self.fetch_byte(cycles, memory);
-                    zero_page_address = zero_page_address.wrapping_add(self.X);
-                    *cycles -= 1;
-                    self.A |= self.read_byte(cycles, zero_page_address as u16, memory);
+                    self.A |= self.zero_page_address_x(cycles, memory);                    
                     self.lda_register_set_status();
                 }
 
                 0x55 => {
                     println!("Instruction EOR ZPX");
-                    let mut zero_page_address: Byte = self.fetch_byte(cycles, memory);
-                    zero_page_address = zero_page_address.wrapping_add(self.X);
-                    *cycles -= 1;
-                    self.A ^= self.read_byte(cycles, zero_page_address as u16, memory);
+                    self.A ^= self.zero_page_address_x(cycles, memory); 
                     self.lda_register_set_status();
                 }
 
@@ -1128,8 +1137,49 @@ impl CPU {
                     self.branch_if(cycles, memory, self.PS.get_bit(6), true);
                 }
 
+                // Status Flags Changes
+                0x18 => {
+                    println!("Instruction CLC");
+                    self.PS.set_bit(0, false);
+                    *cycles -= 1;
+                } 
 
- 
+                0xD8 => {
+                    println!("Instruction CLD");
+                    self.PS.set_bit(3, false);
+                    *cycles -= 1;
+                } 
+
+                0x58 => {
+                    println!("Instruction CLI");
+                    self.PS.set_bit(2, false);
+                    *cycles -= 1;
+                }
+
+                0xB8 => {
+                    println!("Instruction CLV");
+                    self.PS.set_bit(6, false);
+                    *cycles -= 1;
+                }
+
+                0x38 => {
+                    println!("Instruction SEC");
+                    self.PS.set_bit(0, true);
+                    *cycles -= 1;
+                }
+
+                0xF8 => {
+                    println!("Instruction SED");
+                    self.PS.set_bit(3, true);
+                    *cycles -= 1;
+                }
+
+                0x78 => {
+                    println!("Instruction SEI");
+                    self.PS.set_bit(2, true);
+                    *cycles -= 1;
+                }
+
 
                 _ => {
                     unimplemented!("Instruction not handled {}", ins);

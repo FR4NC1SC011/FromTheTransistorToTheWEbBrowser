@@ -2,10 +2,10 @@ use bit_field::BitField;
 use num_traits::{WrappingShl, WrappingShr};
 use std::os::raw::*;
 
+use crate::address::{Address, AddressDiff};
 use crate::Flags;
 use crate::Mem;
 use crate::CPU;
-use crate::address::{Address, AddressDiff};
 
 type Byte = c_uchar;
 // type SByte = c_schar;
@@ -181,7 +181,9 @@ impl CPU {
             INS_SEC: 0x38,
             INS_SED: 0xF8,
             INS_SEI: 0x78,
- 
+
+            // System Functions
+            INS_NOP: 0xEA,
         }
     }
 
@@ -305,37 +307,6 @@ impl CPU {
         value_from_stack
     }
 
-    // load program into memory
-    pub fn load_prg(&mut self, program: [Byte; 14], num_bytes: u32, memory: &mut Mem) -> Word {
-        let mut load_address: Word = 0;
-
-        if !program.is_empty() && num_bytes > 2 {
-            let mut at: u32 = 0;
-
-            let lo: Word = program[at as usize] as Word;
-
-            at = at + 1;
-            let hi_byte: Word = program[at as usize] as Word;
-
-            let hi: Word = hi_byte.wrapping_shl(8) as Word;
-
-            load_address = lo | hi;
-
-            let mut i = load_address;
-            loop {
-                if u32::from(i) >= load_address as u32 + num_bytes - 2 {
-                    break;
-                }
-
-                at = at + 1;
-                memory.Data[i as usize] = program[at as usize];
-                i += 1;
-            }
-        }
-
-        load_address
-    }
-
     fn zero_page_address(&mut self, cycles: &mut isize, memory: &mut Mem) -> Byte {
         let zero_page_address: Byte = self.fetch_byte(cycles, memory);
         let value: Byte = self.read_byte(cycles, zero_page_address as u16, memory);
@@ -344,11 +315,6 @@ impl CPU {
     }
 
     fn zero_page_address_x(&mut self, cycles: &mut isize, memory: &mut Mem) -> Byte {
-//         let zero_page_address: Byte = self.fetch_byte(cycles, memory);
-//         let value: Byte = self.read_byte(cycles, zero_page_address as u16, memory);
-// 
-//         value
-
         let mut zero_page_address_x: Byte = self.fetch_byte(cycles, memory);
         zero_page_address_x = zero_page_address_x.wrapping_add(self.X);
         *cycles -= 1;
@@ -357,10 +323,70 @@ impl CPU {
         value
     }
 
+    fn zero_page_address_y(&mut self, cycles: &mut isize, memory: &mut Mem) -> Byte {
+        let mut zero_page_address_y: Byte = self.fetch_byte(cycles, memory);
+        zero_page_address_y = zero_page_address_y.wrapping_add(self.Y);
+        *cycles -= 1;
+        let value: Byte = self.read_byte(cycles, zero_page_address_y as u16, memory);
+
+        value
+    }
+
+    fn absolute_address(&mut self, cycles: &mut isize, memory: &mut Mem) -> Byte {
+        let abs_addrress: Word = self.fetch_word(cycles, memory);
+        let value = self.read_byte(cycles, abs_addrress as u16, memory);
+
+        value
+    }
+
+    fn absolute_address_x(&mut self, cycles: &mut isize, memory: &mut Mem) -> Byte {
+        let abs_address: Word = self.fetch_word(cycles, memory);
+        let abs_address_plus_x: Word = abs_address + self.X as u16;
+        let value = self.read_byte(cycles, abs_address_plus_x, memory);
+        if abs_address_plus_x - abs_address >= 0xFF {
+            *cycles -= 1;
+        }
+
+        value
+    }
+
+    fn absolute_address_y(&mut self, cycles: &mut isize, memory: &mut Mem) -> Byte {
+        let abs_address: Word = self.fetch_word(cycles, memory);
+        let abs_address_plus_y: Word = abs_address + self.Y as u16;
+        let value = self.read_byte(cycles, abs_address_plus_y, memory);
+        if abs_address_plus_y - abs_address >= 0xFF {
+            *cycles -= 1;
+        }
+
+        value
+    }
+
+    fn indirect_address_x(&mut self, cycles: &mut isize, memory: &mut Mem) -> Byte {
+        let mut zero_page_address: Byte = self.fetch_byte(cycles, memory);
+        zero_page_address += self.X;
+        *cycles -= 1;
+        let effective_address: Word = self.read_word(cycles, zero_page_address as u16, memory);
+        let value: Byte = self.read_byte(cycles, effective_address, memory);
+
+        value
+    }
+
+    fn indirect_address_y(&mut self, cycles: &mut isize, memory: &mut Mem) -> Byte {
+        let zero_page_address: Byte = self.fetch_byte(cycles, memory);
+        let effective_address: Word = self.read_word(cycles, zero_page_address as u16, memory);
+        let effective_address_y: Word = effective_address + self.Y as u16;
+        let value = self.read_byte(cycles, effective_address_y, memory);
+        if effective_address_y - effective_address >= 0xFF {
+            *cycles -= 1;
+        }
+
+        value
+    }
+
     fn branch_if(&mut self, cycles: &mut isize, memory: &mut Mem, value: bool, condition: bool) {
-         // TODO: review this function
+        // TODO: review this function
         let offset: Byte = self.fetch_byte(cycles, memory);
-        let address = CPU::signed_8_bit_to_16(offset).wrapping_add(self.PC); 
+        let address = CPU::signed_8_bit_to_16(offset).wrapping_add(self.PC);
         if value == condition {
             let old_pc: Word = self.PC;
             // self.PC = self.PC as Address + AddressDiff(i32::from(offset));
@@ -375,7 +401,6 @@ impl CPU {
             }
         }
     }
-
 
     pub fn execute(&mut self, cycles: &mut isize, memory: &mut Mem) -> isize {
         let cycles_requested = *cycles;
@@ -434,99 +459,61 @@ impl CPU {
 
                 0xB6 => {
                     println!("Instruction LDX ZPY");
-                    let mut zero_page_address: Byte = self.fetch_byte(cycles, memory);
-                    zero_page_address = zero_page_address.wrapping_add(self.Y);
-                    *cycles -= 1;
-                    self.X = self.read_byte(cycles, zero_page_address as u16, memory);
+                    self.X = self.zero_page_address_y(cycles, memory);
                     self.ldx_register_set_status();
                 }
 
                 0xAD => {
                     println!("Instruction LDA Absolute");
-                    let abs_addrress: Word = self.fetch_word(cycles, memory);
-                    self.A = self.read_byte(cycles, abs_addrress as u16, memory);
+                    self.A = self.absolute_address(cycles, memory);
                     self.lda_register_set_status();
                 }
 
                 0xAE => {
                     println!("Instruction LDX Absolute");
-                    let abs_addrress: Word = self.fetch_word(cycles, memory);
-                    self.X = self.read_byte(cycles, abs_addrress as u16, memory);
+                    self.X = self.absolute_address(cycles, memory);
                     self.ldx_register_set_status();
                 }
 
                 0xAC => {
                     println!("Instruction LDY Absolute");
-                    let abs_addrress: Word = self.fetch_word(cycles, memory);
-                    self.Y = self.read_byte(cycles, abs_addrress as u16, memory);
+                    self.Y = self.absolute_address(cycles, memory);
                     self.ldy_register_set_status();
                 }
 
                 0xBC => {
                     println!("Instruction LDY Absolute X");
-                    let abs_addrress: Word = self.fetch_word(cycles, memory);
-                    let abs_address_plus_x: Word = abs_addrress + self.X as u16;
-                    self.Y = self.read_byte(cycles, abs_address_plus_x, memory);
-                    if abs_address_plus_x - abs_addrress >= 0xFF {
-                        *cycles -= 1;
-                    }
+                    self.Y = self.absolute_address_x(cycles, memory);
                     self.ldy_register_set_status();
                 }
 
                 0xBD => {
                     println!("Instruction LDA Absolute X");
-                    let abs_addrress: Word = self.fetch_word(cycles, memory);
-                    let abs_address_plus_x: Word = abs_addrress + self.X as u16;
-                    self.A = self.read_byte(cycles, abs_address_plus_x, memory);
-                    if abs_address_plus_x - abs_addrress >= 0xFF {
-                        *cycles -= 1;
-                    }
+                    self.A = self.absolute_address_x(cycles, memory);
                     self.lda_register_set_status();
                 }
 
                 0xBE => {
                     println!("Instruction LDX Absolute Y");
-                    let abs_addrress: Word = self.fetch_word(cycles, memory);
-                    let abs_address_plus_y: Word = abs_addrress + self.Y as u16;
-                    self.X = self.read_byte(cycles, abs_address_plus_y, memory);
-                    if abs_address_plus_y - abs_addrress >= 0xFF {
-                        *cycles -= 1;
-                    }
+                    self.X = self.absolute_address_y(cycles, memory);
                     self.ldx_register_set_status();
                 }
 
                 0xB9 => {
                     println!("Instruction LDA Absolute Y");
-                    let abs_addrress: Word = self.fetch_word(cycles, memory);
-                    let abs_address_plus_y: Word = abs_addrress + self.Y as u16;
-                    self.A = self.read_byte(cycles, abs_address_plus_y, memory);
-                    if abs_address_plus_y - abs_addrress >= 0xFF {
-                        *cycles -= 1;
-                    }
+                    self.A = self.absolute_address_y(cycles, memory);
                     self.lda_register_set_status();
                 }
 
                 0xA1 => {
                     println!("Instruction LDA Indirect X");
-                    let mut zero_page_address: Byte = self.fetch_byte(cycles, memory);
-                    zero_page_address += self.X;
-                    *cycles -= 1;
-                    let effective_address: Word =
-                        self.read_word(cycles, zero_page_address as u16, memory);
-                    self.A = self.read_byte(cycles, effective_address, memory);
+                    self.A = self.indirect_address_x(cycles, memory);
                     self.lda_register_set_status();
                 }
 
                 0xB1 => {
                     println!("Instruction LDA Indirect Y");
-                    let zero_page_address: Byte = self.fetch_byte(cycles, memory);
-                    let effective_address: Word =
-                        self.read_word(cycles, zero_page_address as u16, memory);
-                    let effective_address_y: Word = effective_address + self.Y as u16;
-                    self.A = self.read_byte(cycles, effective_address_y, memory);
-                    if effective_address_y - effective_address >= 0xFF {
-                        *cycles -= 1;
-                    }
+                    self.A = self.indirect_address_y(cycles, memory);
                     self.lda_register_set_status();
                 }
 
@@ -715,197 +702,127 @@ impl CPU {
 
                 0x25 => {
                     println!("Instruction AND ZP");
-                    self.A &= self.zero_page_address(cycles, memory);                    
+                    self.A &= self.zero_page_address(cycles, memory);
                     self.lda_register_set_status();
                 }
 
                 0x05 => {
                     println!("Instruction ORA ZP");
-                    self.A |= self.zero_page_address(cycles, memory);                    
+                    self.A |= self.zero_page_address(cycles, memory);
                     self.lda_register_set_status();
                 }
 
                 0x45 => {
                     println!("Instruction EOR ZP");
-                    self.A ^= self.zero_page_address(cycles, memory);                    
+                    self.A ^= self.zero_page_address(cycles, memory);
                     self.lda_register_set_status();
-
                 }
 
                 0x35 => {
                     println!("Instruction AND ZPX");
-                    self.A &= self.zero_page_address_x(cycles, memory); 
+                    self.A &= self.zero_page_address_x(cycles, memory);
                     self.lda_register_set_status();
                 }
 
                 0x15 => {
                     println!("Instruction ORA ZPX");
-                    self.A |= self.zero_page_address_x(cycles, memory);                    
+                    self.A |= self.zero_page_address_x(cycles, memory);
                     self.lda_register_set_status();
                 }
 
                 0x55 => {
                     println!("Instruction EOR ZPX");
-                    self.A ^= self.zero_page_address_x(cycles, memory); 
+                    self.A ^= self.zero_page_address_x(cycles, memory);
                     self.lda_register_set_status();
                 }
 
                 0x2D => {
                     println!("Instruction AND Absolute");
-                    let abs_addrress: Word = self.fetch_word(cycles, memory);
-                    self.A &= self.read_byte(cycles, abs_addrress as u16, memory);
+                    self.A &= self.absolute_address(cycles, memory);
                     self.lda_register_set_status();
                 }
 
                 0x0D => {
                     println!("Instruction ORA Absolute");
-                    let abs_addrress: Word = self.fetch_word(cycles, memory);
-                    self.A |= self.read_byte(cycles, abs_addrress as u16, memory);
+                    self.A |= self.absolute_address(cycles, memory);
                     self.lda_register_set_status();
                 }
 
                 0x4D => {
                     println!("Instruction EOR Absolute");
-                    let abs_addrress: Word = self.fetch_word(cycles, memory);
-                    self.A ^= self.read_byte(cycles, abs_addrress as u16, memory);
+                    self.A ^= self.absolute_address(cycles, memory);
                     self.lda_register_set_status();
                 }
 
                 0x3D => {
                     println!("Instruction AND Absolute X");
-                    let abs_addrress: Word = self.fetch_word(cycles, memory);
-                    let abs_address_plus_x: Word = abs_addrress + self.X as u16;
-                    self.A &= self.read_byte(cycles, abs_address_plus_x, memory);
-                    if abs_address_plus_x - abs_addrress >= 0xFF {
-                        *cycles -= 1;
-                    }
+                    self.A &= self.absolute_address_x(cycles, memory);
                     self.lda_register_set_status();
                 }
 
                 0x1D => {
                     println!("Instruction ORA Absolute X");
-                    let abs_addrress: Word = self.fetch_word(cycles, memory);
-                    let abs_address_plus_x: Word = abs_addrress + self.X as u16;
-                    self.A |= self.read_byte(cycles, abs_address_plus_x, memory);
-                    if abs_address_plus_x - abs_addrress >= 0xFF {
-                        *cycles -= 1;
-                    }
+                    self.A |= self.absolute_address_x(cycles, memory);
                     self.lda_register_set_status();
                 }
 
                 0x5D => {
                     println!("Instruction EOR Absolute X");
-                    let abs_addrress: Word = self.fetch_word(cycles, memory);
-                    let abs_address_plus_x: Word = abs_addrress + self.X as u16;
-                    self.A ^= self.read_byte(cycles, abs_address_plus_x, memory);
-                    if abs_address_plus_x - abs_addrress >= 0xFF {
-                        *cycles -= 1;
-                    }
+                    self.A ^= self.absolute_address_x(cycles, memory);
                     self.lda_register_set_status();
                 }
 
                 0x39 => {
                     println!("Instruction AND Absolute Y");
-                    let abs_addrress: Word = self.fetch_word(cycles, memory);
-                    let abs_address_plus_y: Word = abs_addrress + self.Y as u16;
-                    self.A &= self.read_byte(cycles, abs_address_plus_y, memory);
-                    if abs_address_plus_y - abs_addrress >= 0xFF {
-                        *cycles -= 1;
-                    }
+                    self.A &= self.absolute_address_y(cycles, memory);
                     self.lda_register_set_status();
                 }
 
                 0x19 => {
                     println!("Instruction ORA Absolute Y");
-                    let abs_addrress: Word = self.fetch_word(cycles, memory);
-                    let abs_address_plus_y: Word = abs_addrress + self.Y as u16;
-                    self.A |= self.read_byte(cycles, abs_address_plus_y, memory);
-                    if abs_address_plus_y - abs_addrress >= 0xFF {
-                        *cycles -= 1;
-                    }
+                    self.A |= self.absolute_address_y(cycles, memory);
                     self.lda_register_set_status();
                 }
 
                 0x59 => {
                     println!("Instruction EOR Absolute Y");
-                    let abs_addrress: Word = self.fetch_word(cycles, memory);
-                    let abs_address_plus_y: Word = abs_addrress + self.Y as u16;
-                    self.A ^= self.read_byte(cycles, abs_address_plus_y, memory);
-                    if abs_address_plus_y - abs_addrress >= 0xFF {
-                        *cycles -= 1;
-                    }
+                    self.A ^= self.absolute_address_y(cycles, memory);
                     self.lda_register_set_status();
                 }
 
                 0x21 => {
                     println!("Instruction AND Indirect X");
-                    let mut zero_page_address: Byte = self.fetch_byte(cycles, memory);
-                    zero_page_address += self.X;
-                    *cycles -= 1;
-                    let effective_address: Word =
-                        self.read_word(cycles, zero_page_address as u16, memory);
-                    self.A &= self.read_byte(cycles, effective_address, memory);
+                    self.A &= self.indirect_address_x(cycles, memory);
                     self.lda_register_set_status();
                 }
 
                 0x01 => {
                     println!("Instruction ORA Indirect X");
-                    let mut zero_page_address: Byte = self.fetch_byte(cycles, memory);
-                    zero_page_address += self.X;
-                    *cycles -= 1;
-                    let effective_address: Word =
-                        self.read_word(cycles, zero_page_address as u16, memory);
-                    self.A |= self.read_byte(cycles, effective_address, memory);
+                    self.A |= self.indirect_address_x(cycles, memory);
                     self.lda_register_set_status();
                 }
 
                 0x41 => {
                     println!("Instruction EOR Indirect X");
-                    let mut zero_page_address: Byte = self.fetch_byte(cycles, memory);
-                    zero_page_address += self.X;
-                    *cycles -= 1;
-                    let effective_address: Word =
-                        self.read_word(cycles, zero_page_address as u16, memory);
-                    self.A ^= self.read_byte(cycles, effective_address, memory);
+                    self.A ^= self.indirect_address_x(cycles, memory);
                     self.lda_register_set_status();
                 }
 
                 0x31 => {
                     println!("Instruction AND Indirect Y");
-                    let zero_page_address: Byte = self.fetch_byte(cycles, memory);
-                    let effective_address: Word =
-                        self.read_word(cycles, zero_page_address as u16, memory);
-                    let effective_address_y: Word = effective_address + self.Y as u16;
-                    self.A &= self.read_byte(cycles, effective_address_y, memory);
-                    if effective_address_y - effective_address >= 0xFF {
-                        *cycles -= 1;
-                    }
+                    self.A &= self.indirect_address_y(cycles, memory);
                     self.lda_register_set_status();
                 }
 
                 0x11 => {
                     println!("Instruction ORA Indirect Y");
-                    let zero_page_address: Byte = self.fetch_byte(cycles, memory);
-                    let effective_address: Word =
-                        self.read_word(cycles, zero_page_address as u16, memory);
-                    let effective_address_y: Word = effective_address + self.Y as u16;
-                    self.A |= self.read_byte(cycles, effective_address_y, memory);
-                    if effective_address_y - effective_address >= 0xFF {
-                        *cycles -= 1;
-                    }
+                    self.A |= self.indirect_address_y(cycles, memory);
                     self.lda_register_set_status();
                 }
 
                 0x51 => {
                     println!("Instruction EOR Indirect Y");
-                    let zero_page_address: Byte = self.fetch_byte(cycles, memory);
-                    let effective_address: Word =
-                        self.read_word(cycles, zero_page_address as u16, memory);
-                    let effective_address_y: Word = effective_address + self.Y as u16;
-                    self.A ^= self.read_byte(cycles, effective_address_y, memory);
-                    if effective_address_y - effective_address >= 0xFF {
-                        *cycles -= 1;
-                    }
+                    self.A ^= self.indirect_address_y(cycles, memory);
                     self.lda_register_set_status();
                 }
 
@@ -1112,7 +1029,7 @@ impl CPU {
                     self.branch_if(cycles, memory, self.PS.get_bit(1), true);
                 }
 
-               0xD0 => {
+                0xD0 => {
                     println!("Instruction BNE");
                     self.branch_if(cycles, memory, self.PS.get_bit(1), false);
                 }
@@ -1142,13 +1059,13 @@ impl CPU {
                     println!("Instruction CLC");
                     self.PS.set_bit(0, false);
                     *cycles -= 1;
-                } 
+                }
 
                 0xD8 => {
                     println!("Instruction CLD");
                     self.PS.set_bit(3, false);
                     *cycles -= 1;
-                } 
+                }
 
                 0x58 => {
                     println!("Instruction CLI");
@@ -1180,6 +1097,11 @@ impl CPU {
                     *cycles -= 1;
                 }
 
+                // System Functions
+                0xEA => {
+                    println!("Instruction NOP");
+                    *cycles -= 1;
+                }
 
                 _ => {
                     unimplemented!("Instruction not handled {}", ins);

@@ -87,11 +87,9 @@ mod branches_tests {
         // assert_eq!(cpu.PS, cpu_copy.PS);
     }
 
-
     // TODO: check this test
     #[test]
     fn beq_can_branch_backwards_when_zero_is_set_from_assembly() {
-
         // loop
         // lda #0
         // beq loop

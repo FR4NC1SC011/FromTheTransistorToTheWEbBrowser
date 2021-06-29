@@ -19,7 +19,7 @@ mod status_flags_tests {
         // given:
         cpu.reset(&mut mem);
         cpu_copy.reset(&mut mem);
-    
+
         cpu.PS.set_bit(0, true);
 
         mem.Data[0xFFFC] = cpu.INS_CLC;
@@ -49,7 +49,7 @@ mod status_flags_tests {
         // given:
         cpu.reset(&mut mem);
         cpu_copy.reset(&mut mem);
-    
+
         cpu.PS.set_bit(3, true);
 
         mem.Data[0xFFFC] = cpu.INS_CLD;
@@ -79,7 +79,7 @@ mod status_flags_tests {
         // given:
         cpu.reset(&mut mem);
         cpu_copy.reset(&mut mem);
-    
+
         cpu.PS.set_bit(2, true);
 
         mem.Data[0xFFFC] = cpu.INS_CLI;
@@ -109,7 +109,7 @@ mod status_flags_tests {
         // given:
         cpu.reset(&mut mem);
         cpu_copy.reset(&mut mem);
-    
+
         cpu.PS.set_bit(6, true);
 
         mem.Data[0xFFFC] = cpu.INS_CLV;
@@ -139,7 +139,7 @@ mod status_flags_tests {
         // given:
         cpu.reset(&mut mem);
         cpu_copy.reset(&mut mem);
-    
+
         cpu.PS.set_bit(0, false);
 
         mem.Data[0xFFFC] = cpu.INS_SEC;
@@ -169,7 +169,7 @@ mod status_flags_tests {
         // given:
         cpu.reset(&mut mem);
         cpu_copy.reset(&mut mem);
-    
+
         cpu.PS.set_bit(3, false);
 
         mem.Data[0xFFFC] = cpu.INS_SED;
@@ -199,7 +199,7 @@ mod status_flags_tests {
         // given:
         cpu.reset(&mut mem);
         cpu_copy.reset(&mut mem);
-    
+
         cpu.PS.set_bit(2, false);
 
         mem.Data[0xFFFC] = cpu.INS_SEI;
@@ -220,15 +220,39 @@ mod status_flags_tests {
         assert_eq!(cpu.PS.get_bit(7), cpu_copy.PS.get_bit(7)); // Negative Flag
     }
 
+    #[test]
+    fn nop_will_do_nothing_except_consume_a_cycle() {
+        let mut mem = Mem::new();
+        let mut cpu = CPU::new();
+        let mut cpu_copy = CPU::new();
 
+        // given:
+        cpu.reset(&mut mem);
+        cpu_copy.reset(&mut mem);
 
-// 
-//         assert_eq!(cpu.PS.get_bit(0), cpu_copy.PS.get_bit(0)); // Carry Flag
-//         assert_eq!(cpu.PS.get_bit(1), cpu_copy.PS.get_bit(1)); // Zero Flag
-//         assert_eq!(cpu.PS.get_bit(2), cpu_copy.PS.get_bit(2)); // Interrupt Disable
-//         assert_eq!(cpu.PS.get_bit(3), cpu_copy.PS.get_bit(3)); // Decimnal Mode
-//         assert_eq!(cpu.PS.get_bit(4), cpu_copy.PS.get_bit(4)); // Break Command
-//         assert_eq!(cpu.PS.get_bit(5), cpu_copy.PS.get_bit(5)); // Unused
-//         assert_eq!(cpu.PS.get_bit(6), cpu_copy.PS.get_bit(6)); // Overflow Flag
-//         assert_eq!(cpu.PS.get_bit(7), cpu_copy.PS.get_bit(7)); // Negative Flag
+        mem.Data[0xFFFC] = cpu.INS_NOP;
+
+        // when:
+        let cycles_used = cpu.execute(&mut 2, &mut mem);
+        assert_eq!(cycles_used, 2);
+
+        // then:
+        assert_eq!(cycles_used, 2);
+        assert_eq!(cpu.PS, cpu_copy.PS);
+        assert_eq!(cpu.PC, 0xFFFD);
+        assert_eq!(cpu.A, cpu_copy.A);
+        assert_eq!(cpu.X, cpu_copy.X);
+        assert_eq!(cpu.Y, cpu_copy.Y);
+        assert_eq!(cpu.SP, cpu_copy.SP);
+    }
+
+    //
+    //         assert_eq!(cpu.PS.get_bit(0), cpu_copy.PS.get_bit(0)); // Carry Flag
+    //         assert_eq!(cpu.PS.get_bit(1), cpu_copy.PS.get_bit(1)); // Zero Flag
+    //         assert_eq!(cpu.PS.get_bit(2), cpu_copy.PS.get_bit(2)); // Interrupt Disable
+    //         assert_eq!(cpu.PS.get_bit(3), cpu_copy.PS.get_bit(3)); // Decimnal Mode
+    //         assert_eq!(cpu.PS.get_bit(4), cpu_copy.PS.get_bit(4)); // Break Command
+    //         assert_eq!(cpu.PS.get_bit(5), cpu_copy.PS.get_bit(5)); // Unused
+    //         assert_eq!(cpu.PS.get_bit(6), cpu_copy.PS.get_bit(6)); // Overflow Flag
+    //         assert_eq!(cpu.PS.get_bit(7), cpu_copy.PS.get_bit(7)); // Negative Flag
 }

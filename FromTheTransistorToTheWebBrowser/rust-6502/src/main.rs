@@ -1,3 +1,4 @@
+mod address;
 mod and_eor_ora_tests;
 mod branches_tests;
 mod increments_and_decrements_tests;
@@ -6,10 +7,9 @@ mod load_tests;
 mod mos6502;
 mod programs_tests;
 mod stack_operations_tests;
+mod status_flags_tests;
 mod store_tests;
 mod transfer_register_tests;
-mod address;
-mod status_flags_tests;
 
 use mos6502::*;
 
@@ -39,7 +39,6 @@ pub enum Flags {
 pub struct CPU {
     pub PC: Word, // program counter
     pub SP: Byte, // stack pointer
-    // pub PS: Byte, // process status
 
     // Registers
     pub A: Byte, // Accumulator
@@ -47,17 +46,7 @@ pub struct CPU {
     pub Y: Byte,
 
     // Status flags
-    // pub PS: (Byte, Byte, Byte, Byte, Byte, Byte, Byte, Byte),
     pub PS: Byte,
-
-    // pub C: Byte,
-    // pub Z: Byte,
-    // pub I: Byte,
-    // pub D: Byte,
-    // pub B: Byte,
-    // pub Unused: Byte,
-    // pub V: Byte,
-    // pub N: Byte,
 
     // Opcodes
 
@@ -191,51 +180,71 @@ pub struct CPU {
     pub INS_SED: Byte,
     pub INS_SEI: Byte,
 
+    // System Functions
+    pub INS_NOP: Byte,
+}
+
+impl CPU {
+    // load program into memory
+    pub fn load_prg(&mut self, program: [Byte; 14], num_bytes: u32, memory: &mut Mem) -> Word {
+        let mut load_address: Word = 0;
+
+        if !program.is_empty() && num_bytes > 2 {
+            let mut at: u32 = 0;
+
+            let lo: Word = program[at as usize] as Word;
+
+            at = at + 1;
+            let hi_byte: Word = program[at as usize] as Word;
+
+            let hi: Word = hi_byte.wrapping_shl(8) as Word;
+
+            load_address = lo | hi;
+
+            let mut i = load_address;
+            loop {
+                if u32::from(i) >= load_address as u32 + num_bytes - 2 {
+                    break;
+                }
+
+                at = at + 1;
+                memory.Data[i as usize] = program[at as usize];
+                i += 1;
+            }
+        }
+
+        load_address
+    }
 }
 
 fn main() {
     println!("6502 Emulator with rust");
 
-//     let mut mem = Mem::new();
-//     let mut cpu = CPU::new();
-//     let mut cpu_copy = CPU::new();
-// 
-//     // given:
-//     cpu.reset(&mut mem);
-//     cpu_copy.reset(&mut mem);
-// 
-//     let prg: [Byte; 14] = [
-//         0x00, 0x10, 0xA9, 0xFF, 0x85, 0x90, 0x8D, 0x00, 0x80, 0x49, 0xCC, 0x4C, 0x02, 0x10,
-//     ];
-// 
-//     // when
-//     let start_address = cpu.load_prg(prg, 14, &mut mem);
-//     cpu.PC = start_address;
-// 
-//     let mut clock: i32 = 1000;
-//     loop {
-//         if clock <= 0 {
-//             break;
-//         }
-// 
-//         clock -= cpu.execute(&mut 1, &mut mem) as i32;
-//         println!("A: {}, X: {}, Y: {}", cpu.A, cpu.X, cpu.Y);
-//         println!("PC: {}, SP: {}", cpu.PC, cpu.SP);
-//         println!("PS: {}", cpu.PS);
-//     }
+    let mut mem = Mem::new();
+    let mut cpu = CPU::new();
+    let mut cpu_copy = CPU::new();
 
-        let x: u8 = 10;
-        println!("X: {:#8b}", x);
-        println!("X: {}", x);
+    // given:
+    cpu.reset(&mut mem);
+    cpu_copy.reset(&mut mem);
 
-        let y: u8 = !10;
-        println!("Y: {:#8b}", y);
-        println!("Y: {}", y);
+    let prg: [Byte; 14] = [
+        0x00, 0x10, 0xA9, 0xFF, 0x85, 0x90, 0x8D, 0x00, 0x80, 0x49, 0xCC, 0x4C, 0x02, 0x10,
+    ];
 
-        let z: u8 = !10_u8.wrapping_shr(8);
-        println!("Z: {:#8b}", z);
-        println!("Z: {}", z);
-        
-        let u: u8 = 0x10_u8.wrapping_neg();
-        println!("U: {}", u);
+    // when
+    let start_address = cpu.load_prg(prg, 14, &mut mem);
+    cpu.PC = start_address;
+
+    let mut clock: i32 = 1000;
+    loop {
+        if clock <= 0 {
+            break;
+        }
+
+        clock -= cpu.execute(&mut 1, &mut mem) as i32;
+        println!("A: {}, X: {}, Y: {}", cpu.A, cpu.X, cpu.Y);
+        println!("PC: {}, SP: {}", cpu.PC, cpu.SP);
+        println!("PS: {}", cpu.PS);
+    }
 }

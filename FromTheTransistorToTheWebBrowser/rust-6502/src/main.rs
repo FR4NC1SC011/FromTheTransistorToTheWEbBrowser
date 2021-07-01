@@ -10,6 +10,7 @@ mod stack_operations_tests;
 mod status_flags_tests;
 mod store_tests;
 mod transfer_register_tests;
+mod add_with_carry_tests;
 
 use mos6502::*;
 
@@ -179,6 +180,19 @@ pub struct CPU {
     pub INS_SEC: Byte,
     pub INS_SED: Byte,
     pub INS_SEI: Byte,
+
+    // Arithmetic
+
+    // Add With Carry
+    pub INS_ADC_IM: Byte,
+    pub INS_ADC_ZP: Byte,
+    pub INS_ADC_ZPX: Byte,
+    pub INS_ADC_ABS: Byte,
+    pub INS_ADC_ABSX: Byte,
+    pub INS_ADC_ABSY: Byte,
+    pub INS_ADC_INDX: Byte,
+    pub INS_ADC_INDY: Byte,
+
 
     // System Functions
     pub INS_NOP: Byte,

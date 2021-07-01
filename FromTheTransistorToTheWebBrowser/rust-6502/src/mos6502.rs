@@ -182,6 +182,18 @@ impl CPU {
             INS_SED: 0xF8,
             INS_SEI: 0x78,
 
+            // Arithmetic
+
+            // Add With Carry
+            INS_ADC_IM: 0x69,
+            INS_ADC_ZP: 0x65,
+            INS_ADC_ZPX: 0x75,
+            INS_ADC_ABS: 0x6D,
+            INS_ADC_ABSX: 0x7D,
+            INS_ADC_ABSY: 0x79,
+            INS_ADC_INDX: 0x61,
+            INS_ADC_INDY: 0x71,
+
             // System Functions
             INS_NOP: 0xEA,
         }

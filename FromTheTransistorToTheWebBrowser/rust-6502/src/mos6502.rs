@@ -405,6 +405,32 @@ impl CPU {
         value
     }
 
+    fn add_with_carry(&mut self, operand: Byte) {
+        let are_sign_bits_the_same: bool = !((self.A ^ operand) & Flags::NegativeFlagBit as u8) != 0;
+
+
+        let c_flag_value: Byte = if self.PS.get_bit(0) == true { 1 } else { 0 }; 
+        self.A = self.A.wrapping_add(c_flag_value);
+        let sum = self.A.checked_add(operand);
+        
+        match sum {
+            Some(x) => {
+                self.A = x;
+                self.PS.set_bit(0, false);  // set Carry Flag
+                self.lda_register_set_status();
+            }
+
+            None => {                      // Overflow
+                self.A = self.A.wrapping_add(operand);
+                self.PS.set_bit(0, true);  // set Carry Flag
+                self.lda_register_set_status();
+            }
+        }
+
+        let v: bool = are_sign_bits_the_same && ((self.A ^ operand) & Flags::NegativeFlagBit as u8) != 0;
+        self.PS.set_bit(6, v); // V flag
+    }
+
     fn branch_if(&mut self, cycles: &mut isize, memory: &mut Mem, value: bool, condition: bool) {
         // TODO: review this function
         let offset: Byte = self.fetch_byte(cycles, memory);
@@ -1124,32 +1150,50 @@ impl CPU {
                 0x6D => {
                     println!("Instruction ADC Absolute");
                     let operand: Byte = self.absolute_address(cycles, memory);
-                    let are_sign_bits_the_same: bool = !((self.A ^ operand) & Flags::NegativeFlagBit as u8) != 0;
-
-
-                    let c_flag_value: Byte = if self.PS.get_bit(0) == true { 1 } else { 0 }; 
-                    self.A = self.A.wrapping_add(c_flag_value);
-                    let sum = self.A.checked_add(operand);
-                    
-                    match sum {
-                        Some(x) => {
-                            self.A = x;
-                            self.PS.set_bit(0, false);  // set Carry Flag
-                            self.lda_register_set_status();
-                        }
-
-                        None => {                      // Overflow
-                            self.A = self.A.wrapping_add(operand);
-                            self.PS.set_bit(0, true);  // set Carry Flag
-                            self.lda_register_set_status();
-                        }
-                    }
-
-                    let v: bool = are_sign_bits_the_same && ((self.A ^ operand) & Flags::NegativeFlagBit as u8) != 0;
-                    self.PS.set_bit(6, v); // V flag
-
+                    self.add_with_carry(operand);
                }
 
+                0x7D => {
+                    println!("Instruction ADC Absolute X");
+                    let operand: Byte = self.absolute_address_x(cycles, memory);
+                    self.add_with_carry(operand);
+               }
+
+                0x79 => {
+                    println!("Instruction ADC Absolute Y");
+                    let operand: Byte = self.absolute_address_y(cycles, memory);
+                    self.add_with_carry(operand);
+               }
+
+               0x69 => {
+                    println!("Instruction ADC Inmediate");
+                    let operand: Byte = self.fetch_byte(cycles, memory);
+                    self.add_with_carry(operand);
+                }
+
+               0x65 => {
+                    println!("Instruction ADC Zero Page");
+                    let operand: Byte = self.zero_page_address(cycles, memory);
+                    self.add_with_carry(operand);
+                }
+
+                0x75 => {
+                    println!("Instruction ADC Zero Page X");
+                    let operand: Byte = self.zero_page_address_x(cycles, memory);
+                    self.add_with_carry(operand);
+                }
+
+               0x61 => {
+                    println!("Instruction ADC Indirect X");
+                    let operand: Byte = self.indirect_address_x(cycles, memory);
+                    self.add_with_carry(operand);
+                }
+
+                0x71 => {
+                    println!("Instruction ADC Indirect Y");
+                    let operand: Byte = self.indirect_address_y(cycles, memory);
+                    self.add_with_carry(operand);
+                }
                 // System Functions
                 0xEA => {
                     println!("Instruction NOP");

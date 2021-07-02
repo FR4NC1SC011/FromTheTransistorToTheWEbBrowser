@@ -108,9 +108,226 @@ mod add_with_carry_tests {
         assert_eq!(cpu.PS.get_bit(6), test.expect_v);     // V
         assert_eq!(cpu.PS.get_bit(7), test.expect_n);     // N
         verify_unmodified_flags(cpu, cpu_copy);
-
     }
 
+    fn test_adc_or_sbc_absolute_y(test: ADCTestData, operation: EOperation) {
+        let mut mem = Mem::new();
+        let mut cpu = CPU::new();
+
+        // given:
+        cpu.reset_vector(&mut mem, 0xFF00);
+
+        cpu.PS.set_bit(0, test.carry);      // C
+        cpu.Y = 0x10;
+        cpu.A = test.a;
+        cpu.PS.set_bit(1, !test.expect_z);  // Z
+        cpu.PS.set_bit(6, !test.expect_v);  // V
+        cpu.PS.set_bit(7, !test.expect_n);  // N
+
+        let opcode = if operation == EOperation::Add { cpu.INS_ADC_ABSY } 
+                                                else { cpu.INS_SBC_ABSY };
+
+        mem.Data[0xFF00] = opcode;         
+        mem.Data[0xFF01] = 0x00;
+        mem.Data[0xFF02] = 0x80;
+        mem.Data[0x8000 + 0x10] = test.operand;
+        let mut expected_cycles = 4;
+        let cpu_copy = cpu;
+
+        // when 
+        let actual_cycles = cpu.execute(&mut expected_cycles, &mut mem);
+
+        // then:
+        assert_eq!(actual_cycles, 4);
+        assert_eq!(cpu.A, test.answer);
+        assert_eq!(cpu.PS.get_bit(0), test.expect_c);     // C
+        assert_eq!(cpu.PS.get_bit(1), test.expect_z);     // Z
+        assert_eq!(cpu.PS.get_bit(6), test.expect_v);     // V
+        assert_eq!(cpu.PS.get_bit(7), test.expect_n);     // N
+        verify_unmodified_flags(cpu, cpu_copy);
+    }
+
+    fn test_adc_or_sbc_inmediate(test: ADCTestData, operation: EOperation) {
+        let mut mem = Mem::new();
+        let mut cpu = CPU::new();
+
+        // given:
+        cpu.reset_vector(&mut mem, 0xFF00);
+
+        cpu.PS.set_bit(0, test.carry);      // C
+        cpu.A = test.a;
+        cpu.PS.set_bit(1, !test.expect_z);  // Z
+        cpu.PS.set_bit(6, !test.expect_v);  // V
+        cpu.PS.set_bit(7, !test.expect_n);  // N
+
+        let opcode = if operation == EOperation::Add { cpu.INS_ADC_IM } 
+                                                else { cpu.INS_SBC_IM };
+
+        mem.Data[0xFF00] = opcode;         
+        mem.Data[0xFF01] = test.operand;
+        let mut expected_cycles = 2;
+        let cpu_copy = cpu;
+
+        // when 
+        let actual_cycles = cpu.execute(&mut expected_cycles, &mut mem);
+
+        // then:
+        assert_eq!(actual_cycles, 2);
+        assert_eq!(cpu.A, test.answer);
+        assert_eq!(cpu.PS.get_bit(0), test.expect_c);     // C
+        assert_eq!(cpu.PS.get_bit(1), test.expect_z);     // Z
+        assert_eq!(cpu.PS.get_bit(6), test.expect_v);     // V
+        assert_eq!(cpu.PS.get_bit(7), test.expect_n);     // N
+        verify_unmodified_flags(cpu, cpu_copy);
+    }
+
+
+    fn test_adc_or_sbc_zero_page(test: ADCTestData, operation: EOperation) {
+        let mut mem = Mem::new();
+        let mut cpu = CPU::new();
+
+        // given:
+        cpu.reset_vector(&mut mem, 0xFF00);
+
+        cpu.PS.set_bit(0, test.carry);      // C
+        cpu.A = test.a;
+        cpu.PS.set_bit(1, !test.expect_z);  // Z
+        cpu.PS.set_bit(6, !test.expect_v);  // V
+        cpu.PS.set_bit(7, !test.expect_n);  // N
+
+        let opcode = if operation == EOperation::Add { cpu.INS_ADC_ZP } 
+                                                else { cpu.INS_SBC_ZP };
+
+        mem.Data[0xFF00] = opcode;         
+        mem.Data[0xFF01] = 0x42;
+        mem.Data[0x0042] = test.operand;
+        let mut expected_cycles = 3;
+        let cpu_copy = cpu;
+
+        // when 
+        let actual_cycles = cpu.execute(&mut expected_cycles, &mut mem);
+
+        // then:
+        assert_eq!(actual_cycles, 3);
+        assert_eq!(cpu.A, test.answer);
+        assert_eq!(cpu.PS.get_bit(0), test.expect_c);     // C
+        assert_eq!(cpu.PS.get_bit(1), test.expect_z);     // Z
+        assert_eq!(cpu.PS.get_bit(6), test.expect_v);     // V
+        assert_eq!(cpu.PS.get_bit(7), test.expect_n);     // N
+        verify_unmodified_flags(cpu, cpu_copy);
+    }
+
+     fn test_adc_or_sbc_zero_page_x(test: ADCTestData, operation: EOperation) {
+        let mut mem = Mem::new();
+        let mut cpu = CPU::new();
+
+        // given:
+        cpu.reset_vector(&mut mem, 0xFF00);
+
+        cpu.PS.set_bit(0, test.carry);      // C
+        cpu.A = test.a;
+        cpu.X = 0x10;
+        cpu.PS.set_bit(1, !test.expect_z);  // Z
+        cpu.PS.set_bit(6, !test.expect_v);  // V
+        cpu.PS.set_bit(7, !test.expect_n);  // N
+
+        let opcode = if operation == EOperation::Add { cpu.INS_ADC_ZPX } 
+                                                else { cpu.INS_SBC_ZPX };
+
+        mem.Data[0xFF00] = opcode;         
+        mem.Data[0xFF01] = 0x42;
+        mem.Data[0x0042 + 0x10] = test.operand;
+        let mut expected_cycles = 4;
+        let cpu_copy = cpu;
+
+        // when 
+        let actual_cycles = cpu.execute(&mut expected_cycles, &mut mem);
+
+        // then:
+        assert_eq!(actual_cycles, 4);
+        assert_eq!(cpu.A, test.answer);
+        assert_eq!(cpu.PS.get_bit(0), test.expect_c);     // C
+        assert_eq!(cpu.PS.get_bit(1), test.expect_z);     // Z
+        assert_eq!(cpu.PS.get_bit(6), test.expect_v);     // V
+        assert_eq!(cpu.PS.get_bit(7), test.expect_n);     // N
+        verify_unmodified_flags(cpu, cpu_copy);
+    }
+
+    fn test_adc_or_sbc_indirect_x(test: ADCTestData, operation: EOperation) {
+        let mut mem = Mem::new();
+        let mut cpu = CPU::new();
+
+        // given:
+        cpu.reset_vector(&mut mem, 0xFF00);
+
+        cpu.PS.set_bit(0, test.carry);      // C
+        cpu.A = test.a;
+        cpu.X = 0x04;
+        cpu.PS.set_bit(1, !test.expect_z);  // Z
+        cpu.PS.set_bit(6, !test.expect_v);  // V
+        cpu.PS.set_bit(7, !test.expect_n);  // N
+
+        let opcode = if operation == EOperation::Add { cpu.INS_ADC_INDX } 
+                                                else { cpu.INS_SBC_INDX };
+
+        mem.Data[0xFF00] = opcode;         
+        mem.Data[0xFF01] = 0x02;         
+        mem.Data[0x0006] = 0x00;            // 0x2 + 0x4
+        mem.Data[0x0007] = 0x80;
+        mem.Data[0x8000] = test.operand;
+        let mut expected_cycles = 6;
+        let cpu_copy = cpu;
+
+        // when 
+        let actual_cycles = cpu.execute(&mut expected_cycles, &mut mem);
+
+        // then:
+        assert_eq!(actual_cycles, 6);
+        assert_eq!(cpu.A, test.answer);
+        assert_eq!(cpu.PS.get_bit(0), test.expect_c);     // C
+        assert_eq!(cpu.PS.get_bit(1), test.expect_z);     // Z
+        assert_eq!(cpu.PS.get_bit(6), test.expect_v);     // V
+        assert_eq!(cpu.PS.get_bit(7), test.expect_n);     // N
+        verify_unmodified_flags(cpu, cpu_copy);
+    }
+
+    fn test_adc_or_sbc_indirect_y(test: ADCTestData, operation: EOperation) {
+        let mut mem = Mem::new();
+        let mut cpu = CPU::new();
+
+        // given:
+        cpu.reset_vector(&mut mem, 0xFF00);
+
+        cpu.PS.set_bit(0, test.carry);      // C
+        cpu.A = test.a;
+        cpu.Y = 0x04;
+        cpu.PS.set_bit(1, !test.expect_z);  // Z
+        cpu.PS.set_bit(6, !test.expect_v);  // V
+        cpu.PS.set_bit(7, !test.expect_n);  // N
+
+        let opcode = if operation == EOperation::Add { cpu.INS_ADC_INDY } 
+                                                else { cpu.INS_SBC_INDY };
+
+        mem.Data[0xFF00] = opcode;         
+        mem.Data[0xFF01] = 0x02;         
+        mem.Data[0x0002] = 0x00;            // 0x2 + 0x4
+        mem.Data[0x0003] = 0x80;
+        mem.Data[0x8000 + 0x04] = test.operand;
+        let mut expected_cycles = 5;
+        let cpu_copy = cpu;
+
+        // when 
+        let actual_cycles = cpu.execute(&mut expected_cycles, &mut mem);
+
+        // then:
+        assert_eq!(actual_cycles, 5);
+        assert_eq!(cpu.A, test.answer);
+        assert_eq!(cpu.PS.get_bit(0), test.expect_c);     // C
+        assert_eq!(cpu.PS.get_bit(1), test.expect_z);     // Z
+        assert_eq!(cpu.PS.get_bit(6), test.expect_v);     // V
+        assert_eq!(cpu.PS.get_bit(7), test.expect_n);     // N
+        verify_unmodified_flags(cpu, cpu_copy);
+    }
 
     #[test]
     fn adc_can_add_zero_to_zero_and_get_zero() {
@@ -242,4 +459,224 @@ mod add_with_carry_tests {
         
         test_adc_or_sbc_absolute(test, EOperation::Add);
     }
+
+    #[test]
+    fn adc_inmediate_can_add_two_unsigned_numbers() {
+        let test = ADCTestData {
+            carry: true,
+            a: 20,
+            operand: 17,
+            answer: 38,
+            expect_c: false,
+            expect_n: false,
+            expect_v: false,
+            expect_z: false,
+        };
+        
+        test_adc_or_sbc_inmediate(test, EOperation::Add);
+    }
+
+    #[test]
+    fn adc_inmediate_can_add_a_positive_number_and_a_negative_number() {
+        let test = ADCTestData {
+            carry: true,
+            a: 20,
+            operand: u8::MAX - 16,
+            answer: 4,
+            expect_c: true,
+            expect_n: false,
+            expect_v: false,
+            expect_z: false,
+        };
+        
+        test_adc_or_sbc_inmediate(test, EOperation::Add);
+    }
+
+    #[test]
+    fn adc_zero_page_can_add_two_unsigned_numbers() {
+        let test = ADCTestData {
+            carry: true,
+            a: 20,
+            operand: 17,
+            answer: 38,
+            expect_c: false,
+            expect_n: false,
+            expect_v: false,
+            expect_z: false,
+        };
+        
+        test_adc_or_sbc_zero_page(test, EOperation::Add);
+    }
+
+    #[test]
+    fn adc_zero_page_can_add_a_positive_number_and_a_negative_number() {
+        let test = ADCTestData {
+            carry: true,
+            a: 20,
+            operand: u8::MAX - 16,
+            answer: 4,
+            expect_c: true,
+            expect_n: false,
+            expect_v: false,
+            expect_z: false,
+        };
+        
+        test_adc_or_sbc_zero_page(test, EOperation::Add);
+    }
+
+    #[test]
+    fn adc_zero_page_x_can_add_two_unsigned_numbers() {
+        let test = ADCTestData {
+            carry: true,
+            a: 20,
+            operand: 17,
+            answer: 38,
+            expect_c: false,
+            expect_n: false,
+            expect_v: false,
+            expect_z: false,
+        };
+        
+        test_adc_or_sbc_zero_page_x(test, EOperation::Add);
+    }
+
+    #[test]
+    fn adc_zero_page_x_can_add_a_positive_number_and_a_negative_number() {
+        let test = ADCTestData {
+            carry: true,
+            a: 20,
+            operand: u8::MAX - 16,
+            answer: 4,
+            expect_c: true,
+            expect_n: false,
+            expect_v: false,
+            expect_z: false,
+        };
+        test_adc_or_sbc_zero_page_x(test, EOperation::Add);
+    }
+
+    #[test]
+    fn adc_abs_x_can_add_two_unsigned_numbers() {
+        let test = ADCTestData {
+            carry: true,
+            a: 20,
+            operand: 17,
+            answer: 38,
+            expect_c: false,
+            expect_n: false,
+            expect_v: false,
+            expect_z: false,
+        };
+        
+        test_adc_or_sbc_absolute_x(test, EOperation::Add);
+    }
+
+    #[test]
+    fn adc_abs_x_can_add_a_positive_number_and_a_negative_number() {
+        let test = ADCTestData {
+            carry: true,
+            a: 20,
+            operand: u8::MAX - 16,
+            answer: 4,
+            expect_c: true,
+            expect_n: false,
+            expect_v: false,
+            expect_z: false,
+        };
+        test_adc_or_sbc_absolute_x(test, EOperation::Add);
+    }
+
+    #[test]
+    fn adc_abs_y_can_add_two_unsigned_numbers() {
+        let test = ADCTestData {
+            carry: true,
+            a: 20,
+            operand: 17,
+            answer: 38,
+            expect_c: false,
+            expect_n: false,
+            expect_v: false,
+            expect_z: false,
+        };
+        
+        test_adc_or_sbc_absolute_y(test, EOperation::Add);
+    }
+
+    #[test]
+    fn adc_abs_y_can_add_a_positive_number_and_a_negative_number() {
+        let test = ADCTestData {
+            carry: true,
+            a: 20,
+            operand: u8::MAX - 16,
+            answer: 4,
+            expect_c: true,
+            expect_n: false,
+            expect_v: false,
+            expect_z: false,
+        };
+        test_adc_or_sbc_absolute_y(test, EOperation::Add);
+    }
+
+    #[test]
+    fn adc_ind_x_can_add_two_unsigned_numbers() {
+        let test = ADCTestData {
+            carry: true,
+            a: 20,
+            operand: 17,
+            answer: 38,
+            expect_c: false,
+            expect_n: false,
+            expect_v: false,
+            expect_z: false,
+        };
+        
+        test_adc_or_sbc_indirect_x(test, EOperation::Add);
+    }
+
+    #[test]
+    fn adc_ind_x_can_add_a_positive_number_and_a_negative_number() {
+        let test = ADCTestData {
+            carry: true,
+            a: 20,
+            operand: u8::MAX - 16,
+            answer: 4,
+            expect_c: true,
+            expect_n: false,
+            expect_v: false,
+            expect_z: false,
+        };
+        test_adc_or_sbc_indirect_x(test, EOperation::Add);
+    }
+
+    #[test]
+    fn adc_ind_y_can_add_two_unsigned_numbers() {
+        let test = ADCTestData {
+            carry: true,
+            a: 20,
+            operand: 17,
+            answer: 38,
+            expect_c: false,
+            expect_n: false,
+            expect_v: false,
+            expect_z: false,
+        };
+        
+        test_adc_or_sbc_indirect_y(test, EOperation::Add);
+    }
+
+    #[test]
+    fn adc_ind_y_can_add_a_positive_number_and_a_negative_number() {
+        let test = ADCTestData {
+            carry: true,
+            a: 20,
+            operand: u8::MAX - 16,
+            answer: 4,
+            expect_c: true,
+            expect_n: false,
+            expect_v: false,
+            expect_z: false,
+        };
+        test_adc_or_sbc_indirect_y(test, EOperation::Add);
+    }
+
 }

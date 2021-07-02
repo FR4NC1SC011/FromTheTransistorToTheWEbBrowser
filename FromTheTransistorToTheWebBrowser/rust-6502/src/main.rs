@@ -193,6 +193,16 @@ pub struct CPU {
     pub INS_ADC_INDX: Byte,
     pub INS_ADC_INDY: Byte,
 
+    // Sub With Carry
+    pub INS_SBC_IM: Byte,
+    pub INS_SBC_ZP: Byte,
+    pub INS_SBC_ZPX: Byte,
+    pub INS_SBC_ABS: Byte,
+    pub INS_SBC_ABSX: Byte,
+    pub INS_SBC_ABSY: Byte,
+    pub INS_SBC_INDX: Byte,
+    pub INS_SBC_INDY: Byte,
+
 
     // System Functions
     pub INS_NOP: Byte,

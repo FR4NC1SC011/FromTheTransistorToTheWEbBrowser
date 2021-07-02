@@ -194,6 +194,16 @@ impl CPU {
             INS_ADC_INDX: 0x61,
             INS_ADC_INDY: 0x71,
 
+            // Sub With Carry
+            INS_SBC_IM: 0xE9,
+            INS_SBC_ZP: 0xE5,
+            INS_SBC_ZPX: 0xF5,
+            INS_SBC_ABS: 0xED,
+            INS_SBC_ABSX: 0xFD,
+            INS_SBC_ABSY: 0xF9,
+            INS_SBC_INDX: 0xE1,
+            INS_SBC_INDY: 0xF1,
+
             // System Functions
             INS_NOP: 0xEA,
         }
@@ -1108,6 +1118,37 @@ impl CPU {
                     self.PS.set_bit(2, true);
                     *cycles -= 1;
                 }
+
+                // Arithmetic
+
+                0x6D => {
+                    println!("Instruction ADC Absolute");
+                    let operand: Byte = self.absolute_address(cycles, memory);
+                    let are_sign_bits_the_same: bool = !((self.A ^ operand) & Flags::NegativeFlagBit as u8) != 0;
+
+
+                    let c_flag_value: Byte = if self.PS.get_bit(0) == true { 1 } else { 0 }; 
+                    self.A = self.A.wrapping_add(c_flag_value);
+                    let sum = self.A.checked_add(operand);
+                    
+                    match sum {
+                        Some(x) => {
+                            self.A = x;
+                            self.PS.set_bit(0, false);  // set Carry Flag
+                            self.lda_register_set_status();
+                        }
+
+                        None => {                      // Overflow
+                            self.A = self.A.wrapping_add(operand);
+                            self.PS.set_bit(0, true);  // set Carry Flag
+                            self.lda_register_set_status();
+                        }
+                    }
+
+                    let v: bool = are_sign_bits_the_same && ((self.A ^ operand) & Flags::NegativeFlagBit as u8) != 0;
+                    self.PS.set_bit(6, v); // V flag
+
+               }
 
                 // System Functions
                 0xEA => {

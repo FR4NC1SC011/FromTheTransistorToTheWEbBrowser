@@ -1261,6 +1261,109 @@ impl CPU {
                     self.add_with_carry(!operand);
                 }
 
+                // CMP
+
+                0xC9 => {
+                    println!("Instruction CMP Inmediate");
+                    let operand: Byte = self.fetch_byte(cycles, memory);
+                    let temp: Byte = self.A.wrapping_sub(operand);
+                    self.cmp_register_set_status(operand, temp);
+                }
+
+                0xC5 => {
+                    println!("Instruction CMP ZP");
+                    let operand: Byte = self.zero_page_address(cycles, memory);
+                    let temp: Byte = self.A.wrapping_sub(operand);
+                    self.cmp_register_set_status(operand, temp);
+                }
+
+                0xD5 => {
+                    println!("Instruction CMP ZPX");
+                    let operand: Byte = self.zero_page_address_x(cycles, memory);
+                    let temp: Byte = self.A.wrapping_sub(operand);
+                    self.cmp_register_set_status(operand, temp);
+                }
+
+                0xCD => {
+                    println!("Instruction CMP ABS");
+                    let operand: Byte = self.absolute_address(cycles, memory);
+                    let temp: Byte = self.A.wrapping_sub(operand);
+                    self.cmp_register_set_status(operand, temp);
+                }
+
+                0xDD => {
+                    println!("Instruction CMP ABS X");
+                    let operand: Byte = self.absolute_address_x(cycles, memory);
+                    let temp: Byte = self.A.wrapping_sub(operand);
+                    self.cmp_register_set_status(operand, temp);
+                }
+
+                0xD9 => {
+                    println!("Instruction CMP ABS Y");
+                    let operand: Byte = self.absolute_address_y(cycles, memory);
+                    let temp: Byte = self.A.wrapping_sub(operand);
+                    self.cmp_register_set_status(operand, temp);
+                }
+
+                0xC1 => {
+                    println!("Instruction CMP IND X");
+                    let operand: Byte = self.indirect_address_x(cycles, memory);
+                    let temp: Byte = self.A.wrapping_sub(operand);
+                    self.cmp_register_set_status(operand, temp);
+                }
+
+                0xD1 => {
+                    println!("Instruction CMP IND Y");
+                    let operand: Byte = self.indirect_address_y(cycles, memory);
+                    let temp: Byte = self.A.wrapping_sub(operand);
+                    self.cmp_register_set_status(operand, temp);
+                }
+
+                // CPX 
+
+                0xE0 => {
+                    println!("Instruction CPX Inmediate");
+                    let operand: Byte = self.fetch_byte(cycles, memory);
+                    let temp: Byte = self.X.wrapping_sub(operand);
+                    self.cpx_register_set_status(operand, temp);
+                }
+
+                0xE4 => {
+                    println!("Instruction CPX ZP");
+                    let operand: Byte = self.zero_page_address(cycles, memory);
+                    let temp: Byte = self.X.wrapping_sub(operand);
+                    self.cpx_register_set_status(operand, temp);
+                }
+
+                0xEC => {
+                    println!("Instruction CPX ABS");
+                    let operand: Byte = self.absolute_address(cycles, memory);
+                    let temp: Byte = self.X.wrapping_sub(operand);
+                    self.cpx_register_set_status(operand, temp);
+                }
+
+                // CPY 
+
+                0xC0 => {
+                    println!("Instruction CPY Inmediate");
+                    let operand: Byte = self.fetch_byte(cycles, memory);
+                    let temp: Byte = self.Y.wrapping_sub(operand);
+                    self.cpy_register_set_status(operand, temp);
+                }
+
+                0xC4 => {
+                    println!("Instruction CPY ZP");
+                    let operand: Byte = self.zero_page_address(cycles, memory);
+                    let temp: Byte = self.Y.wrapping_sub(operand);
+                    self.cpy_register_set_status(operand, temp);
+                }
+
+                0xCC => {
+                    println!("Instruction CPY ABS");
+                    let operand: Byte = self.absolute_address(cycles, memory);
+                    let temp: Byte = self.Y.wrapping_sub(operand);
+                    self.cpy_register_set_status(operand, temp);
+                }
 
                 // System Functions
                 0xEA => {
@@ -1324,6 +1427,25 @@ impl CPU {
             true => *self.PS.set_bit(7, true),
         };
     }
+
+    fn cmp_register_set_status(&mut self, operand: Byte, temp: Byte) {
+        self.PS.set_bit(0, self.A >= operand);                          // C
+        self.PS.set_bit(1, self.A == operand);                          // Z
+        self.PS.set_bit(7, temp & Flags::NegativeFlagBit as u8 != 0);   // N
+    }
+
+    fn cpx_register_set_status(&mut self, operand: Byte, temp: Byte) {
+        self.PS.set_bit(0, self.X >= operand);                          // C
+        self.PS.set_bit(1, self.X == operand);                          // Z
+        self.PS.set_bit(7, temp & Flags::NegativeFlagBit as u8 != 0);   // N
+    }
+
+    fn cpy_register_set_status(&mut self, operand: Byte, temp: Byte) {
+        self.PS.set_bit(0, self.Y >= operand);                          // C
+        self.PS.set_bit(1, self.Y == operand);                          // Z
+        self.PS.set_bit(7, temp & Flags::NegativeFlagBit as u8 != 0);   // N
+    }
+
 
     // function to convert a byte to a u16 when the value is signed
     fn signed_8_bit_to_16(value: u8) -> u16 {

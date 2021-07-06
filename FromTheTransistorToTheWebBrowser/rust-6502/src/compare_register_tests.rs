@@ -260,7 +260,7 @@ mod compare_register_tests {
         verify_unmodified_flags(cpu, cpu_copy);
     }
 
-    fn compare_absolute_x(test: CMPTestData, register_to_compare: ERegister) {
+    fn compare_absolute_x(test: CMPTestData) {
         let mut mem = Mem::new();
         let mut cpu = CPU::new();
 
@@ -294,7 +294,7 @@ mod compare_register_tests {
         verify_unmodified_flags(cpu, cpu_copy);
     }
 
-    fn compare_absolute_y(test: CMPTestData, register_to_compare: ERegister) {
+    fn compare_absolute_y(test: CMPTestData) {
         let mut mem = Mem::new();
         let mut cpu = CPU::new();
 
@@ -328,7 +328,7 @@ mod compare_register_tests {
         verify_unmodified_flags(cpu, cpu_copy);
     }
 
-    fn compare_indirect_x(test: CMPTestData, register_to_compare: ERegister) {
+    fn compare_indirect_x(test: CMPTestData) {
         let mut mem = Mem::new();
         let mut cpu = CPU::new();
 
@@ -363,7 +363,7 @@ mod compare_register_tests {
         verify_unmodified_flags(cpu, cpu_copy);
     }
 
-    fn compare_indirect_y(test: CMPTestData, register_to_compare: ERegister) {
+    fn compare_indirect_y(test: CMPTestData) {
         let mut mem = Mem::new();
         let mut cpu = CPU::new();
 
@@ -391,7 +391,7 @@ mod compare_register_tests {
         // then:
         assert_eq!(actual_cycles, 5);
         assert_eq!(cpu.A, test.register_value);
-        assert_eq!(cpu.X, 4);
+        assert_eq!(cpu.Y, 4);
         assert_eq!(cpu.PS.get_bit(0), test.expect_c);     // C
         assert_eq!(cpu.PS.get_bit(1), test.expect_z);     // Z
         assert_eq!(cpu.PS.get_bit(7), test.expect_n);     // N
@@ -399,9 +399,369 @@ mod compare_register_tests {
     }
 
 
+    // -- INMEDIATE
 
+    #[test]
+    fn cmp_inmediate_can_compare_two_identical_values() {
+        let test: CMPTestData = CMPTestData::compare_two_identical_values();
+        compare_inmediate(test, ERegister::A);
+    } 
 
+    #[test]
+    fn cmp_inmediate_can_compare_a_large_positive_to_a_small_positive() {
+        let test: CMPTestData = CMPTestData::compare_large_positive_to_small_positive();
+        compare_inmediate(test, ERegister::A);
+    } 
 
+    #[test]
+    fn cmp_inmediate_can_compare_a_negative_to_positive() {
+        let test: CMPTestData = CMPTestData::compare_negative_number_to_a_positive();
+        compare_inmediate(test, ERegister::A);
+    } 
+
+    #[test]
+    fn cmp_inmediate_can_compare_two_values_that_result_in_negative_flag_set() {
+        let test: CMPTestData = CMPTestData::compare_two_values_that_result_in_a_negative_flag_set();
+        compare_inmediate(test, ERegister::A);
+    } 
+
+    // -- ZERO PAGE
+
+    #[test]
+    fn cmp_zero_page_can_compare_two_identical_values() {
+        let test: CMPTestData = CMPTestData::compare_two_identical_values();
+        compare_zero_page(test, ERegister::A);
+    } 
+
+    #[test]
+    fn cmp_zero_page_can_compare_a_large_positive_to_a_small_positive() {
+        let test: CMPTestData = CMPTestData::compare_large_positive_to_small_positive();
+        compare_zero_page(test, ERegister::A);
+    } 
+
+    #[test]
+    fn cmp_zero_page_can_compare_a_negative_to_positive() {
+        let test: CMPTestData = CMPTestData::compare_negative_number_to_a_positive();
+        compare_zero_page(test, ERegister::A);
+    } 
+
+    #[test]
+    fn cmp_zero_page_can_compare_two_values_that_result_in_negative_flag_set() {
+        let test: CMPTestData = CMPTestData::compare_two_values_that_result_in_a_negative_flag_set();
+        compare_zero_page(test, ERegister::A);
+    } 
+
+    // -- ZERO PAGE X
+
+    #[test]
+    fn cmp_zero_page_x_can_compare_two_identical_values() {
+        let test: CMPTestData = CMPTestData::compare_two_identical_values();
+        compare_zero_page_x(test, ERegister::A);
+    } 
+
+    #[test]
+    fn cmp_zero_page_x_can_compare_a_large_positive_to_a_small_positive() {
+        let test: CMPTestData = CMPTestData::compare_large_positive_to_small_positive();
+        compare_zero_page_x(test, ERegister::A);
+    } 
+
+    #[test]
+    fn cmp_zero_page_x_can_compare_a_negative_to_positive() {
+        let test: CMPTestData = CMPTestData::compare_negative_number_to_a_positive();
+        compare_zero_page_x(test, ERegister::A);
+    } 
+
+    #[test]
+    fn cmp_zero_page_x_can_compare_two_values_that_result_in_negative_flag_set() {
+        let test: CMPTestData = CMPTestData::compare_two_values_that_result_in_a_negative_flag_set();
+        compare_zero_page_x(test, ERegister::A);
+    } 
+
+    // -- ABSOLUTE
+
+    #[test]
+    fn cmp_absolute_can_compare_two_identical_values() {
+        let test: CMPTestData = CMPTestData::compare_two_identical_values();
+        compare_absolute(test, ERegister::A);
+    } 
+
+    #[test]
+    fn cmp_absolute_can_compare_a_large_positive_to_a_small_positive() {
+        let test: CMPTestData = CMPTestData::compare_large_positive_to_small_positive();
+        compare_absolute(test, ERegister::A);
+    } 
+
+    #[test]
+    fn cmp_absolute_can_compare_a_negative_to_positive() {
+        let test: CMPTestData = CMPTestData::compare_negative_number_to_a_positive();
+        compare_absolute(test, ERegister::A);
+    } 
+
+    #[test]
+    fn cmp_absolute_can_compare_two_values_that_result_in_negative_flag_set() {
+        let test: CMPTestData = CMPTestData::compare_two_values_that_result_in_a_negative_flag_set();
+        compare_absolute(test, ERegister::A);
+    } 
+
+    // -- ABSOLUTE X
+
+    #[test]
+    fn cmp_absolute_x_can_compare_two_identical_values() {
+        let test: CMPTestData = CMPTestData::compare_two_identical_values();
+        compare_absolute_x(test);
+    } 
+
+    #[test]
+    fn cmp_absolute_x_can_compare_a_large_positive_to_a_small_positive() {
+        let test: CMPTestData = CMPTestData::compare_large_positive_to_small_positive();
+        compare_absolute_x(test);
+    } 
+
+    #[test]
+    fn cmp_absolute_x_can_compare_a_negative_to_positive() {
+        let test: CMPTestData = CMPTestData::compare_negative_number_to_a_positive();
+        compare_absolute_x(test);
+    } 
+
+    #[test]
+    fn cmp_absolute_x_can_compare_two_values_that_result_in_negative_flag_set() {
+        let test: CMPTestData = CMPTestData::compare_two_values_that_result_in_a_negative_flag_set();
+        compare_absolute_x(test);
+    } 
+
+    // -- ABSOLUTE Y
+
+    #[test]
+    fn cmp_absolute_y_can_compare_two_identical_values() {
+        let test: CMPTestData = CMPTestData::compare_two_identical_values();
+        compare_absolute_y(test);
+    } 
+
+    #[test]
+    fn cmp_absolute_y_can_compare_a_large_positive_to_a_small_positive() {
+        let test: CMPTestData = CMPTestData::compare_large_positive_to_small_positive();
+        compare_absolute_y(test);
+    } 
+
+    #[test]
+    fn cmp_absolute_y_can_compare_a_negative_to_positive() {
+        let test: CMPTestData = CMPTestData::compare_negative_number_to_a_positive();
+        compare_absolute_y(test);
+    } 
+
+    #[test]
+    fn cmp_absolute_y_can_compare_two_values_that_result_in_negative_flag_set() {
+        let test: CMPTestData = CMPTestData::compare_two_values_that_result_in_a_negative_flag_set();
+        compare_absolute_y(test);
+    } 
+
+    // -- INDIRECT X
+
+    #[test]
+    fn cmp_indirect_x_can_compare_two_identical_values() {
+        let test: CMPTestData = CMPTestData::compare_two_identical_values();
+        compare_indirect_x(test);
+    } 
+
+    #[test]
+    fn cmp_indirect_x_can_compare_a_large_positive_to_a_small_positive() {
+        let test: CMPTestData = CMPTestData::compare_large_positive_to_small_positive();
+        compare_indirect_x(test);
+    } 
+
+    #[test]
+    fn cmp_indirect_x_can_compare_a_negative_to_positive() {
+        let test: CMPTestData = CMPTestData::compare_negative_number_to_a_positive();
+        compare_indirect_x(test);
+    } 
+
+    #[test]
+    fn cmp_indirect_x_can_compare_two_values_that_result_in_negative_flag_set() {
+        let test: CMPTestData = CMPTestData::compare_two_values_that_result_in_a_negative_flag_set();
+        compare_indirect_x(test);
+    } 
+
+    // -- INDIRECT Y
+
+    #[test]
+    fn cmp_indirect_y_can_compare_two_identical_values() {
+        let test: CMPTestData = CMPTestData::compare_two_identical_values();
+        compare_indirect_y(test);
+    } 
+
+    #[test]
+    fn cmp_indirect_y_can_compare_a_large_positive_to_a_small_positive() {
+        let test: CMPTestData = CMPTestData::compare_large_positive_to_small_positive();
+        compare_indirect_y(test);
+    } 
+
+    #[test]
+    fn cmp_indirect_y_can_compare_a_negative_to_positive() {
+        let test: CMPTestData = CMPTestData::compare_negative_number_to_a_positive();
+        compare_indirect_y(test);
+    } 
+
+    #[test]
+    fn cmp_indirect_y_can_compare_two_values_that_result_in_negative_flag_set() {
+        let test: CMPTestData = CMPTestData::compare_two_values_that_result_in_a_negative_flag_set();
+        compare_indirect_y(test);
+    } 
+
+    // CPX Inmediate
+
+    #[test]
+    fn cpx_inmediate_can_compare_two_identical_values() {
+        let test: CMPTestData = CMPTestData::compare_two_identical_values();
+        compare_inmediate(test, ERegister::X);
+    } 
+
+    #[test]
+    fn cpx_inmediate_can_compare_a_large_positive_to_a_small_positive() {
+        let test: CMPTestData = CMPTestData::compare_large_positive_to_small_positive();
+        compare_inmediate(test, ERegister::X);
+    } 
+
+    #[test]
+    fn cpx_inmediate_can_compare_a_negative_to_positive() {
+        let test: CMPTestData = CMPTestData::compare_negative_number_to_a_positive();
+        compare_inmediate(test, ERegister::X);
+    } 
+
+    #[test]
+    fn cpx_inmediate_can_compare_two_values_that_result_in_negative_flag_set() {
+        let test: CMPTestData = CMPTestData::compare_two_values_that_result_in_a_negative_flag_set();
+        compare_inmediate(test, ERegister::X);
+    } 
+
+    // CPY Inmediate
+
+    #[test]
+    fn cpy_inmediate_can_compare_two_identical_values() {
+        let test: CMPTestData = CMPTestData::compare_two_identical_values();
+        compare_inmediate(test, ERegister::Y);
+    } 
+
+    #[test]
+    fn cpy_inmediate_can_compare_a_large_positive_to_a_small_positive() {
+        let test: CMPTestData = CMPTestData::compare_large_positive_to_small_positive();
+        compare_inmediate(test, ERegister::Y);
+    } 
+
+    #[test]
+    fn cpy_inmediate_can_compare_a_negative_to_positive() {
+        let test: CMPTestData = CMPTestData::compare_negative_number_to_a_positive();
+        compare_inmediate(test, ERegister::Y);
+    } 
+
+    #[test]
+    fn cpy_inmediate_can_compare_two_values_that_result_in_negative_flag_set() {
+        let test: CMPTestData = CMPTestData::compare_two_values_that_result_in_a_negative_flag_set();
+        compare_inmediate(test, ERegister::Y);
+    } 
+
+    // CPX Zero Page
+
+    #[test]
+    fn cpx_zero_page_can_compare_two_identical_values() {
+        let test: CMPTestData = CMPTestData::compare_two_identical_values();
+        compare_zero_page(test, ERegister::X);
+    } 
+
+    #[test]
+    fn cpx_zero_page_can_compare_a_large_positive_to_a_small_positive() {
+        let test: CMPTestData = CMPTestData::compare_large_positive_to_small_positive();
+        compare_zero_page(test, ERegister::X);
+    } 
+
+    #[test]
+    fn cpx_zero_page_can_compare_a_negative_to_positive() {
+        let test: CMPTestData = CMPTestData::compare_negative_number_to_a_positive();
+        compare_zero_page(test, ERegister::X);
+    } 
+
+    #[test]
+    fn cpx_zero_page_can_compare_two_values_that_result_in_negative_flag_set() {
+        let test: CMPTestData = CMPTestData::compare_two_values_that_result_in_a_negative_flag_set();
+        compare_zero_page(test, ERegister::X);
+    } 
+
+    // CPY ZERO PAGE
+
+    #[test]
+    fn cpy_zero_page_can_compare_two_identical_values() {
+        let test: CMPTestData = CMPTestData::compare_two_identical_values();
+        compare_zero_page(test, ERegister::Y);
+    } 
+
+    #[test]
+    fn cpy_zero_page_can_compare_a_large_positive_to_a_small_positive() {
+        let test: CMPTestData = CMPTestData::compare_large_positive_to_small_positive();
+        compare_zero_page(test, ERegister::Y);
+    } 
+
+    #[test]
+    fn cpy_zero_page_can_compare_a_negative_to_positive() {
+        let test: CMPTestData = CMPTestData::compare_negative_number_to_a_positive();
+        compare_zero_page(test, ERegister::Y);
+    } 
+
+    #[test]
+    fn cpy_zero_page_can_compare_two_values_that_result_in_negative_flag_set() {
+        let test: CMPTestData = CMPTestData::compare_two_values_that_result_in_a_negative_flag_set();
+        compare_zero_page(test, ERegister::Y);
+    } 
+
+   // -- CPX ABSOLUTE
+
+    #[test]
+    fn cpx_absolute_can_compare_two_identical_values() {
+        let test: CMPTestData = CMPTestData::compare_two_identical_values();
+        compare_absolute(test, ERegister::X);
+    } 
+
+    #[test]
+    fn cpx_absolute_can_compare_a_large_positive_to_a_small_positive() {
+        let test: CMPTestData = CMPTestData::compare_large_positive_to_small_positive();
+        compare_absolute(test, ERegister::X);
+    } 
+
+    #[test]
+    fn cpx_absolute_can_compare_a_negative_to_positive() {
+        let test: CMPTestData = CMPTestData::compare_negative_number_to_a_positive();
+        compare_absolute(test, ERegister::X);
+    } 
+
+    #[test]
+    fn cpx_absolute_can_compare_two_values_that_result_in_negative_flag_set() {
+        let test: CMPTestData = CMPTestData::compare_two_values_that_result_in_a_negative_flag_set();
+        compare_absolute(test, ERegister::X);
+    } 
+
+   // -- CPY ABSOLUTE
+
+    #[test]
+    fn cpy_absolute_can_compare_two_identical_values() {
+        let test: CMPTestData = CMPTestData::compare_two_identical_values();
+        compare_absolute(test, ERegister::Y);
+    } 
+
+    #[test]
+    fn cpy_absolute_can_compare_a_large_positive_to_a_small_positive() {
+        let test: CMPTestData = CMPTestData::compare_large_positive_to_small_positive();
+        compare_absolute(test, ERegister::Y);
+    } 
+
+    #[test]
+    fn cpy_absolute_can_compare_a_negative_to_positive() {
+        let test: CMPTestData = CMPTestData::compare_negative_number_to_a_positive();
+        compare_absolute(test, ERegister::Y);
+    } 
+
+    #[test]
+    fn cpy_absolute_can_compare_two_values_that_result_in_negative_flag_set() {
+        let test: CMPTestData = CMPTestData::compare_two_values_that_result_in_a_negative_flag_set();
+        compare_absolute(test, ERegister::Y);
+    } 
 
     fn verify_unmodified_flags(cpu: CPU, cpu_copy: CPU) {
         assert_eq!(cpu.PS.get_bit(2), cpu_copy.PS.get_bit(2));    // I

@@ -8,8 +8,6 @@ use crate::Mem;
 use crate::CPU;
 
 type Byte = c_uchar;
-// type SByte = c_schar;
-
 type Word = c_ushort;
 
 impl Mem {
@@ -203,6 +201,26 @@ impl CPU {
             INS_SBC_ABSY: 0xF9,
             INS_SBC_INDX: 0xE1,
             INS_SBC_INDY: 0xF1,
+
+            // Compare Accumulator
+            INS_CMP_IM: 0xC9,
+            INS_CMP_ZP: 0xC5,
+            INS_CMP_ZPX: 0xD5,
+            INS_CMP_ABS: 0xCD,
+            INS_CMP_ABSX: 0xDD,
+            INS_CMP_ABSY: 0xD9,
+            INS_CMP_INDX: 0xC1,
+            INS_CMP_INDY: 0xD1,
+
+            // Compare X Register
+            INS_CPX_IM: 0xE0,
+            INS_CPX_ZP: 0xE4,
+            INS_CPX_ABS: 0xEC,
+
+            //Compare Y Register
+            INS_CPY_IM: 0xC0,
+            INS_CPY_ZP: 0xC4,
+            INS_CPY_ABS: 0xCC,
 
             // System Functions
             INS_NOP: 0xEA,
@@ -437,8 +455,6 @@ impl CPU {
         let address = CPU::signed_8_bit_to_16(offset).wrapping_add(self.PC);
         if value == condition {
             let old_pc: Word = self.PC;
-            // self.PC = self.PC as Address + AddressDiff(i32::from(offset));
-            // self.PC = (self.PC as i16 + offset as i16) as u16 ;
             self.PC = address;
             *cycles -= 1;
 

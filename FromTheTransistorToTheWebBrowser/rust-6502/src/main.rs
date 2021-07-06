@@ -11,6 +11,7 @@ mod status_flags_tests;
 mod store_tests;
 mod transfer_register_tests;
 mod add_with_carry_tests;
+mod compare_register_tests;
 
 use mos6502::*;
 
@@ -202,6 +203,30 @@ pub struct CPU {
     pub INS_SBC_ABSY: Byte,
     pub INS_SBC_INDX: Byte,
     pub INS_SBC_INDY: Byte,
+
+    // Compare Accumulator
+    pub INS_CMP_IM: Byte,
+    pub INS_CMP_ZP: Byte,
+    pub INS_CMP_ZPX: Byte,
+    pub INS_CMP_ABS: Byte,
+    pub INS_CMP_ABSX: Byte,
+    pub INS_CMP_ABSY: Byte,
+    pub INS_CMP_INDX: Byte,
+    pub INS_CMP_INDY: Byte,
+
+    // Compare X Register
+    pub INS_CPX_IM: Byte,
+    pub INS_CPX_ZP: Byte,
+    pub INS_CPX_ABS: Byte,
+
+    // Compare Y Register
+    pub INS_CPY_IM: Byte,
+    pub INS_CPY_ZP: Byte,
+    pub INS_CPY_ABS: Byte,
+
+
+
+
 
 
     // System Functions

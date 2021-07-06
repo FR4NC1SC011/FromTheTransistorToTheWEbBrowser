@@ -1,5 +1,4 @@
 #[cfg(test)]
-
 mod add_with_carry_tests {
 
     use std::os::raw::*;
@@ -679,1058 +678,1059 @@ mod add_with_carry_tests {
     //     test_adc_or_sbc_indirect_y(test, EOperation::Add);
     // }
 
-
-    // SBC ABS Tests
-
-    #[test]
-    fn sbc_abs_can_subtract_zero_to_zero_and_get_zero() {
-        let test = ADCTestData {
-            carry: true,
-            a: 0,
-            operand: 0,
-            answer: 0,
-            expect_c: true,
-            expect_n: false,
-            expect_v: false,
-            expect_z: true,
-        };
-        
-        test_adc_or_sbc_absolute(test, EOperation::Subtract);
-    }
-
-
-    #[test]
-    fn sbc_abs_can_subtract_carry_and_zero_to_zero_and_get_minus_one() {
-        let test = ADCTestData {
-            carry: false,
-            a: 0,
-            operand: 0,
-            answer: u8::MAX,
-            expect_c: false,
-            expect_n: true,
-            expect_v: false,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_absolute(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_abs_can_subtract_one_from_zero_and_get_minus_one() {
-        let test = ADCTestData {
-            carry: false,
-            a: 0,
-            operand: 1,
-            answer: u8::MAX - 1,
-            expect_c: false,
-            expect_n: true,
-            expect_v: false,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_absolute(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_abs_can_subtract_one_from_zero_with_a_carry_and_get_minus_two() {
-        let test = ADCTestData {
-            carry: false,
-            a: 0,
-            operand: 1,
-            answer: u8::MAX - 1,
-            expect_c: false,
-            expect_n: true,
-            expect_v: false,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_absolute(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_abs_can_subtract_two_neg_numbers_and_get_signed_overflow() {
-        let test = ADCTestData {
-            carry: true,
-            a: u8::MAX - 127,
-            operand: 1,
-            answer: 127,
-            expect_c: true,
-            expect_n: false,
-            expect_v: true,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_absolute(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_abs_can_subtract_pos_and_neg_numbers_and_get_signed_overflow() {
-        let test = ADCTestData {
-            carry: true,
-            a: 127,
-            operand: u8::MAX,
-            answer: 128,
-            expect_c: false,
-            expect_n: true,
-            expect_v: true,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_absolute(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_abs_can_subtract_two_unsigned_numbers() {
-        let test = ADCTestData {
-            carry: true,
-            a: 20,
-            operand: 17,
-            answer: 3,
-            expect_c: true,
-            expect_n: false,
-            expect_v: false,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_absolute(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_abs_can_subtract_two_negative_numbers() {
-        let test = ADCTestData {
-            carry: true,
-            a: u8::MAX - 20,
-            operand: u8::MAX - 17,
-            answer: u8::MAX - 2,
-            expect_c: false,
-            expect_n: true,
-            expect_v: false,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_absolute(test, EOperation::Subtract);
-    }
-
-
-    // SBC Zero Page
-
-    #[test]
-    fn sbc_zp_can_subtract_zero_to_zero_and_get_zero() {
-        let test = ADCTestData {
-            carry: true,
-            a: 0,
-            operand: 0,
-            answer: 0,
-            expect_c: true,
-            expect_n: false,
-            expect_v: false,
-            expect_z: true,
-        };
-        
-        test_adc_or_sbc_zero_page(test, EOperation::Subtract);
-    }
-
-
-    #[test]
-    fn sbc_zp_can_subtract_carry_and_zero_to_zero_and_get_minus_one() {
-        let test = ADCTestData {
-            carry: false,
-            a: 0,
-            operand: 0,
-            answer: u8::MAX,
-            expect_c: false,
-            expect_n: true,
-            expect_v: false,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_zero_page(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_zp_can_subtract_one_from_zero_and_get_minus_one() {
-        let test = ADCTestData {
-            carry: true,
-            a: 0,
-            operand: 1,
-            answer: u8::MAX,
-            expect_c: false,
-            expect_n: true,
-            expect_v: false,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_zero_page(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_zp_can_subtract_one_from_zero_with_a_carry_and_get_minus_two() {
-        let test = ADCTestData {
-            carry: false,
-            a: 0,
-            operand: 1,
-            answer: u8::MAX - 1,
-            expect_c: false,
-            expect_n: true,
-            expect_v: false,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_zero_page(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_zp_can_subtract_two_neg_numbers_and_get_signed_overflow() {
-        let test = ADCTestData {
-            carry: true,
-            a: u8::MAX - 127,
-            operand: 1,
-            answer: 127,
-            expect_c: true,
-            expect_n: false,
-            expect_v: true,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_absolute(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_zp_can_subtract_pos_and_neg_numbers_and_get_signed_overflow() {
-        let x: u8 = u8::MAX;    // x = -1 as u8;
-        let test = ADCTestData {
-            carry: true,
-            a: 127,
-            operand: u8::MAX,
-            answer: 128,
-            expect_c: false,
-            expect_n: true,
-            expect_v: true,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_zero_page(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_zp_can_subtract_two_unsigned_numbers() {
-        let test = ADCTestData {
-            carry: true,
-            a: 20,
-            operand: 17,
-            answer: 3,
-            expect_c: true,
-            expect_n: false,
-            expect_v: false,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_zero_page(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_zp_can_subtract_two_negative_numbers() {
-        let test = ADCTestData {
-            carry: true,
-            a: u8::MAX - 19,
-            operand: u8::MAX - 16,
-            answer: u8::MAX - 2,
-            expect_c: false,
-            expect_n: true,
-            expect_v: false,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_zero_page(test, EOperation::Subtract);
-    }
-
-
-    // SBC Inmediate
-
-    #[test]
-    fn sbc_im_can_subtract_zero_to_zero_and_get_zero() {
-        let test = ADCTestData {
-            carry: true,
-            a: 0,
-            operand: 0,
-            answer: 0,
-            expect_c: true,
-            expect_n: false,
-            expect_v: false,
-            expect_z: true,
-        };
-        
-        test_adc_or_sbc_inmediate(test, EOperation::Subtract);
-    }
-
-
-    #[test]
-    fn sbc_im_can_subtract_carry_and_zero_to_zero_and_get_minus_one() {
-        let test = ADCTestData {
-            carry: false,
-            a: 0,
-            operand: 0,
-            answer: u8::MAX,
-            expect_c: false,
-            expect_n: true,
-            expect_v: false,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_inmediate(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_im_can_subtract_one_from_zero_and_get_minus_one() {
-        let test = ADCTestData {
-            carry: true,
-            a: 0,
-            operand: 1,
-            answer: u8::MAX,
-            expect_c: false,
-            expect_n: true,
-            expect_v: false,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_inmediate(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_im_can_subtract_one_from_zero_with_a_carry_and_get_minus_two() {
-        let test = ADCTestData {
-            carry: false,
-            a: 0,
-            operand: 1,
-            answer: u8::MAX - 1,
-            expect_c: false,
-            expect_n: true,
-            expect_v: false,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_inmediate(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_im_can_subtract_two_neg_numbers_and_get_signed_overflow() {
-        let test = ADCTestData {
-            carry: true,
-            a: u8::MAX - 127,
-            operand: 1,
-            answer: 127,
-            expect_c: true,
-            expect_n: false,
-            expect_v: true,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_inmediate(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_im_can_subtract_pos_and_neg_numbers_and_get_signed_overflow() {
-        let x: u8 = u8::MAX;    // x = -1 as u8;
-        let test = ADCTestData {
-            carry: true,
-            a: 127,
-            operand: u8::MAX,
-            answer: 128,
-            expect_c: false,
-            expect_n: true,
-            expect_v: true,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_inmediate(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_im_can_subtract_two_unsigned_numbers() {
-        let test = ADCTestData {
-            carry: true,
-            a: 20,
-            operand: 17,
-            answer: 3,
-            expect_c: true,
-            expect_n: false,
-            expect_v: false,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_inmediate(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_im_can_subtract_two_negative_numbers() {
-        let test = ADCTestData {
-            carry: true,
-            a: u8::MAX - 19,
-            operand: u8::MAX - 16,
-            answer: u8::MAX - 2,
-            expect_c: false,
-            expect_n: true,
-            expect_v: false,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_inmediate(test, EOperation::Subtract);
-    }
-
-    // SBC Zero Page X 
-
-    #[test]
-    fn sbc_zpx_can_subtract_zero_to_zero_and_get_zero() {
-        let test = ADCTestData {
-            carry: true,
-            a: 0,
-            operand: 0,
-            answer: 0,
-            expect_c: true,
-            expect_n: false,
-            expect_v: false,
-            expect_z: true,
-        };
-        
-        test_adc_or_sbc_zero_page_x(test, EOperation::Subtract);
-    }
-
-
-    #[test]
-    fn sbc_zpx_can_subtract_carry_and_zero_to_zero_and_get_minus_one() {
-        let test = ADCTestData {
-            carry: false,
-            a: 0,
-            operand: 0,
-            answer: u8::MAX,
-            expect_c: false,
-            expect_n: true,
-            expect_v: false,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_zero_page_x(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_zpx_can_subtract_one_from_zero_and_get_minus_one() {
-        let test = ADCTestData {
-            carry: true,
-            a: 0,
-            operand: 1,
-            answer: u8::MAX,
-            expect_c: false,
-            expect_n: true,
-            expect_v: false,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_zero_page_x(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_zpx_can_subtract_one_from_zero_with_a_carry_and_get_minus_two() {
-        let test = ADCTestData {
-            carry: false,
-            a: 0,
-            operand: 1,
-            answer: u8::MAX - 1,
-            expect_c: false,
-            expect_n: true,
-            expect_v: false,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_zero_page_x(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_zpx_can_subtract_two_neg_numbers_and_get_signed_overflow() {
-        let test = ADCTestData {
-            carry: true,
-            a: u8::MAX - 127,
-            operand: 1,
-            answer: 127,
-            expect_c: true,
-            expect_n: false,
-            expect_v: true,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_zero_page_x(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_zpx_can_subtract_pos_and_neg_numbers_and_get_signed_overflow() {
-        let x: u8 = u8::MAX;    // x = -1 as u8;
-        let test = ADCTestData {
-            carry: true,
-            a: 127,
-            operand: u8::MAX,
-            answer: 128,
-            expect_c: false,
-            expect_n: true,
-            expect_v: true,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_zero_page_x(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_zpx_can_subtract_two_unsigned_numbers() {
-        let test = ADCTestData {
-            carry: true,
-            a: 20,
-            operand: 17,
-            answer: 3,
-            expect_c: true,
-            expect_n: false,
-            expect_v: false,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_zero_page_x(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_zpx_can_subtract_two_negative_numbers() {
-        let test = ADCTestData {
-            carry: true,
-            a: u8::MAX - 19,
-            operand: u8::MAX - 16,
-            answer: u8::MAX - 2,
-            expect_c: false,
-            expect_n: true,
-            expect_v: false,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_zero_page_x(test, EOperation::Subtract);
-    }
-
-    // SBC Abs X
-
-    #[test]
-    fn sbc_absx_can_subtract_zero_to_zero_and_get_zero() {
-        let test = ADCTestData {
-            carry: true,
-            a: 0,
-            operand: 0,
-            answer: 0,
-            expect_c: true,
-            expect_n: false,
-            expect_v: false,
-            expect_z: true,
-        };
-        
-        test_adc_or_sbc_absolute_x(test, EOperation::Subtract);
-    }
-
-
-    #[test]
-    fn sbc_absx_can_subtract_carry_and_zero_to_zero_and_get_minus_one() {
-        let test = ADCTestData {
-            carry: false,
-            a: 0,
-            operand: 0,
-            answer: u8::MAX,
-            expect_c: false,
-            expect_n: true,
-            expect_v: false,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_absolute_x(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_absx_can_subtract_one_from_zero_and_get_minus_one() {
-        let test = ADCTestData {
-            carry: true,
-            a: 0,
-            operand: 1,
-            answer: u8::MAX,
-            expect_c: false,
-            expect_n: true,
-            expect_v: false,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_absolute_x(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_absx_can_subtract_one_from_zero_with_a_carry_and_get_minus_two() {
-        let test = ADCTestData {
-            carry: false,
-            a: 0,
-            operand: 1,
-            answer: u8::MAX - 1,
-            expect_c: false,
-            expect_n: true,
-            expect_v: false,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_absolute_x(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_absx_can_subtract_two_neg_numbers_and_get_signed_overflow() {
-        let test = ADCTestData {
-            carry: true,
-            a: u8::MAX - 127,
-            operand: 1,
-            answer: 127,
-            expect_c: true,
-            expect_n: false,
-            expect_v: true,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_absolute_x(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_absx_can_subtract_pos_and_neg_numbers_and_get_signed_overflow() {
-        let test = ADCTestData {
-            carry: true,
-            a: 127,
-            operand: u8::MAX,
-            answer: 128,
-            expect_c: false,
-            expect_n: true,
-            expect_v: true,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_absolute_x(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_absx_can_subtract_two_unsigned_numbers() {
-        let test = ADCTestData {
-            carry: true,
-            a: 20,
-            operand: 17,
-            answer: 3,
-            expect_c: true,
-            expect_n: false,
-            expect_v: false,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_absolute_x(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_absx_can_subtract_two_negative_numbers() {
-        let test = ADCTestData {
-            carry: true,
-            a: u8::MAX - 19,
-            operand: u8::MAX - 16,
-            answer: u8::MAX - 2,
-            expect_c: false,
-            expect_n: true,
-            expect_v: false,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_absolute_x(test, EOperation::Subtract);
-    }
-
-    // SBC Absolute Y 
-
-    #[test]
-    fn sbc_absy_can_subtract_zero_to_zero_and_get_zero() {
-        let test = ADCTestData {
-            carry: true,
-            a: 0,
-            operand: 0,
-            answer: 0,
-            expect_c: true,
-            expect_n: false,
-            expect_v: false,
-            expect_z: true,
-        };
-        
-        test_adc_or_sbc_absolute_y(test, EOperation::Subtract);
-    }
-
-
-    #[test]
-    fn sbc_absy_can_subtract_carry_and_zero_to_zero_and_get_minus_one() {
-        let test = ADCTestData {
-            carry: false,
-            a: 0,
-            operand: 0,
-            answer: u8::MAX,
-            expect_c: false,
-            expect_n: true,
-            expect_v: false,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_absolute_y(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_absy_can_subtract_one_from_zero_and_get_minus_one() {
-        let test = ADCTestData {
-            carry: true,
-            a: 0,
-            operand: 1,
-            answer: u8::MAX,
-            expect_c: false,
-            expect_n: true,
-            expect_v: false,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_absolute_y(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_absy_can_subtract_one_from_zero_with_a_carry_and_get_minus_two() {
-        let test = ADCTestData {
-            carry: false,
-            a: 0,
-            operand: 1,
-            answer: u8::MAX - 1,
-            expect_c: false,
-            expect_n: true,
-            expect_v: false,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_absolute_y(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_absy_can_subtract_two_neg_numbers_and_get_signed_overflow() {
-        let test = ADCTestData {
-            carry: true,
-            a: u8::MAX - 127,
-            operand: 1,
-            answer: 127,
-            expect_c: true,
-            expect_n: false,
-            expect_v: true,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_absolute_y(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_absy_can_subtract_pos_and_neg_numbers_and_get_signed_overflow() {
-        let test = ADCTestData {
-            carry: true,
-            a: 127,
-            operand: u8::MAX,
-            answer: 128,
-            expect_c: false,
-            expect_n: true,
-            expect_v: true,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_absolute_y(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_absy_can_subtract_two_unsigned_numbers() {
-        let test = ADCTestData {
-            carry: true,
-            a: 20,
-            operand: 17,
-            answer: 3,
-            expect_c: true,
-            expect_n: false,
-            expect_v: false,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_absolute_y(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_absy_can_subtract_two_negative_numbers() {
-        let test = ADCTestData {
-            carry: true,
-            a: u8::MAX - 19,
-            operand: u8::MAX - 16,
-            answer: u8::MAX - 2,
-            expect_c: false,
-            expect_n: true,
-            expect_v: false,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_absolute_y(test, EOperation::Subtract);
-    }
-
-    // SBC Indirect X
-
-    #[test]
-    fn sbc_indx_can_subtract_zero_to_zero_and_get_zero() {
-        let test = ADCTestData {
-            carry: true,
-            a: 0,
-            operand: 0,
-            answer: 0,
-            expect_c: true,
-            expect_n: false,
-            expect_v: false,
-            expect_z: true,
-        };
-        
-        test_adc_or_sbc_indirect_x(test, EOperation::Subtract);
-    }
-
-
-    #[test]
-    fn sbc_indx_can_subtract_carry_and_zero_to_zero_and_get_minus_one() {
-        let test = ADCTestData {
-            carry: false,
-            a: 0,
-            operand: 0,
-            answer: u8::MAX,
-            expect_c: false,
-            expect_n: true,
-            expect_v: false,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_indirect_x(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_indx_can_subtract_one_from_zero_and_get_minus_one() {
-        let test = ADCTestData {
-            carry: true,
-            a: 0,
-            operand: 1,
-            answer: u8::MAX,
-            expect_c: false,
-            expect_n: true,
-            expect_v: false,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_indirect_x(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_indx_can_subtract_one_from_zero_with_a_carry_and_get_minus_two() {
-        let test = ADCTestData {
-            carry: false,
-            a: 0,
-            operand: 1,
-            answer: u8::MAX - 1,
-            expect_c: false,
-            expect_n: true,
-            expect_v: false,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_indirect_x(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_indx_can_subtract_two_neg_numbers_and_get_signed_overflow() {
-        let test = ADCTestData {
-            carry: true,
-            a: u8::MAX - 127,
-            operand: 1,
-            answer: 127,
-            expect_c: true,
-            expect_n: false,
-            expect_v: true,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_indirect_x(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_indx_can_subtract_pos_and_neg_numbers_and_get_signed_overflow() {
-        let test = ADCTestData {
-            carry: true,
-            a: 127,
-            operand: u8::MAX,
-            answer: 128,
-            expect_c: false,
-            expect_n: true,
-            expect_v: true,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_indirect_x(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_indx_can_subtract_two_unsigned_numbers() {
-        let test = ADCTestData {
-            carry: true,
-            a: 20,
-            operand: 17,
-            answer: 3,
-            expect_c: true,
-            expect_n: false,
-            expect_v: false,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_indirect_x(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_indx_can_subtract_two_negative_numbers() {
-        let test = ADCTestData {
-            carry: true,
-            a: u8::MAX - 19,
-            operand: u8::MAX - 16,
-            answer: u8::MAX - 2,
-            expect_c: false,
-            expect_n: true,
-            expect_v: false,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_indirect_x(test, EOperation::Subtract);
-    }
-
-
-    // SBC Indirect Y
-
-    #[test]
-    fn sbc_indy_can_subtract_zero_to_zero_and_get_zero() {
-        let test = ADCTestData {
-            carry: true,
-            a: 0,
-            operand: 0,
-            answer: 0,
-            expect_c: true,
-            expect_n: false,
-            expect_v: false,
-            expect_z: true,
-        };
-        
-        test_adc_or_sbc_indirect_y(test, EOperation::Subtract);
-    }
-
-
-    #[test]
-    fn sbc_indy_can_subtract_carry_and_zero_to_zero_and_get_minus_one() {
-        let test = ADCTestData {
-            carry: false,
-            a: 0,
-            operand: 0,
-            answer: u8::MAX,
-            expect_c: false,
-            expect_n: true,
-            expect_v: false,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_indirect_y(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_indy_can_subtract_one_from_zero_and_get_minus_one() {
-        let test = ADCTestData {
-            carry: true,
-            a: 0,
-            operand: 1,
-            answer: u8::MAX,
-            expect_c: false,
-            expect_n: true,
-            expect_v: false,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_indirect_y(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_indy_can_subtract_one_from_zero_with_a_carry_and_get_minus_two() {
-        let test = ADCTestData {
-            carry: false,
-            a: 0,
-            operand: 1,
-            answer: u8::MAX - 1,
-            expect_c: false,
-            expect_n: true,
-            expect_v: false,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_indirect_y(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_indy_can_subtract_two_neg_numbers_and_get_signed_overflow() {
-        let test = ADCTestData {
-            carry: true,
-            a: u8::MAX - 127,
-            operand: 1,
-            answer: 127,
-            expect_c: true,
-            expect_n: false,
-            expect_v: true,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_indirect_y(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_indy_can_subtract_pos_and_neg_numbers_and_get_signed_overflow() {
-        let test = ADCTestData {
-            carry: true,
-            a: 127,
-            operand: u8::MAX,
-            answer: 128,
-            expect_c: false,
-            expect_n: true,
-            expect_v: true,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_indirect_y(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_indy_can_subtract_two_unsigned_numbers() {
-        let test = ADCTestData {
-            carry: true,
-            a: 20,
-            operand: 17,
-            answer: 3,
-            expect_c: true,
-            expect_n: false,
-            expect_v: false,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_indirect_y(test, EOperation::Subtract);
-    }
-
-    #[test]
-    fn sbc_indy_can_subtract_two_negative_numbers() {
-        let test = ADCTestData {
-            carry: true,
-            a: u8::MAX - 19,
-            operand: u8::MAX - 16,
-            answer: u8::MAX - 2,
-            expect_c: false,
-            expect_n: true,
-            expect_v: false,
-            expect_z: false,
-        };
-        
-        test_adc_or_sbc_indirect_y(test, EOperation::Subtract);
-    }
+///////////////////////////////////////////////////////////////////////////
+//                          SBC ABS Tests                                //
+///////////////////////////////////////////////////////////////////////////
+
+//     #[test]
+//     fn sbc_abs_can_subtract_zero_to_zero_and_get_zero() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: 0,
+//             operand: 0,
+//             answer: 0,
+//             expect_c: true,
+//             expect_n: false,
+//             expect_v: false,
+//             expect_z: true,
+//         };
+//         
+//         test_adc_or_sbc_absolute(test, EOperation::Subtract);
+//     }
+// 
+// 
+//     #[test]
+//     fn sbc_abs_can_subtract_carry_and_zero_to_zero_and_get_minus_one() {
+//         let test = ADCTestData {
+//             carry: false,
+//             a: 0,
+//             operand: 0,
+//             answer: u8::MAX,
+//             expect_c: false,
+//             expect_n: true,
+//             expect_v: false,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_absolute(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_abs_can_subtract_one_from_zero_and_get_minus_one() {
+//         let test = ADCTestData {
+//             carry: false,
+//             a: 0,
+//             operand: 1,
+//             answer: u8::MAX - 1,
+//             expect_c: false,
+//             expect_n: true,
+//             expect_v: false,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_absolute(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_abs_can_subtract_one_from_zero_with_a_carry_and_get_minus_two() {
+//         let test = ADCTestData {
+//             carry: false,
+//             a: 0,
+//             operand: 1,
+//             answer: u8::MAX - 1,
+//             expect_c: false,
+//             expect_n: true,
+//             expect_v: false,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_absolute(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_abs_can_subtract_two_neg_numbers_and_get_signed_overflow() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: u8::MAX - 127,
+//             operand: 1,
+//             answer: 127,
+//             expect_c: true,
+//             expect_n: false,
+//             expect_v: true,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_absolute(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_abs_can_subtract_pos_and_neg_numbers_and_get_signed_overflow() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: 127,
+//             operand: u8::MAX,
+//             answer: 128,
+//             expect_c: false,
+//             expect_n: true,
+//             expect_v: true,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_absolute(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_abs_can_subtract_two_unsigned_numbers() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: 20,
+//             operand: 17,
+//             answer: 3,
+//             expect_c: true,
+//             expect_n: false,
+//             expect_v: false,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_absolute(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_abs_can_subtract_two_negative_numbers() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: u8::MAX - 20,
+//             operand: u8::MAX - 17,
+//             answer: u8::MAX - 2,
+//             expect_c: false,
+//             expect_n: true,
+//             expect_v: false,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_absolute(test, EOperation::Subtract);
+//     }
+// 
+// 
+//     // SBC Zero Page
+// 
+//     #[test]
+//     fn sbc_zp_can_subtract_zero_to_zero_and_get_zero() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: 0,
+//             operand: 0,
+//             answer: 0,
+//             expect_c: true,
+//             expect_n: false,
+//             expect_v: false,
+//             expect_z: true,
+//         };
+//         
+//         test_adc_or_sbc_zero_page(test, EOperation::Subtract);
+//     }
+// 
+// 
+//     #[test]
+//     fn sbc_zp_can_subtract_carry_and_zero_to_zero_and_get_minus_one() {
+//         let test = ADCTestData {
+//             carry: false,
+//             a: 0,
+//             operand: 0,
+//             answer: u8::MAX,
+//             expect_c: false,
+//             expect_n: true,
+//             expect_v: false,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_zero_page(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_zp_can_subtract_one_from_zero_and_get_minus_one() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: 0,
+//             operand: 1,
+//             answer: u8::MAX,
+//             expect_c: false,
+//             expect_n: true,
+//             expect_v: false,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_zero_page(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_zp_can_subtract_one_from_zero_with_a_carry_and_get_minus_two() {
+//         let test = ADCTestData {
+//             carry: false,
+//             a: 0,
+//             operand: 1,
+//             answer: u8::MAX - 1,
+//             expect_c: false,
+//             expect_n: true,
+//             expect_v: false,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_zero_page(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_zp_can_subtract_two_neg_numbers_and_get_signed_overflow() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: u8::MAX - 127,
+//             operand: 1,
+//             answer: 127,
+//             expect_c: true,
+//             expect_n: false,
+//             expect_v: true,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_absolute(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_zp_can_subtract_pos_and_neg_numbers_and_get_signed_overflow() {
+//         let x: u8 = u8::MAX;    // x = -1 as u8;
+//         let test = ADCTestData {
+//             carry: true,
+//             a: 127,
+//             operand: u8::MAX,
+//             answer: 128,
+//             expect_c: false,
+//             expect_n: true,
+//             expect_v: true,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_zero_page(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_zp_can_subtract_two_unsigned_numbers() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: 20,
+//             operand: 17,
+//             answer: 3,
+//             expect_c: true,
+//             expect_n: false,
+//             expect_v: false,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_zero_page(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_zp_can_subtract_two_negative_numbers() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: u8::MAX - 19,
+//             operand: u8::MAX - 16,
+//             answer: u8::MAX - 2,
+//             expect_c: false,
+//             expect_n: true,
+//             expect_v: false,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_zero_page(test, EOperation::Subtract);
+//     }
+// 
+// 
+//     // SBC Inmediate
+// 
+//     #[test]
+//     fn sbc_im_can_subtract_zero_to_zero_and_get_zero() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: 0,
+//             operand: 0,
+//             answer: 0,
+//             expect_c: true,
+//             expect_n: false,
+//             expect_v: false,
+//             expect_z: true,
+//         };
+//         
+//         test_adc_or_sbc_inmediate(test, EOperation::Subtract);
+//     }
+// 
+// 
+//     #[test]
+//     fn sbc_im_can_subtract_carry_and_zero_to_zero_and_get_minus_one() {
+//         let test = ADCTestData {
+//             carry: false,
+//             a: 0,
+//             operand: 0,
+//             answer: u8::MAX,
+//             expect_c: false,
+//             expect_n: true,
+//             expect_v: false,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_inmediate(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_im_can_subtract_one_from_zero_and_get_minus_one() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: 0,
+//             operand: 1,
+//             answer: u8::MAX,
+//             expect_c: false,
+//             expect_n: true,
+//             expect_v: false,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_inmediate(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_im_can_subtract_one_from_zero_with_a_carry_and_get_minus_two() {
+//         let test = ADCTestData {
+//             carry: false,
+//             a: 0,
+//             operand: 1,
+//             answer: u8::MAX - 1,
+//             expect_c: false,
+//             expect_n: true,
+//             expect_v: false,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_inmediate(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_im_can_subtract_two_neg_numbers_and_get_signed_overflow() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: u8::MAX - 127,
+//             operand: 1,
+//             answer: 127,
+//             expect_c: true,
+//             expect_n: false,
+//             expect_v: true,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_inmediate(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_im_can_subtract_pos_and_neg_numbers_and_get_signed_overflow() {
+//         let x: u8 = u8::MAX;    // x = -1 as u8;
+//         let test = ADCTestData {
+//             carry: true,
+//             a: 127,
+//             operand: u8::MAX,
+//             answer: 128,
+//             expect_c: false,
+//             expect_n: true,
+//             expect_v: true,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_inmediate(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_im_can_subtract_two_unsigned_numbers() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: 20,
+//             operand: 17,
+//             answer: 3,
+//             expect_c: true,
+//             expect_n: false,
+//             expect_v: false,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_inmediate(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_im_can_subtract_two_negative_numbers() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: u8::MAX - 19,
+//             operand: u8::MAX - 16,
+//             answer: u8::MAX - 2,
+//             expect_c: false,
+//             expect_n: true,
+//             expect_v: false,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_inmediate(test, EOperation::Subtract);
+//     }
+// 
+//     // SBC Zero Page X 
+// 
+//     #[test]
+//     fn sbc_zpx_can_subtract_zero_to_zero_and_get_zero() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: 0,
+//             operand: 0,
+//             answer: 0,
+//             expect_c: true,
+//             expect_n: false,
+//             expect_v: false,
+//             expect_z: true,
+//         };
+//         
+//         test_adc_or_sbc_zero_page_x(test, EOperation::Subtract);
+//     }
+// 
+// 
+//     #[test]
+//     fn sbc_zpx_can_subtract_carry_and_zero_to_zero_and_get_minus_one() {
+//         let test = ADCTestData {
+//             carry: false,
+//             a: 0,
+//             operand: 0,
+//             answer: u8::MAX,
+//             expect_c: false,
+//             expect_n: true,
+//             expect_v: false,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_zero_page_x(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_zpx_can_subtract_one_from_zero_and_get_minus_one() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: 0,
+//             operand: 1,
+//             answer: u8::MAX,
+//             expect_c: false,
+//             expect_n: true,
+//             expect_v: false,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_zero_page_x(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_zpx_can_subtract_one_from_zero_with_a_carry_and_get_minus_two() {
+//         let test = ADCTestData {
+//             carry: false,
+//             a: 0,
+//             operand: 1,
+//             answer: u8::MAX - 1,
+//             expect_c: false,
+//             expect_n: true,
+//             expect_v: false,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_zero_page_x(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_zpx_can_subtract_two_neg_numbers_and_get_signed_overflow() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: u8::MAX - 127,
+//             operand: 1,
+//             answer: 127,
+//             expect_c: true,
+//             expect_n: false,
+//             expect_v: true,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_zero_page_x(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_zpx_can_subtract_pos_and_neg_numbers_and_get_signed_overflow() {
+//         let x: u8 = u8::MAX;    // x = -1 as u8;
+//         let test = ADCTestData {
+//             carry: true,
+//             a: 127,
+//             operand: u8::MAX,
+//             answer: 128,
+//             expect_c: false,
+//             expect_n: true,
+//             expect_v: true,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_zero_page_x(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_zpx_can_subtract_two_unsigned_numbers() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: 20,
+//             operand: 17,
+//             answer: 3,
+//             expect_c: true,
+//             expect_n: false,
+//             expect_v: false,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_zero_page_x(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_zpx_can_subtract_two_negative_numbers() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: u8::MAX - 19,
+//             operand: u8::MAX - 16,
+//             answer: u8::MAX - 2,
+//             expect_c: false,
+//             expect_n: true,
+//             expect_v: false,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_zero_page_x(test, EOperation::Subtract);
+//     }
+// 
+//     // SBC Abs X
+// 
+//     #[test]
+//     fn sbc_absx_can_subtract_zero_to_zero_and_get_zero() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: 0,
+//             operand: 0,
+//             answer: 0,
+//             expect_c: true,
+//             expect_n: false,
+//             expect_v: false,
+//             expect_z: true,
+//         };
+//         
+//         test_adc_or_sbc_absolute_x(test, EOperation::Subtract);
+//     }
+// 
+// 
+//     #[test]
+//     fn sbc_absx_can_subtract_carry_and_zero_to_zero_and_get_minus_one() {
+//         let test = ADCTestData {
+//             carry: false,
+//             a: 0,
+//             operand: 0,
+//             answer: u8::MAX,
+//             expect_c: false,
+//             expect_n: true,
+//             expect_v: false,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_absolute_x(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_absx_can_subtract_one_from_zero_and_get_minus_one() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: 0,
+//             operand: 1,
+//             answer: u8::MAX,
+//             expect_c: false,
+//             expect_n: true,
+//             expect_v: false,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_absolute_x(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_absx_can_subtract_one_from_zero_with_a_carry_and_get_minus_two() {
+//         let test = ADCTestData {
+//             carry: false,
+//             a: 0,
+//             operand: 1,
+//             answer: u8::MAX - 1,
+//             expect_c: false,
+//             expect_n: true,
+//             expect_v: false,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_absolute_x(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_absx_can_subtract_two_neg_numbers_and_get_signed_overflow() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: u8::MAX - 127,
+//             operand: 1,
+//             answer: 127,
+//             expect_c: true,
+//             expect_n: false,
+//             expect_v: true,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_absolute_x(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_absx_can_subtract_pos_and_neg_numbers_and_get_signed_overflow() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: 127,
+//             operand: u8::MAX,
+//             answer: 128,
+//             expect_c: false,
+//             expect_n: true,
+//             expect_v: true,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_absolute_x(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_absx_can_subtract_two_unsigned_numbers() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: 20,
+//             operand: 17,
+//             answer: 3,
+//             expect_c: true,
+//             expect_n: false,
+//             expect_v: false,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_absolute_x(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_absx_can_subtract_two_negative_numbers() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: u8::MAX - 19,
+//             operand: u8::MAX - 16,
+//             answer: u8::MAX - 2,
+//             expect_c: false,
+//             expect_n: true,
+//             expect_v: false,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_absolute_x(test, EOperation::Subtract);
+//     }
+// 
+//     // SBC Absolute Y 
+// 
+//     #[test]
+//     fn sbc_absy_can_subtract_zero_to_zero_and_get_zero() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: 0,
+//             operand: 0,
+//             answer: 0,
+//             expect_c: true,
+//             expect_n: false,
+//             expect_v: false,
+//             expect_z: true,
+//         };
+//         
+//         test_adc_or_sbc_absolute_y(test, EOperation::Subtract);
+//     }
+// 
+// 
+//     #[test]
+//     fn sbc_absy_can_subtract_carry_and_zero_to_zero_and_get_minus_one() {
+//         let test = ADCTestData {
+//             carry: false,
+//             a: 0,
+//             operand: 0,
+//             answer: u8::MAX,
+//             expect_c: false,
+//             expect_n: true,
+//             expect_v: false,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_absolute_y(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_absy_can_subtract_one_from_zero_and_get_minus_one() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: 0,
+//             operand: 1,
+//             answer: u8::MAX,
+//             expect_c: false,
+//             expect_n: true,
+//             expect_v: false,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_absolute_y(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_absy_can_subtract_one_from_zero_with_a_carry_and_get_minus_two() {
+//         let test = ADCTestData {
+//             carry: false,
+//             a: 0,
+//             operand: 1,
+//             answer: u8::MAX - 1,
+//             expect_c: false,
+//             expect_n: true,
+//             expect_v: false,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_absolute_y(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_absy_can_subtract_two_neg_numbers_and_get_signed_overflow() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: u8::MAX - 127,
+//             operand: 1,
+//             answer: 127,
+//             expect_c: true,
+//             expect_n: false,
+//             expect_v: true,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_absolute_y(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_absy_can_subtract_pos_and_neg_numbers_and_get_signed_overflow() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: 127,
+//             operand: u8::MAX,
+//             answer: 128,
+//             expect_c: false,
+//             expect_n: true,
+//             expect_v: true,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_absolute_y(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_absy_can_subtract_two_unsigned_numbers() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: 20,
+//             operand: 17,
+//             answer: 3,
+//             expect_c: true,
+//             expect_n: false,
+//             expect_v: false,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_absolute_y(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_absy_can_subtract_two_negative_numbers() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: u8::MAX - 19,
+//             operand: u8::MAX - 16,
+//             answer: u8::MAX - 2,
+//             expect_c: false,
+//             expect_n: true,
+//             expect_v: false,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_absolute_y(test, EOperation::Subtract);
+//     }
+// 
+//     // SBC Indirect X
+// 
+//     #[test]
+//     fn sbc_indx_can_subtract_zero_to_zero_and_get_zero() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: 0,
+//             operand: 0,
+//             answer: 0,
+//             expect_c: true,
+//             expect_n: false,
+//             expect_v: false,
+//             expect_z: true,
+//         };
+//         
+//         test_adc_or_sbc_indirect_x(test, EOperation::Subtract);
+//     }
+// 
+// 
+//     #[test]
+//     fn sbc_indx_can_subtract_carry_and_zero_to_zero_and_get_minus_one() {
+//         let test = ADCTestData {
+//             carry: false,
+//             a: 0,
+//             operand: 0,
+//             answer: u8::MAX,
+//             expect_c: false,
+//             expect_n: true,
+//             expect_v: false,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_indirect_x(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_indx_can_subtract_one_from_zero_and_get_minus_one() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: 0,
+//             operand: 1,
+//             answer: u8::MAX,
+//             expect_c: false,
+//             expect_n: true,
+//             expect_v: false,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_indirect_x(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_indx_can_subtract_one_from_zero_with_a_carry_and_get_minus_two() {
+//         let test = ADCTestData {
+//             carry: false,
+//             a: 0,
+//             operand: 1,
+//             answer: u8::MAX - 1,
+//             expect_c: false,
+//             expect_n: true,
+//             expect_v: false,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_indirect_x(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_indx_can_subtract_two_neg_numbers_and_get_signed_overflow() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: u8::MAX - 127,
+//             operand: 1,
+//             answer: 127,
+//             expect_c: true,
+//             expect_n: false,
+//             expect_v: true,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_indirect_x(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_indx_can_subtract_pos_and_neg_numbers_and_get_signed_overflow() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: 127,
+//             operand: u8::MAX,
+//             answer: 128,
+//             expect_c: false,
+//             expect_n: true,
+//             expect_v: true,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_indirect_x(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_indx_can_subtract_two_unsigned_numbers() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: 20,
+//             operand: 17,
+//             answer: 3,
+//             expect_c: true,
+//             expect_n: false,
+//             expect_v: false,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_indirect_x(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_indx_can_subtract_two_negative_numbers() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: u8::MAX - 19,
+//             operand: u8::MAX - 16,
+//             answer: u8::MAX - 2,
+//             expect_c: false,
+//             expect_n: true,
+//             expect_v: false,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_indirect_x(test, EOperation::Subtract);
+//     }
+// 
+// 
+//     // SBC Indirect Y
+// 
+//     #[test]
+//     fn sbc_indy_can_subtract_zero_to_zero_and_get_zero() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: 0,
+//             operand: 0,
+//             answer: 0,
+//             expect_c: true,
+//             expect_n: false,
+//             expect_v: false,
+//             expect_z: true,
+//         };
+//         
+//         test_adc_or_sbc_indirect_y(test, EOperation::Subtract);
+//     }
+// 
+// 
+//     #[test]
+//     fn sbc_indy_can_subtract_carry_and_zero_to_zero_and_get_minus_one() {
+//         let test = ADCTestData {
+//             carry: false,
+//             a: 0,
+//             operand: 0,
+//             answer: u8::MAX,
+//             expect_c: false,
+//             expect_n: true,
+//             expect_v: false,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_indirect_y(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_indy_can_subtract_one_from_zero_and_get_minus_one() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: 0,
+//             operand: 1,
+//             answer: u8::MAX,
+//             expect_c: false,
+//             expect_n: true,
+//             expect_v: false,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_indirect_y(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_indy_can_subtract_one_from_zero_with_a_carry_and_get_minus_two() {
+//         let test = ADCTestData {
+//             carry: false,
+//             a: 0,
+//             operand: 1,
+//             answer: u8::MAX - 1,
+//             expect_c: false,
+//             expect_n: true,
+//             expect_v: false,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_indirect_y(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_indy_can_subtract_two_neg_numbers_and_get_signed_overflow() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: u8::MAX - 127,
+//             operand: 1,
+//             answer: 127,
+//             expect_c: true,
+//             expect_n: false,
+//             expect_v: true,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_indirect_y(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_indy_can_subtract_pos_and_neg_numbers_and_get_signed_overflow() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: 127,
+//             operand: u8::MAX,
+//             answer: 128,
+//             expect_c: false,
+//             expect_n: true,
+//             expect_v: true,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_indirect_y(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_indy_can_subtract_two_unsigned_numbers() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: 20,
+//             operand: 17,
+//             answer: 3,
+//             expect_c: true,
+//             expect_n: false,
+//             expect_v: false,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_indirect_y(test, EOperation::Subtract);
+//     }
+// 
+//     #[test]
+//     fn sbc_indy_can_subtract_two_negative_numbers() {
+//         let test = ADCTestData {
+//             carry: true,
+//             a: u8::MAX - 19,
+//             operand: u8::MAX - 16,
+//             answer: u8::MAX - 2,
+//             expect_c: false,
+//             expect_n: true,
+//             expect_v: false,
+//             expect_z: false,
+//         };
+//         
+//         test_adc_or_sbc_indirect_y(test, EOperation::Subtract);
+//     }
 }

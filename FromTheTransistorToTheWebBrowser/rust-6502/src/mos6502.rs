@@ -222,8 +222,40 @@ impl CPU {
             INS_CPY_ZP: 0xC4,
             INS_CPY_ABS: 0xCC,
 
+            // Shifts
+
+            // Arithmetic Shift Left
+            INS_ASL_ACC: 0x0A,
+            INS_ASL_ZP: 0x06,
+            INS_ASL_ZPX: 0x16,
+            INS_ASL_ABS: 0x0E,
+            INS_ASL_ABSX: 0x1E,
+
+            //  Logical Shift Right
+            INS_LSR_ACC: 0x4A,
+            INS_LSR_ZP: 0x46,
+            INS_LSR_ZPX: 0x56,
+            INS_LSR_ABS: 0x4E,
+            INS_LSR_ABSX: 0x5E,
+
+            // Rotate Left
+            INS_ROL_ACC: 0x2A,
+            INS_ROL_ZP: 0x26,
+            INS_ROL_ZPX: 0x36,
+            INS_ROL_ABS: 0x2E,
+            INS_ROL_ABSX: 0x3E,
+
+            // Rotate Right
+            INS_ROR_ACC: 0x6A,
+            INS_ROR_ZP: 0x66,
+            INS_ROR_ZPX: 0x76,
+            INS_ROR_ABS: 0x6E,
+            INS_ROR_ABSX: 0x7E,
+
             // System Functions
+            INS_BRK: 0x00,
             INS_NOP: 0xEA,
+            INS_RTI: 0x40,
         }
     }
 
@@ -1364,6 +1396,65 @@ impl CPU {
                     let temp: Byte = self.Y.wrapping_sub(operand);
                     self.cpy_register_set_status(operand, temp);
                 }
+
+                // ASL
+
+                0x0A => {
+                    println!("Instruction ASL ACC");
+                    self.PS.set_bit(0, self.A.get_bit(7));
+                    self.A = self.A << 1;
+                    self.lda_register_set_status();
+                    *cycles -= 1;
+                }
+
+              0x06 => {
+                    println!("Instruction ASL ZP");
+                    let zero_page_address: Byte = self.fetch_byte(cycles, memory);
+                    let mut value = self.read_byte(cycles, zero_page_address as u16, memory);
+                    self.PS.set_bit(0, value.get_bit(7));
+                    value =  value << 1;
+                    *cycles -= 1;
+                    self.write_byte(value, cycles, zero_page_address.into(), memory);
+                    self.ldm_register_set_status(value);
+               }
+
+              0x16 => {
+                    println!("Instruction ASL ZPX");
+                    let mut zero_page_address: Byte = self.fetch_byte(cycles, memory);
+                    zero_page_address = zero_page_address.wrapping_add(self.X);
+                    *cycles -= 1;
+                    let mut value = self.read_byte(cycles, zero_page_address as u16, memory);
+                    self.PS.set_bit(0, value.get_bit(7));
+                    value = value << 1;
+                    *cycles -= 1;
+                    self.write_byte(value, cycles, zero_page_address.into(), memory);
+                    self.ldm_register_set_status(value);
+               }
+
+              0x0E => {
+                    println!("Instruction ASL ABS");
+                    let abs_address: Word = self.fetch_word(cycles, memory);
+                    let mut value = self.read_byte(cycles, abs_address as u16, memory);
+                    self.PS.set_bit(0, value.get_bit(7));
+                    value =  value << 1;
+                    *cycles -= 1;
+                    self.write_byte(value, cycles, abs_address.into(), memory);
+                    self.ldm_register_set_status(value);
+               }
+
+              0x1E => {
+                    println!("Instruction ASL ABSX");
+                    let mut abs_address_x: Word = self.fetch_word(cycles, memory);
+                    abs_address_x = abs_address_x.wrapping_add(self.X as Word);
+                    *cycles -= 1;
+                    let mut value = self.read_byte(cycles, abs_address_x as u16, memory);
+                    self.PS.set_bit(0, value.get_bit(7));
+                    value =  value << 1;
+                    *cycles -= 1;
+                    self.write_byte(value, cycles, abs_address_x.into(), memory);
+                    self.ldm_register_set_status(value);
+               }
+
 
                 // System Functions
                 0xEA => {

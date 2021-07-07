@@ -12,6 +12,7 @@ mod store_tests;
 mod transfer_register_tests;
 mod add_with_carry_tests;
 mod compare_register_tests;
+mod shifts_tests;
 
 use mos6502::*;
 
@@ -51,6 +52,8 @@ pub struct CPU {
     pub PS: Byte,
 
     // Opcodes
+
+    // Load / Store Operations
 
     // LDA
     pub INS_LDA_IM: Byte,
@@ -224,13 +227,40 @@ pub struct CPU {
     pub INS_CPY_ZP: Byte,
     pub INS_CPY_ABS: Byte,
 
+    // Shifts
 
+    // Arithmetic Shift Left
+    pub INS_ASL_ACC: Byte,
+    pub INS_ASL_ZP: Byte,
+    pub INS_ASL_ZPX: Byte,
+    pub INS_ASL_ABS: Byte,
+    pub INS_ASL_ABSX: Byte,
 
+    // Logial Shift Right
+    pub INS_LSR_ACC: Byte,
+    pub INS_LSR_ZP: Byte,
+    pub INS_LSR_ZPX: Byte,
+    pub INS_LSR_ABS: Byte,
+    pub INS_LSR_ABSX: Byte,
 
+    // Rotate Left
+    pub INS_ROL_ACC: Byte,
+    pub INS_ROL_ZP: Byte,
+    pub INS_ROL_ZPX: Byte,
+    pub INS_ROL_ABS: Byte,
+    pub INS_ROL_ABSX: Byte,
 
+    // Rotate Right
+    pub INS_ROR_ACC: Byte,
+    pub INS_ROR_ZP: Byte,
+    pub INS_ROR_ZPX: Byte,
+    pub INS_ROR_ABS: Byte,
+    pub INS_ROR_ABSX: Byte,
 
     // System Functions
+    pub INS_BRK: Byte,
     pub INS_NOP: Byte,
+    pub INS_RTI: Byte,
 }
 
 impl CPU {
@@ -280,6 +310,11 @@ fn main() {
     let prg: [Byte; 14] = [
         0x00, 0x10, 0xA9, 0xFF, 0x85, 0x90, 0x8D, 0x00, 0x80, 0x49, 0xCC, 0x4C, 0x02, 0x10,
     ];
+
+
+    // let prg: [Byte; 13] = [
+    //     0x00, 0x10, 0xA9, 0x00, 0x18, 0x69, 0x08, 0xC9, 0x18, 0xD0, 0xFA, 0xA2, 0x14,
+    // ];
 
     // when
     let start_address = cpu.load_prg(prg, 14, &mut mem);

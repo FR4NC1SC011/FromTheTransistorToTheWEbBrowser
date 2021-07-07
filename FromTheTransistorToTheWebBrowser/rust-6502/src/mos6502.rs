@@ -1455,6 +1455,64 @@ impl CPU {
                     self.ldm_register_set_status(value);
                }
 
+                // LSR
+
+                0x4A => {
+                    println!("Instruction LSR ACC");
+                    self.PS.set_bit(0, self.A.get_bit(0));
+                    self.A = self.A >> 1;
+                    self.lda_register_set_status();
+                    *cycles -= 1;
+                }
+
+              0x46 => {
+                    println!("Instruction LSR ZP");
+                    let zero_page_address: Byte = self.fetch_byte(cycles, memory);
+                    let mut value = self.read_byte(cycles, zero_page_address as u16, memory);
+                    self.PS.set_bit(0, value.get_bit(0));
+                    value =  value >> 1;
+                    *cycles -= 1;
+                    self.write_byte(value, cycles, zero_page_address.into(), memory);
+                    self.ldm_register_set_status(value);
+               }
+
+              0x56 => {
+                    println!("Instruction LSR ZPX");
+                    let mut zero_page_address: Byte = self.fetch_byte(cycles, memory);
+                    zero_page_address = zero_page_address.wrapping_add(self.X);
+                    *cycles -= 1;
+                    let mut value = self.read_byte(cycles, zero_page_address as u16, memory);
+                    self.PS.set_bit(0, value.get_bit(0));
+                    value = value >> 1;
+                    *cycles -= 1;
+                    self.write_byte(value, cycles, zero_page_address.into(), memory);
+                    self.ldm_register_set_status(value);
+               }
+
+              0x4E => {
+                    println!("Instruction LSR ABS");
+                    let abs_address: Word = self.fetch_word(cycles, memory);
+                    let mut value = self.read_byte(cycles, abs_address as u16, memory);
+                    self.PS.set_bit(0, value.get_bit(0));
+                    value =  value >> 1;
+                    *cycles -= 1;
+                    self.write_byte(value, cycles, abs_address.into(), memory);
+                    self.ldm_register_set_status(value);
+               }
+
+              0x5E => {
+                    println!("Instruction LSR ABSX");
+                    let mut abs_address_x: Word = self.fetch_word(cycles, memory);
+                    abs_address_x = abs_address_x.wrapping_add(self.X as Word);
+                    *cycles -= 1;
+                    let mut value = self.read_byte(cycles, abs_address_x as u16, memory);
+                    self.PS.set_bit(0, value.get_bit(0));
+                    value =  value >> 1;
+                    *cycles -= 1;
+                    self.write_byte(value, cycles, abs_address_x.into(), memory);
+                    self.ldm_register_set_status(value);
+               }
+
 
                 // System Functions
                 0xEA => {

@@ -481,25 +481,12 @@ impl CPU {
         self.PS.set_bit(6, v); // V flag
     }
 
-    fn rotate_left(&mut self, cycles: &mut isize, mut operand: Byte) -> Byte {
-        let new_bit_0:  Byte = if self.PS.get_bit(0) { Flags::ZeroBit as u8 } else { 0 };  
+    fn rotate_left(&mut self, operand: mut Byte) -> Byte {
+        let bit_1:  Byte = if self.PS.get_bit(0) { 0b0000001 } else { 0 };  
         let c: bool = (operand & Flags::NegativeFlagBit as u8) > 0;
         self.PS.set_bit(0, c);
         operand = operand << 1;
-        operand |= new_bit_0;
-        *cycles -= 1;
-
-        operand
-    }
-
-    fn rotate_right(&mut self, cycles: &mut isize, mut operand: Byte) -> Byte {
-        let old_bit_0: bool = (operand & Flags::ZeroBit as u8) > 0;
-        operand = operand >> 1;
-        if self.PS.get_bit(0) {            // C
-            operand |= Flags::NegativeFlagBit as u8;
-        }
-        *cycles -= 1;
-        self.PS.set_bit(0, old_bit_0);     // C
+        operand |= bit_1;
 
         operand
     }
@@ -1537,104 +1524,17 @@ impl CPU {
                }
 
                // ROL
-
                 0x2A => {
                     println!("Instruction ROL ACC");
-                    self.A = self.rotate_left(cycles, self.A);
+                    let bit_1:  Byte = if self.PS.get_bit(0) { 0b0000001 } else { 0 };  
+                    let c: bool = (self.A & Flags::NegativeFlagBit as u8) > 0;
+                    self.PS.set_bit(0, c);
+                    self.A = self.A << 1;
+                    self.A |= bit_1;
+                    *cycles -= 1;
                     self.lda_register_set_status();
                 }
 
-                0x26 => {
-                    println!("Instruction ROL ZP");
-                    let zero_page_address: Byte = self.fetch_byte(cycles, memory);
-                    let mut value = self.read_byte(cycles, zero_page_address as u16, memory);
-                    let result: Byte = self.rotate_left(cycles, value);
-                    self.write_byte(result, cycles, zero_page_address.into(), memory);
-                    self.ldm_register_set_status(result);
-                }
-
-                0x36 => {
-                    println!("Instruction ROL ZPX");
-                    let mut zero_page_address: Byte = self.fetch_byte(cycles, memory);
-                    zero_page_address = zero_page_address.wrapping_add(self.X);
-                    *cycles -= 1;
-                    let mut value = self.read_byte(cycles, zero_page_address as u16, memory);
-                    let result: Byte = self.rotate_left(cycles, value);
-                    *cycles -= 1;
-                    self.write_byte(result, cycles, zero_page_address.into(), memory);
-                    self.ldm_register_set_status(result);
-                }
-
-                0x2E => {
-                    println!("Instruction ROL ABS");
-                    let abs_address: Word = self.fetch_word(cycles, memory);
-                    let mut value = self.read_byte(cycles, abs_address as u16, memory);
-                    let result: Byte = self.rotate_left(cycles, value);
-                    *cycles -= 1;
-                    self.write_byte(result, cycles, abs_address.into(), memory);
-                    self.ldm_register_set_status(result);
-                }
-
-                0x3E => {
-                    println!("Instruction ROL ABSX");
-                    let abs_address: Word = self.fetch_word(cycles, memory);
-                    let abs_address_plus_x = abs_address.wrapping_add(self.X as Word);
-                    let mut value = self.read_byte(cycles, abs_address_plus_x, memory);
-                    let result: Byte = self.rotate_left(cycles, value);
-                    *cycles -= 1;
-                    self.write_byte(result, cycles, abs_address_plus_x.into(), memory);
-                    self.ldm_register_set_status(result);
-                }
-
-               // ROR
-
-                0x6A => {
-                    println!("Instruction ROR ACC");
-                    self.A = self.rotate_right(cycles, self.A);
-                    self.lda_register_set_status();
-                }
-
-                0x66 => {
-                    println!("Instruction ROR ZP");
-                    let zero_page_address: Byte = self.fetch_byte(cycles, memory);
-                    let mut value = self.read_byte(cycles, zero_page_address as u16, memory);
-                    let result: Byte = self.rotate_right(cycles, value);
-                    self.write_byte(result, cycles, zero_page_address.into(), memory);
-                    self.ldm_register_set_status(result);
-                }
-
-                0x76 => {
-                    println!("Instruction ROR ZPX");
-                    let mut zero_page_address: Byte = self.fetch_byte(cycles, memory);
-                    zero_page_address = zero_page_address.wrapping_add(self.X);
-                    *cycles -= 1;
-                    let mut value = self.read_byte(cycles, zero_page_address as u16, memory);
-                    let result: Byte = self.rotate_right(cycles, value);
-                    *cycles -= 1;
-                    self.write_byte(result, cycles, zero_page_address.into(), memory);
-                    self.ldm_register_set_status(result);
-                }
-
-                0x6E => {
-                    println!("Instruction ROR ABS");
-                    let abs_address: Word = self.fetch_word(cycles, memory);
-                    let mut value = self.read_byte(cycles, abs_address as u16, memory);
-                    let result: Byte = self.rotate_right(cycles, value);
-                    *cycles -= 1;
-                    self.write_byte(result, cycles, abs_address.into(), memory);
-                    self.ldm_register_set_status(result);
-                }
-
-                0x7E => {
-                    println!("Instruction ROR ABSX");
-                    let abs_address: Word = self.fetch_word(cycles, memory);
-                    let abs_address_plus_x = abs_address.wrapping_add(self.X as Word);
-                    let mut value = self.read_byte(cycles, abs_address_plus_x, memory);
-                    let result: Byte = self.rotate_right(cycles, value);
-                    *cycles -= 1;
-                    self.write_byte(result, cycles, abs_address_plus_x.into(), memory);
-                    self.ldm_register_set_status(result);
-                }
 
 
 

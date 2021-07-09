@@ -792,7 +792,8 @@ impl CPU {
 
                 0x08 => {
                     println!("Instruction PHP");
-                    self.push_byte_to_stack(cycles, memory, self.PS);
+                    let ps_stack: Byte = self.PS | Flags::BreakFlagBit as u8 | Flags::UnusedFlagBit as u8; 
+                    self.push_byte_to_stack(cycles, memory, ps_stack);
                 }
 
                 0x68 => {
@@ -804,7 +805,10 @@ impl CPU {
 
                 0x28 => {
                     println!("Instructin PLP");
-                    self.PS = self.pop_byte_from_stack(cycles, memory);
+                    let mut ps_from_stack: Byte = self.pop_byte_from_stack(cycles, memory);
+                    ps_from_stack &= !(Flags::UnusedFlagBit as u8 | Flags::BreakFlagBit as u8);
+                    self.PS = 0;
+                    self.PS |= ps_from_stack;
                     *cycles -= 1;
                 }
 

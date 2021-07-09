@@ -10,6 +10,7 @@ mod stack_and_operations_tests {
 
     use crate::Mem;
     use crate::CPU;
+    use crate::Flags;
 
     #[test]
     fn tsx_can_transfer_the_stack_pointer_to_the_x_register() {
@@ -236,10 +237,40 @@ mod stack_and_operations_tests {
 
         // then:
         assert_eq!(actual_cycles, 3);
-        assert_eq!(mem.Data[cpu.sp_to_address() as usize + 1 as usize], 0xCC);
+        assert_eq!(mem.Data[cpu.sp_to_address() as usize + 1 as usize], 
+                        0xCC | Flags::UnusedFlagBit as u8 | Flags::BreakFlagBit as u8);
         assert_eq!(cpu.PS, cpu_copy.PS);
         assert_eq!(cpu.SP, 0xFE);
         // verify_unmodified_flags_from_store(cpu, cpu_copy);
+    }
+
+    #[test]
+    fn php_always_set_bits_4_and_5_on_the_stack() {
+        let mut mem = Mem::new();
+        let mut cpu = CPU::new();
+
+        // given:
+        cpu.reset_vector(&mut mem, 0xFF00);
+        cpu.PS = 0x0;
+        mem.Data[0xFF00] = cpu.INS_PHP;
+
+        let mut expected_cycles = 3;
+
+        // when
+        let actual_cycles = cpu.execute(&mut expected_cycles, &mut mem);
+
+        // then:
+        let add_ps_on_stack: Word = cpu.sp_to_address() + 1;
+        assert_eq!(actual_cycles, 3);
+        // https://wiki.nesdev.com/w/index.php/Status_flags
+        //Two interrupts (/IRQ and /NMI) and two instructions (PHP and BRK) push 
+        // the flags to the stack. In the byte pushed, bit 5 is always set to 1, 
+        //and bit 4 is 1 if from an instruction (PHP or BRK) or 0 if from an 
+        // interrupt line being pulled low (/IRQ or /NMI). This is the only time 
+        // and place where the B flag actually exists: not in the status register 
+        // itself, but in bit 4 of the copy that is written to the stack.
+        let flags_on_stack: Byte = Flags::UnusedFlagBit as u8 | Flags::BreakFlagBit as u8; 
+        assert_eq!(mem.Data[add_ps_on_stack as usize], flags_on_stack);
     }
 
     #[test]
@@ -253,7 +284,7 @@ mod stack_and_operations_tests {
         cpu_copy.reset_vector(&mut mem, 0xFF00);
         cpu.PS = 0;
         cpu.SP = 0xFE;
-        mem.Data[0x01FF] = 0x42;
+        mem.Data[0x01FF] = 0x42 | Flags::BreakFlagBit as u8 | Flags::UnusedFlagBit as u8;
         mem.Data[0xFF00] = cpu.INS_PLP;
 
         let mut expected_cycles = 4;
@@ -263,6 +294,28 @@ mod stack_and_operations_tests {
         // then:
         assert_eq!(actual_cycles, 4);
         assert_eq!(cpu.PS, 0x42);
+        // verify_unmodified_flags_from_store(cpu, cpu_copy);
+    }
+
+    #[test]
+    fn plp_clear_bits_4_and_5_when_pulling_from_the_stack() {
+        let mut mem = Mem::new();
+        let mut cpu = CPU::new();
+
+        // given:
+        cpu.reset_vector(&mut mem, 0xFF00);
+        cpu.PS = 0;
+        cpu.SP = 0xFE;
+        mem.Data[0x01FF] = Flags::BreakFlagBit as u8 | Flags::UnusedFlagBit as u8;
+        mem.Data[0xFF00] = cpu.INS_PLP;
+
+        let mut expected_cycles = 4;
+
+        let actual_cycles = cpu.execute(&mut expected_cycles, &mut mem);
+
+        // then:
+        assert_eq!(actual_cycles, 4);
+        assert_eq!(cpu.PS, 0);
         // verify_unmodified_flags_from_store(cpu, cpu_copy);
     }
 

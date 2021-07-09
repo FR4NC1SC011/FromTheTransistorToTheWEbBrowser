@@ -13,6 +13,7 @@ mod transfer_register_tests;
 mod add_with_carry_tests;
 mod compare_register_tests;
 mod shifts_tests;
+mod system_functions_tests;
 
 use mos6502::*;
 
@@ -299,36 +300,69 @@ impl CPU {
 fn main() {
     println!("6502 Emulator with rust");
 
-    let mut mem = Mem::new();
-    let mut cpu = CPU::new();
-    let mut cpu_copy = CPU::new();
-
-    // given:
-    cpu.reset(&mut mem);
-    cpu_copy.reset(&mut mem);
-
-    let prg: [Byte; 14] = [
-        0x00, 0x10, 0xA9, 0xFF, 0x85, 0x90, 0x8D, 0x00, 0x80, 0x49, 0xCC, 0x4C, 0x02, 0x10,
-    ];
-
+//     let mut mem = Mem::new();
+//     let mut cpu = CPU::new();
+//     let mut cpu_copy = CPU::new();
+// 
+//     // given:
+//     cpu.reset(&mut mem);
+//     cpu_copy.reset(&mut mem);
+// 
+//     let prg: [Byte; 14] = [
+//         0x00, 0x10, 0xA9, 0xFF, 0x85, 0x90, 0x8D, 0x00, 0x80, 0x49, 0xCC, 0x4C, 0x02, 0x10,
+//     ];
+// 
 
     // let prg: [Byte; 13] = [
     //     0x00, 0x10, 0xA9, 0x00, 0x18, 0x69, 0x08, 0xC9, 0x18, 0xD0, 0xFA, 0xA2, 0x14,
     // ];
 
     // when
-    let start_address = cpu.load_prg(prg, 14, &mut mem);
-    cpu.PC = start_address;
+//     let start_address = cpu.load_prg(prg, 14, &mut mem);
+//     cpu.PC = start_address;
+// 
+//     let mut clock: i32 = 1000;
+//     loop {
+//         if clock <= 0 {
+//             break;
+//         }
+// 
+//         clock -= cpu.execute(&mut 1, &mut mem) as i32;
+//         println!("A: {}, X: {}, Y: {}", cpu.A, cpu.X, cpu.Y);
+//         println!("PC: {}, SP: {}", cpu.PC, cpu.SP);
+//         println!("PS: {}", cpu.PS);
+//     }
 
-    let mut clock: i32 = 1000;
-    loop {
-        if clock <= 0 {
-            break;
-        }
+        let mut mem = Mem::new();
+        let mut cpu = CPU::new();
 
-        clock -= cpu.execute(&mut 1, &mut mem) as i32;
-        println!("A: {}, X: {}, Y: {}", cpu.A, cpu.X, cpu.Y);
-        println!("PC: {}, SP: {}", cpu.PC, cpu.SP);
-        println!("PS: {}", cpu.PS);
-    }
+        // given:
+        cpu.reset_vector(&mut mem, 0xFF00);
+
+        mem.Data[0xFF00] = cpu.INS_BRK;
+        let cpu_copy = cpu;
+        let old_sp: u16 = cpu_copy.SP as u16;
+        let x = 0x100 | old_sp;
+
+        // when:
+        let cycles_used = cpu.execute(&mut 7, &mut mem);
+
+
+        // then:
+        assert_eq!(cycles_used, 7);
+        dbg!(mem.Data[((x | old_sp ) - 0) as usize]);
+        assert_eq!(mem.Data[((x | old_sp ) - 0) as usize], 0xFF);
+        // https://www.c64-wiki.com/wiki/BRK
+        // Note that since BRK increments the program counter by 
+        // 2 instead of 1, it is advisable to use a NOP after it 
+        // to avoid issues
+        assert_eq!(mem.Data[((x | old_sp ) - 1) as usize], 0x02);
+        assert_eq!(mem.Data[((x | old_sp ) - 2) as usize], cpu_copy.PS 
+                                                    | Flags::UnusedFlagBit as u8 
+                                                    | Flags::BreakFlagBit as u8);
+        // https://wiki.nesdev.com/w/index.php/Status_flags
+        // Instruction	|Bits 5 and 4	| Side effects after pushing 
+        // BRK			|	11			| I is set to 1 
+        assert_eq!(cpu.PS.get_bit(2), true);
+
 }

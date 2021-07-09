@@ -37,14 +37,14 @@ impl CPU {
 
             PS: 0b11111111, // Processor Status
             //  0bNVUBDIZC
-            // C: Carry Flag,
-            // Z: Zero Flag,
-            // I: Interrupt Disable,
-            // D: Decimal Mode,
-            // B: Break Command,
-            // U: Unused,
-            // V: Overflow Flag,
-            // N: Negative Flag,
+            // C: Carry Flag,          0
+            // Z: Zero Flag,           1
+            // I: Interrupt Disable,   2
+            // D: Decimal Mode,        3
+            // B: Break Command,       4
+            // U: Unused,              5
+            // V: Overflow Flag,       6
+            // N: Negative Flag,       7
 
             // Opcodes
 
@@ -348,9 +348,10 @@ impl CPU {
 
     fn pop_byte_from_stack(&mut self, cycles: &mut isize, memory: &mut Mem) -> Byte {
         self.SP += 1;
+        *cycles -= 1;
         let sp_word: Word = self.sp_to_address();
         let value: Byte = memory.Data[sp_word as usize];
-        *cycles -= 3;
+        *cycles -= 1;
 
         value
     }
@@ -364,9 +365,14 @@ impl CPU {
         self.SP -= 1;
     }
 
-    // push the PC - 1 onto the stack
+    // push the PC onto the stack
     fn push_pc_to_stack(&mut self, cycles: &mut isize, memory: &mut Mem) {
         self.push_word_to_stack(cycles, memory, self.PC as Word);
+    }
+
+    // push the PC + 1 onto the stack
+    fn push_pc_to_stack_plus_one(&mut self, cycles: &mut isize, memory: &mut Mem) {
+        self.push_word_to_stack(cycles, memory, (self.PC + 1) as Word);
     }
 
     fn pop_word_from_stack(&mut self, cycles: &mut isize, memory: &mut Mem) -> Word {
@@ -792,12 +798,14 @@ impl CPU {
                 0x68 => {
                     println!("Instructin PLA");
                     self.A = self.pop_byte_from_stack(cycles, memory);
+                    *cycles -= 1;
                     self.lda_register_set_status();
                 }
 
                 0x28 => {
                     println!("Instructin PLP");
                     self.PS = self.pop_byte_from_stack(cycles, memory);
+                    *cycles -= 1;
                 }
 
                 // Logical Operations
@@ -1639,9 +1647,24 @@ impl CPU {
 
 
                 // System Functions
+                0x00 => {
+                    println!("Instruction BRK");
+                    self.push_pc_to_stack_plus_one(cycles, memory);
+                    self.push_byte_to_stack(cycles, memory, self.PS);
+                    let interrupt_vector: Word = 0xFFFE;
+                    self.PC = self.read_word(cycles, interrupt_vector, memory);
+                    self.PS.set_bit(4, true);
+                }
+
                 0xEA => {
                     println!("Instruction NOP");
                     *cycles -= 1;
+                }
+                
+                0x40 => {
+                    println!("Instruction RTI");
+                    self.PS = self.pop_byte_from_stack(cycles, memory);
+                    self.PC = self.pop_word_from_stack(cycles, memory);
                 }
 
                 _ => {

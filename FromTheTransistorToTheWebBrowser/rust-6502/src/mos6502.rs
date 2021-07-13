@@ -342,7 +342,7 @@ impl CPU {
     fn push_byte_to_stack(&mut self, cycles: &mut isize, memory: &mut Mem, value: Byte) {
         memory.Data[self.sp_to_address() as usize] = value;
         *cycles -= 1;
-        self.SP -= 1;
+        self.SP = self.SP.wrapping_sub(1);
         *cycles -= 1;
     }
 
@@ -359,10 +359,10 @@ impl CPU {
     fn push_word_to_stack(&mut self, cycles: &mut isize, memory: &mut Mem, value: Word) {
         let mut sp_16_bit = self.sp_to_address();
         self.write_byte(value.wrapping_shr(8) as Byte, cycles, sp_16_bit, memory);
-        self.SP -= 1;
+        self.SP = self.SP.wrapping_sub(1);
         sp_16_bit = self.sp_to_address();
         self.write_byte((value & 0xFF) as Byte, cycles, sp_16_bit, memory);
-        self.SP -= 1;
+        self.SP = self.SP.wrapping_sub(1);
     }
 
     // push the PC onto the stack

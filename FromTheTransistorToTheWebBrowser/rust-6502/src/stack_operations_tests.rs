@@ -8,9 +8,9 @@ mod stack_and_operations_tests {
     type Byte = c_uchar;
     type Word = c_ushort;
 
+    use crate::Flags;
     use crate::Mem;
     use crate::CPU;
-    use crate::Flags;
 
     #[test]
     fn tsx_can_transfer_the_stack_pointer_to_the_x_register() {
@@ -237,8 +237,10 @@ mod stack_and_operations_tests {
 
         // then:
         assert_eq!(actual_cycles, 3);
-        assert_eq!(mem.Data[cpu.sp_to_address() as usize + 1 as usize], 
-                        0xCC | Flags::UnusedFlagBit as u8 | Flags::BreakFlagBit as u8);
+        assert_eq!(
+            mem.Data[cpu.sp_to_address() as usize + 1 as usize],
+            0xCC | Flags::UnusedFlagBit as u8 | Flags::BreakFlagBit as u8
+        );
         assert_eq!(cpu.PS, cpu_copy.PS);
         assert_eq!(cpu.SP, 0xFE);
         // verify_unmodified_flags_from_store(cpu, cpu_copy);
@@ -263,13 +265,13 @@ mod stack_and_operations_tests {
         let add_ps_on_stack: Word = cpu.sp_to_address() + 1;
         assert_eq!(actual_cycles, 3);
         // https://wiki.nesdev.com/w/index.php/Status_flags
-        //Two interrupts (/IRQ and /NMI) and two instructions (PHP and BRK) push 
-        // the flags to the stack. In the byte pushed, bit 5 is always set to 1, 
-        //and bit 4 is 1 if from an instruction (PHP or BRK) or 0 if from an 
-        // interrupt line being pulled low (/IRQ or /NMI). This is the only time 
-        // and place where the B flag actually exists: not in the status register 
+        //Two interrupts (/IRQ and /NMI) and two instructions (PHP and BRK) push
+        // the flags to the stack. In the byte pushed, bit 5 is always set to 1,
+        //and bit 4 is 1 if from an instruction (PHP or BRK) or 0 if from an
+        // interrupt line being pulled low (/IRQ or /NMI). This is the only time
+        // and place where the B flag actually exists: not in the status register
         // itself, but in bit 4 of the copy that is written to the stack.
-        let flags_on_stack: Byte = Flags::UnusedFlagBit as u8 | Flags::BreakFlagBit as u8; 
+        let flags_on_stack: Byte = Flags::UnusedFlagBit as u8 | Flags::BreakFlagBit as u8;
         assert_eq!(mem.Data[add_ps_on_stack as usize], flags_on_stack);
     }
 

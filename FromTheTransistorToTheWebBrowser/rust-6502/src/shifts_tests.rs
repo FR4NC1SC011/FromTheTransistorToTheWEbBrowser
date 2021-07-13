@@ -16,9 +16,9 @@ mod shifts_tests {
 
         // given:
         cpu.reset_vector(&mut mem, 0xFF00);
-        cpu.PS.set_bit(0, true);    // C
-        cpu.PS.set_bit(1, true);    // Z
-        cpu.PS.set_bit(7, true);    // N
+        cpu.PS.set_bit(0, true); // C
+        cpu.PS.set_bit(1, true); // Z
+        cpu.PS.set_bit(7, true); // N
 
         cpu.A = 1;
 
@@ -30,9 +30,9 @@ mod shifts_tests {
         // then:
         assert_eq!(cycles_used, 2);
         assert_eq!(cpu.A, 2);
-        assert_eq!(cpu.PS.get_bit(0), false);    // C
-        assert_eq!(cpu.PS.get_bit(1), false);    // Z
-        assert_eq!(cpu.PS.get_bit(7), false);    // N
+        assert_eq!(cpu.PS.get_bit(0), false); // C
+        assert_eq!(cpu.PS.get_bit(1), false); // Z
+        assert_eq!(cpu.PS.get_bit(7), false); // N
     }
 
     #[test]
@@ -42,9 +42,9 @@ mod shifts_tests {
 
         // given:
         cpu.reset_vector(&mut mem, 0xFF00);
-        cpu.PS.set_bit(0, false);   // C
-        cpu.PS.set_bit(1, true);    // Z
-        cpu.PS.set_bit(7, false);   // N
+        cpu.PS.set_bit(0, false); // C
+        cpu.PS.set_bit(1, true); // Z
+        cpu.PS.set_bit(7, false); // N
 
         cpu.A = 0b11000010;
 
@@ -56,9 +56,9 @@ mod shifts_tests {
         // then:
         assert_eq!(cycles_used, 2);
         assert_eq!(cpu.A, 0b10000100);
-        assert_eq!(cpu.PS.get_bit(0), true);     // C
-        assert_eq!(cpu.PS.get_bit(1), false);    // Z
-        assert_eq!(cpu.PS.get_bit(7), true);     // N
+        assert_eq!(cpu.PS.get_bit(0), true); // C
+        assert_eq!(cpu.PS.get_bit(1), false); // Z
+        assert_eq!(cpu.PS.get_bit(7), true); // N
     }
 
     #[test]
@@ -68,9 +68,9 @@ mod shifts_tests {
 
         // given:
         cpu.reset_vector(&mut mem, 0xFF00);
-        cpu.PS.set_bit(0, true);    // C
-        cpu.PS.set_bit(1, true);    // Z
-        cpu.PS.set_bit(7, true);    // N
+        cpu.PS.set_bit(0, true); // C
+        cpu.PS.set_bit(1, true); // Z
+        cpu.PS.set_bit(7, true); // N
 
         mem.Data[0xFF00] = cpu.INS_ASL_ZP;
         mem.Data[0xFF01] = 0x42;
@@ -82,9 +82,9 @@ mod shifts_tests {
         // then:
         assert_eq!(cycles_used, 5);
         assert_eq!(mem.Data[0x0042], 2);
-        assert_eq!(cpu.PS.get_bit(0), false);    // C
-        assert_eq!(cpu.PS.get_bit(1), false);    // Z
-        assert_eq!(cpu.PS.get_bit(7), false);    // N
+        assert_eq!(cpu.PS.get_bit(0), false); // C
+        assert_eq!(cpu.PS.get_bit(1), false); // Z
+        assert_eq!(cpu.PS.get_bit(7), false); // N
     }
 
     #[test]
@@ -94,9 +94,9 @@ mod shifts_tests {
 
         // given:
         cpu.reset_vector(&mut mem, 0xFF00);
-        cpu.PS.set_bit(0, false);   // C
-        cpu.PS.set_bit(1, true);    // Z
-        cpu.PS.set_bit(7, false);   // N
+        cpu.PS.set_bit(0, false); // C
+        cpu.PS.set_bit(1, true); // Z
+        cpu.PS.set_bit(7, false); // N
 
         mem.Data[0xFF00] = cpu.INS_ASL_ZP;
         mem.Data[0xFF01] = 0x42;
@@ -108,11 +108,11 @@ mod shifts_tests {
         // then:
         assert_eq!(cycles_used, 5);
         assert_eq!(mem.Data[0x0042], 0b10000100);
-        assert_eq!(cpu.PS.get_bit(0), true);     // C
-        assert_eq!(cpu.PS.get_bit(1), false);    // Z
-        assert_eq!(cpu.PS.get_bit(7), true);     // N
+        assert_eq!(cpu.PS.get_bit(0), true); // C
+        assert_eq!(cpu.PS.get_bit(1), false); // Z
+        assert_eq!(cpu.PS.get_bit(7), true); // N
     }
-    
+
     #[test]
     fn test_asl_zpx_can_shift_the_value_of_one() {
         let mut mem = Mem::new();
@@ -120,9 +120,9 @@ mod shifts_tests {
 
         // given:
         cpu.reset_vector(&mut mem, 0xFF00);
-        cpu.PS.set_bit(0, true);    // C
-        cpu.PS.set_bit(1, true);    // Z
-        cpu.PS.set_bit(7, true);    // N
+        cpu.PS.set_bit(0, true); // C
+        cpu.PS.set_bit(1, true); // Z
+        cpu.PS.set_bit(7, true); // N
 
         cpu.X = 0x10;
 
@@ -136,9 +136,9 @@ mod shifts_tests {
         // then:
         assert_eq!(cycles_used, 6);
         assert_eq!(mem.Data[0x0042 + 0x10], 2);
-        assert_eq!(cpu.PS.get_bit(0), false);    // C
-        assert_eq!(cpu.PS.get_bit(1), false);     // Z
-        assert_eq!(cpu.PS.get_bit(7), false);    // N
+        assert_eq!(cpu.PS.get_bit(0), false); // C
+        assert_eq!(cpu.PS.get_bit(1), false); // Z
+        assert_eq!(cpu.PS.get_bit(7), false); // N
     }
 
     #[test]
@@ -148,9 +148,9 @@ mod shifts_tests {
 
         // given:
         cpu.reset_vector(&mut mem, 0xFF00);
-        cpu.PS.set_bit(0, false);   // C
-        cpu.PS.set_bit(1, true);    // Z
-        cpu.PS.set_bit(7, false);   // N
+        cpu.PS.set_bit(0, false); // C
+        cpu.PS.set_bit(1, true); // Z
+        cpu.PS.set_bit(7, false); // N
 
         cpu.X = 0x10;
 
@@ -164,9 +164,9 @@ mod shifts_tests {
         // then:
         assert_eq!(cycles_used, 6);
         assert_eq!(mem.Data[0x0042 + 0x10], 0b10000100);
-        assert_eq!(cpu.PS.get_bit(0), true);     // C
-        assert_eq!(cpu.PS.get_bit(1), false);    // Z
-        assert_eq!(cpu.PS.get_bit(7), true);     // N
+        assert_eq!(cpu.PS.get_bit(0), true); // C
+        assert_eq!(cpu.PS.get_bit(1), false); // Z
+        assert_eq!(cpu.PS.get_bit(7), true); // N
     }
 
     #[test]
@@ -176,9 +176,9 @@ mod shifts_tests {
 
         // given:
         cpu.reset_vector(&mut mem, 0xFF00);
-        cpu.PS.set_bit(0, true);    // C
-        cpu.PS.set_bit(1, true);    // Z
-        cpu.PS.set_bit(7, true);    // N
+        cpu.PS.set_bit(0, true); // C
+        cpu.PS.set_bit(1, true); // Z
+        cpu.PS.set_bit(7, true); // N
 
         mem.Data[0xFF00] = cpu.INS_ASL_ABS;
         mem.Data[0xFF01] = 0x00;
@@ -191,9 +191,9 @@ mod shifts_tests {
         // then:
         assert_eq!(cycles_used, 6);
         assert_eq!(mem.Data[0x8000], 2);
-        assert_eq!(cpu.PS.get_bit(0), false);    // C
-        assert_eq!(cpu.PS.get_bit(1), false);    // Z
-        assert_eq!(cpu.PS.get_bit(7), false);    // N
+        assert_eq!(cpu.PS.get_bit(0), false); // C
+        assert_eq!(cpu.PS.get_bit(1), false); // Z
+        assert_eq!(cpu.PS.get_bit(7), false); // N
     }
 
     #[test]
@@ -203,9 +203,9 @@ mod shifts_tests {
 
         // given:
         cpu.reset_vector(&mut mem, 0xFF00);
-        cpu.PS.set_bit(0, false);   // C
-        cpu.PS.set_bit(1, true);    // Z
-        cpu.PS.set_bit(7, false);   // N
+        cpu.PS.set_bit(0, false); // C
+        cpu.PS.set_bit(1, true); // Z
+        cpu.PS.set_bit(7, false); // N
 
         mem.Data[0xFF00] = cpu.INS_ASL_ABS;
         mem.Data[0xFF01] = 0x00;
@@ -218,9 +218,9 @@ mod shifts_tests {
         // then:
         assert_eq!(cycles_used, 6);
         assert_eq!(mem.Data[0x8000], 0b10000100);
-        assert_eq!(cpu.PS.get_bit(0), true);     // C
-        assert_eq!(cpu.PS.get_bit(1), false);    // Z
-        assert_eq!(cpu.PS.get_bit(7), true);     // N
+        assert_eq!(cpu.PS.get_bit(0), true); // C
+        assert_eq!(cpu.PS.get_bit(1), false); // Z
+        assert_eq!(cpu.PS.get_bit(7), true); // N
     }
 
     #[test]
@@ -230,9 +230,9 @@ mod shifts_tests {
 
         // given:
         cpu.reset_vector(&mut mem, 0xFF00);
-        cpu.PS.set_bit(0, true);    // C
-        cpu.PS.set_bit(1, true);    // Z
-        cpu.PS.set_bit(7, true);    // N
+        cpu.PS.set_bit(0, true); // C
+        cpu.PS.set_bit(1, true); // Z
+        cpu.PS.set_bit(7, true); // N
 
         cpu.X = 0x10;
 
@@ -247,9 +247,9 @@ mod shifts_tests {
         // then:
         assert_eq!(cycles_used, 7);
         assert_eq!(mem.Data[0x8000 + 0x10], 2);
-        assert_eq!(cpu.PS.get_bit(0), false);    // C
-        assert_eq!(cpu.PS.get_bit(1), false);    // Z
-        assert_eq!(cpu.PS.get_bit(7), false);    // N
+        assert_eq!(cpu.PS.get_bit(0), false); // C
+        assert_eq!(cpu.PS.get_bit(1), false); // Z
+        assert_eq!(cpu.PS.get_bit(7), false); // N
     }
 
     #[test]
@@ -259,9 +259,9 @@ mod shifts_tests {
 
         // given:
         cpu.reset_vector(&mut mem, 0xFF00);
-        cpu.PS.set_bit(0, false);   // C
-        cpu.PS.set_bit(1, true);    // Z
-        cpu.PS.set_bit(7, false);   // N
+        cpu.PS.set_bit(0, false); // C
+        cpu.PS.set_bit(1, true); // Z
+        cpu.PS.set_bit(7, false); // N
 
         cpu.X = 0x10;
 
@@ -276,9 +276,9 @@ mod shifts_tests {
         // then:
         assert_eq!(cycles_used, 7);
         assert_eq!(mem.Data[0x8000 + 0x10], 0b10000100);
-        assert_eq!(cpu.PS.get_bit(0), true);     // C
-        assert_eq!(cpu.PS.get_bit(1), false);    // Z
-        assert_eq!(cpu.PS.get_bit(7), true);     // N
+        assert_eq!(cpu.PS.get_bit(0), true); // C
+        assert_eq!(cpu.PS.get_bit(1), false); // Z
+        assert_eq!(cpu.PS.get_bit(7), true); // N
     }
 
     // ---------- LSR ---------
@@ -290,9 +290,9 @@ mod shifts_tests {
 
         // given:
         cpu.reset_vector(&mut mem, 0xFF00);
-        cpu.PS.set_bit(0, false);    // C
-        cpu.PS.set_bit(1, false);    // Z
-        cpu.PS.set_bit(7, true);    // N
+        cpu.PS.set_bit(0, false); // C
+        cpu.PS.set_bit(1, false); // Z
+        cpu.PS.set_bit(7, true); // N
 
         cpu.A = 1;
 
@@ -304,9 +304,9 @@ mod shifts_tests {
         // then:
         assert_eq!(cycles_used, 2);
         assert_eq!(cpu.A, 0);
-        assert_eq!(cpu.PS.get_bit(0), true);    // C
-        assert_eq!(cpu.PS.get_bit(1), true);    // Z
-        assert_eq!(cpu.PS.get_bit(7), false);    // N
+        assert_eq!(cpu.PS.get_bit(0), true); // C
+        assert_eq!(cpu.PS.get_bit(1), true); // Z
+        assert_eq!(cpu.PS.get_bit(7), false); // N
     }
 
     #[test]
@@ -316,9 +316,9 @@ mod shifts_tests {
 
         // given:
         cpu.reset_vector(&mut mem, 0xFF00);
-        cpu.PS.set_bit(0, true);   // C
-        cpu.PS.set_bit(1, true);    // Z
-        cpu.PS.set_bit(7, true);   // N
+        cpu.PS.set_bit(0, true); // C
+        cpu.PS.set_bit(1, true); // Z
+        cpu.PS.set_bit(7, true); // N
 
         cpu.A = 8;
 
@@ -330,9 +330,9 @@ mod shifts_tests {
         // then:
         assert_eq!(cycles_used, 2);
         assert_eq!(cpu.A, 4);
-        assert_eq!(cpu.PS.get_bit(0), false);     // C
-        assert_eq!(cpu.PS.get_bit(1), false);     // Z
-        assert_eq!(cpu.PS.get_bit(7), false);     // N
+        assert_eq!(cpu.PS.get_bit(0), false); // C
+        assert_eq!(cpu.PS.get_bit(1), false); // Z
+        assert_eq!(cpu.PS.get_bit(7), false); // N
     }
 
     #[test]
@@ -342,9 +342,9 @@ mod shifts_tests {
 
         // given:
         cpu.reset_vector(&mut mem, 0xFF00);
-        cpu.PS.set_bit(0, false);    // C
-        cpu.PS.set_bit(1, false);    // Z
-        cpu.PS.set_bit(7, true);    // N
+        cpu.PS.set_bit(0, false); // C
+        cpu.PS.set_bit(1, false); // Z
+        cpu.PS.set_bit(7, true); // N
 
         mem.Data[0xFF00] = cpu.INS_LSR_ZP;
         mem.Data[0xFF01] = 0x42;
@@ -356,9 +356,9 @@ mod shifts_tests {
         // then:
         assert_eq!(cycles_used, 5);
         assert_eq!(mem.Data[0x0042], 0);
-        assert_eq!(cpu.PS.get_bit(0), true);     // C
-        assert_eq!(cpu.PS.get_bit(1), true);     // Z
-        assert_eq!(cpu.PS.get_bit(7), false);    // N
+        assert_eq!(cpu.PS.get_bit(0), true); // C
+        assert_eq!(cpu.PS.get_bit(1), true); // Z
+        assert_eq!(cpu.PS.get_bit(7), false); // N
     }
 
     #[test]
@@ -368,9 +368,9 @@ mod shifts_tests {
 
         // given:
         cpu.reset_vector(&mut mem, 0xFF00);
-        cpu.PS.set_bit(0, true);   // C
-        cpu.PS.set_bit(1, true);    // Z
-        cpu.PS.set_bit(7, true);   // N
+        cpu.PS.set_bit(0, true); // C
+        cpu.PS.set_bit(1, true); // Z
+        cpu.PS.set_bit(7, true); // N
 
         mem.Data[0xFF00] = cpu.INS_LSR_ZP;
         mem.Data[0xFF01] = 0x42;
@@ -382,11 +382,11 @@ mod shifts_tests {
         // then:
         assert_eq!(cycles_used, 5);
         assert_eq!(mem.Data[0x0042], 4);
-        assert_eq!(cpu.PS.get_bit(0), false);     // C
-        assert_eq!(cpu.PS.get_bit(1), false);    // Z
-        assert_eq!(cpu.PS.get_bit(7), false);     // N
+        assert_eq!(cpu.PS.get_bit(0), false); // C
+        assert_eq!(cpu.PS.get_bit(1), false); // Z
+        assert_eq!(cpu.PS.get_bit(7), false); // N
     }
-    
+
     #[test]
     fn test_lsr_zpx_can_shift_the_value_of_one() {
         let mut mem = Mem::new();
@@ -394,9 +394,9 @@ mod shifts_tests {
 
         // given:
         cpu.reset_vector(&mut mem, 0xFF00);
-        cpu.PS.set_bit(0, false);    // C
-        cpu.PS.set_bit(1, false);    // Z
-        cpu.PS.set_bit(7, true);     // N
+        cpu.PS.set_bit(0, false); // C
+        cpu.PS.set_bit(1, false); // Z
+        cpu.PS.set_bit(7, true); // N
 
         cpu.X = 0x10;
 
@@ -410,9 +410,9 @@ mod shifts_tests {
         // then:
         assert_eq!(cycles_used, 6);
         assert_eq!(mem.Data[0x0042 + 0x10], 0);
-        assert_eq!(cpu.PS.get_bit(0), true);    // C
-        assert_eq!(cpu.PS.get_bit(1), true);     // Z
-        assert_eq!(cpu.PS.get_bit(7), false);    // N
+        assert_eq!(cpu.PS.get_bit(0), true); // C
+        assert_eq!(cpu.PS.get_bit(1), true); // Z
+        assert_eq!(cpu.PS.get_bit(7), false); // N
     }
 
     #[test]
@@ -422,9 +422,9 @@ mod shifts_tests {
 
         // given:
         cpu.reset_vector(&mut mem, 0xFF00);
-        cpu.PS.set_bit(0, true);   // C
-        cpu.PS.set_bit(1, true);    // Z
-        cpu.PS.set_bit(7, true);   // N
+        cpu.PS.set_bit(0, true); // C
+        cpu.PS.set_bit(1, true); // Z
+        cpu.PS.set_bit(7, true); // N
 
         cpu.X = 0x10;
 
@@ -438,9 +438,9 @@ mod shifts_tests {
         // then:
         assert_eq!(cycles_used, 6);
         assert_eq!(mem.Data[0x0042 + 0x10], 4);
-        assert_eq!(cpu.PS.get_bit(0), false);     // C
-        assert_eq!(cpu.PS.get_bit(1), false);     // Z
-        assert_eq!(cpu.PS.get_bit(7), false);     // N
+        assert_eq!(cpu.PS.get_bit(0), false); // C
+        assert_eq!(cpu.PS.get_bit(1), false); // Z
+        assert_eq!(cpu.PS.get_bit(7), false); // N
     }
 
     #[test]
@@ -450,9 +450,9 @@ mod shifts_tests {
 
         // given:
         cpu.reset_vector(&mut mem, 0xFF00);
-        cpu.PS.set_bit(0, false);    // C
-        cpu.PS.set_bit(1, false);    // Z
-        cpu.PS.set_bit(7, true);    // N
+        cpu.PS.set_bit(0, false); // C
+        cpu.PS.set_bit(1, false); // Z
+        cpu.PS.set_bit(7, true); // N
 
         mem.Data[0xFF00] = cpu.INS_LSR_ABS;
         mem.Data[0xFF01] = 0x00;
@@ -465,9 +465,9 @@ mod shifts_tests {
         // then:
         assert_eq!(cycles_used, 6);
         assert_eq!(mem.Data[0x8000], 0);
-        assert_eq!(cpu.PS.get_bit(0), true);    // C
-        assert_eq!(cpu.PS.get_bit(1), true);    // Z
-        assert_eq!(cpu.PS.get_bit(7), false);   // N
+        assert_eq!(cpu.PS.get_bit(0), true); // C
+        assert_eq!(cpu.PS.get_bit(1), true); // Z
+        assert_eq!(cpu.PS.get_bit(7), false); // N
     }
 
     #[test]
@@ -477,9 +477,9 @@ mod shifts_tests {
 
         // given:
         cpu.reset_vector(&mut mem, 0xFF00);
-        cpu.PS.set_bit(0, true);   // C
-        cpu.PS.set_bit(1, true);    // Z
-        cpu.PS.set_bit(7, true);   // N
+        cpu.PS.set_bit(0, true); // C
+        cpu.PS.set_bit(1, true); // Z
+        cpu.PS.set_bit(7, true); // N
 
         mem.Data[0xFF00] = cpu.INS_LSR_ABS;
         mem.Data[0xFF01] = 0x00;
@@ -492,9 +492,9 @@ mod shifts_tests {
         // then:
         assert_eq!(cycles_used, 6);
         assert_eq!(mem.Data[0x8000], 4);
-        assert_eq!(cpu.PS.get_bit(0), false);     // C
-        assert_eq!(cpu.PS.get_bit(1), false);     // Z
-        assert_eq!(cpu.PS.get_bit(7), false);     // N
+        assert_eq!(cpu.PS.get_bit(0), false); // C
+        assert_eq!(cpu.PS.get_bit(1), false); // Z
+        assert_eq!(cpu.PS.get_bit(7), false); // N
     }
 
     #[test]
@@ -504,9 +504,9 @@ mod shifts_tests {
 
         // given:
         cpu.reset_vector(&mut mem, 0xFF00);
-        cpu.PS.set_bit(0, false);    // C
-        cpu.PS.set_bit(1, false);    // Z
-        cpu.PS.set_bit(7, true);    // N
+        cpu.PS.set_bit(0, false); // C
+        cpu.PS.set_bit(1, false); // Z
+        cpu.PS.set_bit(7, true); // N
 
         cpu.X = 0x10;
 
@@ -521,9 +521,9 @@ mod shifts_tests {
         // then:
         assert_eq!(cycles_used, 7);
         assert_eq!(mem.Data[0x8000 + 0x10], 0);
-        assert_eq!(cpu.PS.get_bit(0), true);    // C
-        assert_eq!(cpu.PS.get_bit(1), true);    // Z
-        assert_eq!(cpu.PS.get_bit(7), false);   // N
+        assert_eq!(cpu.PS.get_bit(0), true); // C
+        assert_eq!(cpu.PS.get_bit(1), true); // Z
+        assert_eq!(cpu.PS.get_bit(7), false); // N
     }
 
     #[test]
@@ -533,9 +533,9 @@ mod shifts_tests {
 
         // given:
         cpu.reset_vector(&mut mem, 0xFF00);
-        cpu.PS.set_bit(0, true);   // C
-        cpu.PS.set_bit(1, true);   // Z
-        cpu.PS.set_bit(7, true);   // N
+        cpu.PS.set_bit(0, true); // C
+        cpu.PS.set_bit(1, true); // Z
+        cpu.PS.set_bit(7, true); // N
 
         cpu.X = 0x10;
 
@@ -550,9 +550,9 @@ mod shifts_tests {
         // then:
         assert_eq!(cycles_used, 7);
         assert_eq!(mem.Data[0x8000 + 0x10], 4);
-        assert_eq!(cpu.PS.get_bit(0), false);     // C
-        assert_eq!(cpu.PS.get_bit(1), false);     // Z
-        assert_eq!(cpu.PS.get_bit(7), false);     // N
+        assert_eq!(cpu.PS.get_bit(0), false); // C
+        assert_eq!(cpu.PS.get_bit(1), false); // Z
+        assert_eq!(cpu.PS.get_bit(7), false); // N
     }
 
     // ---------- ROL ---------
@@ -564,9 +564,9 @@ mod shifts_tests {
 
         // given:
         cpu.reset_vector(&mut mem, 0xFF00);
-        cpu.PS.set_bit(0, true);    // C
-        cpu.PS.set_bit(1, true);    // Z
-        cpu.PS.set_bit(7, true);    // N
+        cpu.PS.set_bit(0, true); // C
+        cpu.PS.set_bit(1, true); // Z
+        cpu.PS.set_bit(7, true); // N
 
         cpu.A = 0;
 
@@ -578,9 +578,9 @@ mod shifts_tests {
         // then:
         assert_eq!(cycles_used, 2);
         assert_eq!(cpu.A, 1);
-        assert_eq!(cpu.PS.get_bit(0), false);    // C
-        assert_eq!(cpu.PS.get_bit(1), false);    // Z
-        assert_eq!(cpu.PS.get_bit(7), false);    // N
+        assert_eq!(cpu.PS.get_bit(0), false); // C
+        assert_eq!(cpu.PS.get_bit(1), false); // Z
+        assert_eq!(cpu.PS.get_bit(7), false); // N
     }
 
     #[test]
@@ -590,9 +590,9 @@ mod shifts_tests {
 
         // given:
         cpu.reset_vector(&mut mem, 0xFF00);
-        cpu.PS.set_bit(0, false);    // C
-        cpu.PS.set_bit(1, false);    // Z
-        cpu.PS.set_bit(7, true);     // N
+        cpu.PS.set_bit(0, false); // C
+        cpu.PS.set_bit(1, false); // Z
+        cpu.PS.set_bit(7, true); // N
 
         cpu.A = 0b10000000;
 
@@ -604,9 +604,9 @@ mod shifts_tests {
         // then:
         assert_eq!(cycles_used, 2);
         assert_eq!(cpu.A, 0);
-        assert_eq!(cpu.PS.get_bit(0), true);    // C
-        assert_eq!(cpu.PS.get_bit(1), true);    // Z
-        assert_eq!(cpu.PS.get_bit(7), false);   // N
+        assert_eq!(cpu.PS.get_bit(0), true); // C
+        assert_eq!(cpu.PS.get_bit(1), true); // Z
+        assert_eq!(cpu.PS.get_bit(7), false); // N
     }
 
     #[test]
@@ -616,9 +616,9 @@ mod shifts_tests {
 
         // given:
         cpu.reset_vector(&mut mem, 0xFF00);
-        cpu.PS.set_bit(0, false);    // C
-        cpu.PS.set_bit(1, false);    // Z
-        cpu.PS.set_bit(7, true);     // N
+        cpu.PS.set_bit(0, false); // C
+        cpu.PS.set_bit(1, false); // Z
+        cpu.PS.set_bit(7, true); // N
 
         cpu.A = 0;
 
@@ -630,9 +630,9 @@ mod shifts_tests {
         // then:
         assert_eq!(cycles_used, 2);
         assert_eq!(cpu.A, 0);
-        assert_eq!(cpu.PS.get_bit(0), false);    // C
-        assert_eq!(cpu.PS.get_bit(1), true);     // Z
-        assert_eq!(cpu.PS.get_bit(7), false);    // N
+        assert_eq!(cpu.PS.get_bit(0), false); // C
+        assert_eq!(cpu.PS.get_bit(1), true); // Z
+        assert_eq!(cpu.PS.get_bit(7), false); // N
     }
 
     #[test]
@@ -642,9 +642,9 @@ mod shifts_tests {
 
         // given:
         cpu.reset_vector(&mut mem, 0xFF00);
-        cpu.PS.set_bit(0, true);     // C
-        cpu.PS.set_bit(1, false);    // Z
-        cpu.PS.set_bit(7, false);    // N
+        cpu.PS.set_bit(0, true); // C
+        cpu.PS.set_bit(1, false); // Z
+        cpu.PS.set_bit(7, false); // N
 
         cpu.A = 0b01110011;
 
@@ -656,9 +656,9 @@ mod shifts_tests {
         // then:
         assert_eq!(cycles_used, 2);
         assert_eq!(cpu.A, 0b11100111);
-        assert_eq!(cpu.PS.get_bit(0), false);    // C
-        assert_eq!(cpu.PS.get_bit(1), false);    // Z
-        assert_eq!(cpu.PS.get_bit(7), true);     // N
+        assert_eq!(cpu.PS.get_bit(0), false); // C
+        assert_eq!(cpu.PS.get_bit(1), false); // Z
+        assert_eq!(cpu.PS.get_bit(7), true); // N
     }
 
     // -------- Zero Page ---------
@@ -670,9 +670,9 @@ mod shifts_tests {
 
         // given:
         cpu.reset_vector(&mut mem, 0xFF00);
-        cpu.PS.set_bit(0, true);    // C
-        cpu.PS.set_bit(1, true);    // Z
-        cpu.PS.set_bit(7, true);    // N
+        cpu.PS.set_bit(0, true); // C
+        cpu.PS.set_bit(1, true); // Z
+        cpu.PS.set_bit(7, true); // N
 
         mem.Data[0xFF00] = cpu.INS_ROL_ZP;
         mem.Data[0xFF01] = 0x42;
@@ -684,9 +684,9 @@ mod shifts_tests {
         // then:
         assert_eq!(cycles_used, 5);
         assert_eq!(mem.Data[0x0042], 1);
-        assert_eq!(cpu.PS.get_bit(0), false);    // C
-        assert_eq!(cpu.PS.get_bit(1), false);    // Z
-        assert_eq!(cpu.PS.get_bit(7), false);    // N
+        assert_eq!(cpu.PS.get_bit(0), false); // C
+        assert_eq!(cpu.PS.get_bit(1), false); // Z
+        assert_eq!(cpu.PS.get_bit(7), false); // N
     }
 
     #[test]
@@ -696,9 +696,9 @@ mod shifts_tests {
 
         // given:
         cpu.reset_vector(&mut mem, 0xFF00);
-        cpu.PS.set_bit(0, false);    // C
-        cpu.PS.set_bit(1, false);    // Z
-        cpu.PS.set_bit(7, true);     // N
+        cpu.PS.set_bit(0, false); // C
+        cpu.PS.set_bit(1, false); // Z
+        cpu.PS.set_bit(7, true); // N
 
         mem.Data[0xFF00] = cpu.INS_ROL_ZP;
         mem.Data[0xFF01] = 0x42;
@@ -710,9 +710,9 @@ mod shifts_tests {
         // then:
         assert_eq!(cycles_used, 5);
         assert_eq!(mem.Data[0x0042], 0);
-        assert_eq!(cpu.PS.get_bit(0), true);    // C
-        assert_eq!(cpu.PS.get_bit(1), true);    // Z
-        assert_eq!(cpu.PS.get_bit(7), false);   // N
+        assert_eq!(cpu.PS.get_bit(0), true); // C
+        assert_eq!(cpu.PS.get_bit(1), true); // Z
+        assert_eq!(cpu.PS.get_bit(7), false); // N
     }
 
     #[test]
@@ -722,9 +722,9 @@ mod shifts_tests {
 
         // given:
         cpu.reset_vector(&mut mem, 0xFF00);
-        cpu.PS.set_bit(0, false);    // C
-        cpu.PS.set_bit(1, false);    // Z
-        cpu.PS.set_bit(7, true);     // N
+        cpu.PS.set_bit(0, false); // C
+        cpu.PS.set_bit(1, false); // Z
+        cpu.PS.set_bit(7, true); // N
 
         mem.Data[0xFF00] = cpu.INS_ROL_ZP;
         mem.Data[0xFF01] = 0x42;
@@ -736,9 +736,9 @@ mod shifts_tests {
         // then:
         assert_eq!(cycles_used, 5);
         assert_eq!(mem.Data[0x0042], 0);
-        assert_eq!(cpu.PS.get_bit(0), false);    // C
-        assert_eq!(cpu.PS.get_bit(1), true);     // Z
-        assert_eq!(cpu.PS.get_bit(7), false);    // N
+        assert_eq!(cpu.PS.get_bit(0), false); // C
+        assert_eq!(cpu.PS.get_bit(1), true); // Z
+        assert_eq!(cpu.PS.get_bit(7), false); // N
     }
 
     #[test]
@@ -748,9 +748,9 @@ mod shifts_tests {
 
         // given:
         cpu.reset_vector(&mut mem, 0xFF00);
-        cpu.PS.set_bit(0, true);     // C
-        cpu.PS.set_bit(1, false);    // Z
-        cpu.PS.set_bit(7, false);    // N
+        cpu.PS.set_bit(0, true); // C
+        cpu.PS.set_bit(1, false); // Z
+        cpu.PS.set_bit(7, false); // N
 
         mem.Data[0xFF00] = cpu.INS_ROL_ZP;
         mem.Data[0xFF01] = 0x42;
@@ -762,9 +762,9 @@ mod shifts_tests {
         // then:
         assert_eq!(cycles_used, 5);
         assert_eq!(mem.Data[0x0042], 0b11100111);
-        assert_eq!(cpu.PS.get_bit(0), false);    // C
-        assert_eq!(cpu.PS.get_bit(1), false);    // Z
-        assert_eq!(cpu.PS.get_bit(7), true);     // N
+        assert_eq!(cpu.PS.get_bit(0), false); // C
+        assert_eq!(cpu.PS.get_bit(1), false); // Z
+        assert_eq!(cpu.PS.get_bit(7), true); // N
     }
 
     // ---------- ROR ---------
@@ -776,9 +776,9 @@ mod shifts_tests {
 
         // given:
         cpu.reset_vector(&mut mem, 0xFF00);
-        cpu.PS.set_bit(0, true);     // C
-        cpu.PS.set_bit(1, false);    // Z
-        cpu.PS.set_bit(7, false);    // N
+        cpu.PS.set_bit(0, true); // C
+        cpu.PS.set_bit(1, false); // Z
+        cpu.PS.set_bit(7, false); // N
 
         cpu.A = 0;
 
@@ -790,9 +790,9 @@ mod shifts_tests {
         // then:
         assert_eq!(cycles_used, 2);
         assert_eq!(cpu.A, 0b10000000);
-        assert_eq!(cpu.PS.get_bit(0), false);    // C
-        assert_eq!(cpu.PS.get_bit(1), false);    // Z
-        assert_eq!(cpu.PS.get_bit(7), true);    // N
+        assert_eq!(cpu.PS.get_bit(0), false); // C
+        assert_eq!(cpu.PS.get_bit(1), false); // Z
+        assert_eq!(cpu.PS.get_bit(7), true); // N
     }
 
     #[test]
@@ -802,9 +802,9 @@ mod shifts_tests {
 
         // given:
         cpu.reset_vector(&mut mem, 0xFF00);
-        cpu.PS.set_bit(0, false);    // C
-        cpu.PS.set_bit(1, false);    // Z
-        cpu.PS.set_bit(7, false);     // N
+        cpu.PS.set_bit(0, false); // C
+        cpu.PS.set_bit(1, false); // Z
+        cpu.PS.set_bit(7, false); // N
 
         cpu.A = 1;
 
@@ -816,9 +816,9 @@ mod shifts_tests {
         // then:
         assert_eq!(cycles_used, 2);
         assert_eq!(cpu.A, 0);
-        assert_eq!(cpu.PS.get_bit(0), true);    // C
-        assert_eq!(cpu.PS.get_bit(1), true);    // Z
-        assert_eq!(cpu.PS.get_bit(7), false);   // N
+        assert_eq!(cpu.PS.get_bit(0), true); // C
+        assert_eq!(cpu.PS.get_bit(1), true); // Z
+        assert_eq!(cpu.PS.get_bit(7), false); // N
     }
 
     #[test]
@@ -828,9 +828,9 @@ mod shifts_tests {
 
         // given:
         cpu.reset_vector(&mut mem, 0xFF00);
-        cpu.PS.set_bit(0, true);    // C
-        cpu.PS.set_bit(1, true);    // Z
-        cpu.PS.set_bit(7, false);     // N
+        cpu.PS.set_bit(0, true); // C
+        cpu.PS.set_bit(1, true); // Z
+        cpu.PS.set_bit(7, false); // N
 
         cpu.A = 0b01101101;
 
@@ -842,9 +842,9 @@ mod shifts_tests {
         // then:
         assert_eq!(cycles_used, 2);
         assert_eq!(cpu.A, 0b10110110);
-        assert_eq!(cpu.PS.get_bit(0), true);     // C
-        assert_eq!(cpu.PS.get_bit(1), false);    // Z
-        assert_eq!(cpu.PS.get_bit(7), true);     // N
+        assert_eq!(cpu.PS.get_bit(0), true); // C
+        assert_eq!(cpu.PS.get_bit(1), false); // Z
+        assert_eq!(cpu.PS.get_bit(7), true); // N
     }
 
     // -------- Zero Page ---------
@@ -856,9 +856,9 @@ mod shifts_tests {
 
         // given:
         cpu.reset_vector(&mut mem, 0xFF00);
-        cpu.PS.set_bit(0, true);    // C
-        cpu.PS.set_bit(1, false);    // Z
-        cpu.PS.set_bit(7, false);    // N
+        cpu.PS.set_bit(0, true); // C
+        cpu.PS.set_bit(1, false); // Z
+        cpu.PS.set_bit(7, false); // N
 
         mem.Data[0xFF00] = cpu.INS_ROR_ZP;
         mem.Data[0xFF01] = 0x42;
@@ -870,9 +870,9 @@ mod shifts_tests {
         // then:
         assert_eq!(cycles_used, 5);
         assert_eq!(mem.Data[0x0042], 0b10000000);
-        assert_eq!(cpu.PS.get_bit(0), false);    // C
-        assert_eq!(cpu.PS.get_bit(1), false);    // Z
-        assert_eq!(cpu.PS.get_bit(7), true);    // N
+        assert_eq!(cpu.PS.get_bit(0), false); // C
+        assert_eq!(cpu.PS.get_bit(1), false); // Z
+        assert_eq!(cpu.PS.get_bit(7), true); // N
     }
 
     #[test]
@@ -882,9 +882,9 @@ mod shifts_tests {
 
         // given:
         cpu.reset_vector(&mut mem, 0xFF00);
-        cpu.PS.set_bit(0, false);    // C
-        cpu.PS.set_bit(1, false);    // Z
-        cpu.PS.set_bit(7, false);     // N
+        cpu.PS.set_bit(0, false); // C
+        cpu.PS.set_bit(1, false); // Z
+        cpu.PS.set_bit(7, false); // N
 
         mem.Data[0xFF00] = cpu.INS_ROR_ZP;
         mem.Data[0xFF01] = 0x42;
@@ -896,9 +896,9 @@ mod shifts_tests {
         // then:
         assert_eq!(cycles_used, 5);
         assert_eq!(mem.Data[0x0042], 0);
-        assert_eq!(cpu.PS.get_bit(0), true);    // C
-        assert_eq!(cpu.PS.get_bit(1), true);    // Z
-        assert_eq!(cpu.PS.get_bit(7), false);   // N
+        assert_eq!(cpu.PS.get_bit(0), true); // C
+        assert_eq!(cpu.PS.get_bit(1), true); // Z
+        assert_eq!(cpu.PS.get_bit(7), false); // N
     }
 
     #[test]
@@ -908,9 +908,9 @@ mod shifts_tests {
 
         // given:
         cpu.reset_vector(&mut mem, 0xFF00);
-        cpu.PS.set_bit(0, true);    // C
-        cpu.PS.set_bit(1, true);    // Z
-        cpu.PS.set_bit(7, false);     // N
+        cpu.PS.set_bit(0, true); // C
+        cpu.PS.set_bit(1, true); // Z
+        cpu.PS.set_bit(7, false); // N
 
         mem.Data[0xFF00] = cpu.INS_ROR_ZP;
         mem.Data[0xFF01] = 0x42;
@@ -922,11 +922,8 @@ mod shifts_tests {
         // then:
         assert_eq!(cycles_used, 5);
         assert_eq!(mem.Data[0x0042], 0b10110110);
-        assert_eq!(cpu.PS.get_bit(0), true);    // C
-        assert_eq!(cpu.PS.get_bit(1), false);     // Z
-        assert_eq!(cpu.PS.get_bit(7), true);    // N
+        assert_eq!(cpu.PS.get_bit(0), true); // C
+        assert_eq!(cpu.PS.get_bit(1), false); // Z
+        assert_eq!(cpu.PS.get_bit(7), true); // N
     }
-
 }
-
-

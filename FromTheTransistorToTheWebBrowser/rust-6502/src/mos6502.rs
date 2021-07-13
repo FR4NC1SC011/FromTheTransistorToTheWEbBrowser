@@ -383,7 +383,7 @@ impl CPU {
     // Push Processor Status onto the stack
     // Setting bits 4 & 5 on the  stack
     fn push_ps_to_stack(&mut self, cycles: &mut isize, memory: &mut Mem) {
-        let ps_stack: Byte = self.PS | Flags::BreakFlagBit as u8 | Flags::UnusedFlagBit as u8; 
+        let ps_stack: Byte = self.PS | Flags::BreakFlagBit as u8 | Flags::UnusedFlagBit as u8;
         self.push_byte_to_stack(cycles, memory, ps_stack);
     }
 
@@ -391,8 +391,8 @@ impl CPU {
     // Clearing bits 4 & 5 (Break & Unused)
     fn pop_ps_from_stack(&mut self, cycles: &mut isize, memory: &mut Mem) {
         self.PS = self.pop_byte_from_stack(cycles, memory);
-        self.PS.set_bit(4, false);    // B
-        self.PS.set_bit(5, false);    // U
+        self.PS.set_bit(4, false); // B
+        self.PS.set_bit(5, false); // U
     }
 
     fn pop_word_from_stack(&mut self, cycles: &mut isize, memory: &mut Mem) -> Word {
@@ -482,33 +482,40 @@ impl CPU {
     }
 
     fn add_with_carry(&mut self, operand: Byte) {
-        let are_sign_bits_the_same: bool = !((self.A ^ operand) & Flags::NegativeFlagBit as Byte) != 0;
+        let are_sign_bits_the_same: bool =
+            !((self.A ^ operand) & Flags::NegativeFlagBit as Byte) != 0;
 
-        let c_flag_value: Byte = if self.PS.get_bit(0) == true { 1 } else { 0 }; 
+        let c_flag_value: Byte = if self.PS.get_bit(0) == true { 1 } else { 0 };
         self.A = self.A.wrapping_add(c_flag_value);
         let sum = self.A.checked_add(operand);
-        
+
         match sum {
             Some(x) => {
                 self.A = x;
-                self.PS.set_bit(0, false);  // set Carry Flag
+                self.PS.set_bit(0, false); // set Carry Flag
                 self.ld_register_set_status(self.A);
             }
 
-            None => {                      // Overflow
+            None => {
+                // Overflow
                 self.A = self.A.wrapping_add(operand);
-                self.PS.set_bit(0, true);  // set Carry Flag
+                self.PS.set_bit(0, true); // set Carry Flag
                 self.ld_register_set_status(self.A);
             }
         }
 
         // FIXME: Overflow Flag
-        let v: bool = are_sign_bits_the_same && ((self.A ^ operand) & Flags::NegativeFlagBit as Byte) != 0;
+        let v: bool =
+            are_sign_bits_the_same && ((self.A ^ operand) & Flags::NegativeFlagBit as Byte) != 0;
         self.PS.set_bit(6, v); // V flag
     }
 
     fn rotate_left(&mut self, cycles: &mut isize, mut operand: Byte) -> Byte {
-        let new_bit_0:  Byte = if self.PS.get_bit(0) { Flags::ZeroBit as Byte } else { 0 };  
+        let new_bit_0: Byte = if self.PS.get_bit(0) {
+            Flags::ZeroBit as Byte
+        } else {
+            0
+        };
         let c: bool = (operand & Flags::NegativeFlagBit as Byte) > 0;
         self.PS.set_bit(0, c);
         operand = operand << 1;
@@ -521,11 +528,12 @@ impl CPU {
     fn rotate_right(&mut self, cycles: &mut isize, mut operand: Byte) -> Byte {
         let old_bit_0: bool = (operand & Flags::ZeroBit as Byte) > 0;
         operand = operand >> 1;
-        if self.PS.get_bit(0) {            // C
+        if self.PS.get_bit(0) {
+            // C
             operand |= Flags::NegativeFlagBit as Byte;
         }
         *cycles -= 1;
-        self.PS.set_bit(0, old_bit_0);     // C
+        self.PS.set_bit(0, old_bit_0); // C
 
         operand
     }
@@ -793,8 +801,6 @@ impl CPU {
                 0x60 => {
                     println!("Instruction RTS");
                     let return_address = self.pop_word_from_stack(cycles, memory);
-
-                    // TODO: self.PC = return_address + 1 work on the video. Why?
                     self.PC = return_address;
                     *cycles -= 2;
                 }
@@ -1179,7 +1185,6 @@ impl CPU {
                 }
 
                 0xF0 => {
-                    // TODO: review this function
                     println!("Instruction BEQ");
                     self.branch_if(cycles, memory, self.PS.get_bit(1), true);
                 }
@@ -1259,27 +1264,27 @@ impl CPU {
                     println!("Instruction ADC Absolute");
                     let operand: Byte = self.absolute_address(cycles, memory);
                     self.add_with_carry(operand);
-               }
+                }
 
                 0x7D => {
                     println!("Instruction ADC Absolute X");
                     let operand: Byte = self.absolute_address_x(cycles, memory);
                     self.add_with_carry(operand);
-               }
+                }
 
                 0x79 => {
                     println!("Instruction ADC Absolute Y");
                     let operand: Byte = self.absolute_address_y(cycles, memory);
                     self.add_with_carry(operand);
-               }
+                }
 
-               0x69 => {
+                0x69 => {
                     println!("Instruction ADC Inmediate");
                     let operand: Byte = self.fetch_byte(cycles, memory);
                     self.add_with_carry(operand);
                 }
 
-               0x65 => {
+                0x65 => {
                     println!("Instruction ADC Zero Page");
                     let operand: Byte = self.zero_page_address(cycles, memory);
                     self.add_with_carry(operand);
@@ -1291,7 +1296,7 @@ impl CPU {
                     self.add_with_carry(operand);
                 }
 
-               0x61 => {
+                0x61 => {
                     println!("Instruction ADC Indirect X");
                     let operand: Byte = self.indirect_address_x(cycles, memory);
                     self.add_with_carry(operand);
@@ -1308,27 +1313,27 @@ impl CPU {
                     println!("Instruction SBC Absolute");
                     let operand: Byte = self.absolute_address(cycles, memory);
                     self.add_with_carry(!operand);
-               }
+                }
 
                 0xFD => {
                     println!("Instruction SBC Absolute X");
                     let operand: Byte = self.absolute_address_x(cycles, memory);
                     self.add_with_carry(!operand);
-               }
+                }
 
                 0xF9 => {
                     println!("Instruction SBC Absolute Y");
                     let operand: Byte = self.absolute_address_y(cycles, memory);
                     self.add_with_carry(!operand);
-               }
+                }
 
-               0xE9 => {
+                0xE9 => {
                     println!("Instruction SBC Inmediate");
                     let operand: Byte = self.fetch_byte(cycles, memory);
                     self.add_with_carry(!operand);
                 }
 
-               0xE5 => {
+                0xE5 => {
                     println!("Instruction SBC Zero Page");
                     let operand: Byte = self.zero_page_address(cycles, memory);
                     self.add_with_carry(!operand);
@@ -1340,7 +1345,7 @@ impl CPU {
                     self.add_with_carry(!operand);
                 }
 
-               0xE1 => {
+                0xE1 => {
                     println!("Instruction SBC Indirect X");
                     let operand: Byte = self.indirect_address_x(cycles, memory);
                     self.add_with_carry(!operand);
@@ -1353,7 +1358,6 @@ impl CPU {
                 }
 
                 // CMP
-
                 0xC9 => {
                     println!("Instruction CMP Inmediate");
                     let operand: Byte = self.fetch_byte(cycles, memory);
@@ -1410,8 +1414,7 @@ impl CPU {
                     self.cmp_register_set_status(operand, temp, self.A);
                 }
 
-                // CPX 
-
+                // CPX
                 0xE0 => {
                     println!("Instruction CPX Inmediate");
                     let operand: Byte = self.fetch_byte(cycles, memory);
@@ -1433,8 +1436,7 @@ impl CPU {
                     self.cmp_register_set_status(operand, temp, self.X);
                 }
 
-                // CPY 
-
+                // CPY
                 0xC0 => {
                     println!("Instruction CPY Inmediate");
                     let operand: Byte = self.fetch_byte(cycles, memory);
@@ -1457,7 +1459,6 @@ impl CPU {
                 }
 
                 // ASL
-
                 0x0A => {
                     println!("Instruction ASL ACC");
                     self.PS.set_bit(0, self.A.get_bit(7));
@@ -1466,18 +1467,18 @@ impl CPU {
                     *cycles -= 1;
                 }
 
-              0x06 => {
+                0x06 => {
                     println!("Instruction ASL ZP");
                     let zero_page_address: Byte = self.fetch_byte(cycles, memory);
                     let mut value = self.read_byte(cycles, zero_page_address as Word, memory);
                     self.PS.set_bit(0, value.get_bit(7));
-                    value =  value << 1;
+                    value = value << 1;
                     *cycles -= 1;
                     self.write_byte(value, cycles, zero_page_address.into(), memory);
                     self.ld_register_set_status(value);
-               }
+                }
 
-              0x16 => {
+                0x16 => {
                     println!("Instruction ASL ZPX");
                     let mut zero_page_address: Byte = self.fetch_byte(cycles, memory);
                     zero_page_address = zero_page_address.wrapping_add(self.X);
@@ -1488,34 +1489,33 @@ impl CPU {
                     *cycles -= 1;
                     self.write_byte(value, cycles, zero_page_address.into(), memory);
                     self.ld_register_set_status(value);
-               }
+                }
 
-              0x0E => {
+                0x0E => {
                     println!("Instruction ASL ABS");
                     let abs_address: Word = self.fetch_word(cycles, memory);
                     let mut value = self.read_byte(cycles, abs_address as Word, memory);
                     self.PS.set_bit(0, value.get_bit(7));
-                    value =  value << 1;
+                    value = value << 1;
                     *cycles -= 1;
                     self.write_byte(value, cycles, abs_address.into(), memory);
                     self.ld_register_set_status(value);
-               }
+                }
 
-              0x1E => {
+                0x1E => {
                     println!("Instruction ASL ABSX");
                     let mut abs_address_x: Word = self.fetch_word(cycles, memory);
                     abs_address_x = abs_address_x.wrapping_add(self.X as Word);
                     *cycles -= 1;
                     let mut value = self.read_byte(cycles, abs_address_x as Word, memory);
                     self.PS.set_bit(0, value.get_bit(7));
-                    value =  value << 1;
+                    value = value << 1;
                     *cycles -= 1;
                     self.write_byte(value, cycles, abs_address_x.into(), memory);
                     self.ld_register_set_status(value);
-               }
+                }
 
                 // LSR
-
                 0x4A => {
                     println!("Instruction LSR ACC");
                     self.PS.set_bit(0, self.A.get_bit(0));
@@ -1524,18 +1524,18 @@ impl CPU {
                     *cycles -= 1;
                 }
 
-              0x46 => {
+                0x46 => {
                     println!("Instruction LSR ZP");
                     let zero_page_address: Byte = self.fetch_byte(cycles, memory);
                     let mut value = self.read_byte(cycles, zero_page_address as Word, memory);
                     self.PS.set_bit(0, value.get_bit(0));
-                    value =  value >> 1;
+                    value = value >> 1;
                     *cycles -= 1;
                     self.write_byte(value, cycles, zero_page_address.into(), memory);
                     self.ld_register_set_status(value);
-               }
+                }
 
-              0x56 => {
+                0x56 => {
                     println!("Instruction LSR ZPX");
                     let mut zero_page_address: Byte = self.fetch_byte(cycles, memory);
                     zero_page_address = zero_page_address.wrapping_add(self.X);
@@ -1546,34 +1546,33 @@ impl CPU {
                     *cycles -= 1;
                     self.write_byte(value, cycles, zero_page_address.into(), memory);
                     self.ld_register_set_status(value);
-               }
+                }
 
-              0x4E => {
+                0x4E => {
                     println!("Instruction LSR ABS");
                     let abs_address: Word = self.fetch_word(cycles, memory);
                     let mut value = self.read_byte(cycles, abs_address as Word, memory);
                     self.PS.set_bit(0, value.get_bit(0));
-                    value =  value >> 1;
+                    value = value >> 1;
                     *cycles -= 1;
                     self.write_byte(value, cycles, abs_address.into(), memory);
                     self.ld_register_set_status(value);
-               }
+                }
 
-              0x5E => {
+                0x5E => {
                     println!("Instruction LSR ABSX");
                     let mut abs_address_x: Word = self.fetch_word(cycles, memory);
                     abs_address_x = abs_address_x.wrapping_add(self.X as Word);
                     *cycles -= 1;
                     let mut value = self.read_byte(cycles, abs_address_x as Word, memory);
                     self.PS.set_bit(0, value.get_bit(0));
-                    value =  value >> 1;
+                    value = value >> 1;
                     *cycles -= 1;
                     self.write_byte(value, cycles, abs_address_x.into(), memory);
                     self.ld_register_set_status(value);
-               }
+                }
 
-               // ROL
-
+                // ROL
                 0x2A => {
                     println!("Instruction ROL ACC");
                     self.A = self.rotate_left(cycles, self.A);
@@ -1622,8 +1621,7 @@ impl CPU {
                     self.ld_register_set_status(result);
                 }
 
-               // ROR
-
+                // ROR
                 0x6A => {
                     println!("Instruction ROR ACC");
                     self.A = self.rotate_right(cycles, self.A);
@@ -1680,15 +1678,15 @@ impl CPU {
                     self.push_ps_to_stack(cycles, memory);
                     let interrupt_vector: Word = 0xFFFE;
                     self.PC = self.read_word(cycles, interrupt_vector, memory);
-                    self.PS.set_bit(4, true);    // B
-                    self.PS.set_bit(2, true);    // I
+                    self.PS.set_bit(4, true); // B
+                    self.PS.set_bit(2, true); // I
                 }
 
                 0xEA => {
                     println!("Instruction NOP");
                     *cycles -= 1;
                 }
-                
+
                 0x40 => {
                     println!("Instruction RTI");
                     self.pop_ps_from_stack(cycles, memory);
@@ -1717,9 +1715,10 @@ impl CPU {
     }
 
     fn cmp_register_set_status(&mut self, operand: Byte, temp: Byte, reg: Byte) {
-        self.PS.set_bit(0, reg >= operand);                          // C
-        self.PS.set_bit(1, reg == operand);                          // Z
-        self.PS.set_bit(7, temp & Flags::NegativeFlagBit as Byte != 0);   // N
+        self.PS.set_bit(0, reg >= operand); // C
+        self.PS.set_bit(1, reg == operand); // Z
+        self.PS
+            .set_bit(7, temp & Flags::NegativeFlagBit as Byte != 0); // N
     }
 
     // function to convert a byte to a word when the value is signed

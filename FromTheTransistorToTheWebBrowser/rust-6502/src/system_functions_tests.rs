@@ -4,10 +4,9 @@ mod system_functions_tests {
     use bit_field::BitField;
     // use std::os::raw::*;
 
+    use crate::Flags;
     use crate::Mem;
     use crate::CPU;
-    use crate::Flags;
-
 
     #[test]
     fn test_nop_will_do_nothing_but_consume_a_cycle() {
@@ -21,7 +20,6 @@ mod system_functions_tests {
 
         // when:
         let cycles_used = cpu.execute(&mut 2, &mut mem);
-
 
         // then:
         assert_eq!(cycles_used, 2);
@@ -47,7 +45,6 @@ mod system_functions_tests {
         // when:
         let cycles_used = cpu.execute(&mut 7, &mut mem);
 
-
         // then:
         assert_eq!(cycles_used, 7);
         assert_eq!(cpu.PC, 0x8000);
@@ -67,7 +64,6 @@ mod system_functions_tests {
         // when:
         let cycles_used = cpu.execute(&mut 7, &mut mem);
 
-
         // then:
         assert_eq!(cycles_used, 7);
         assert_eq!(cpu.PC, 0x9000);
@@ -80,14 +76,13 @@ mod system_functions_tests {
 
         // given:
         cpu.reset_vector(&mut mem, 0xFF00);
-        
-        cpu.PS.set_bit(4, false);    // B
+
+        cpu.PS.set_bit(4, false); // B
 
         mem.Data[0xFF00] = cpu.INS_BRK;
 
         // when:
         let cycles_used = cpu.execute(&mut 7, &mut mem);
-
 
         // then:
         assert_eq!(cycles_used, 7);
@@ -101,15 +96,14 @@ mod system_functions_tests {
 
         // given:
         cpu.reset_vector(&mut mem, 0xFF00);
-        
-        cpu.PS.set_bit(4, false);    // B
+
+        cpu.PS.set_bit(4, false); // B
 
         mem.Data[0xFF00] = cpu.INS_BRK;
         let cpu_copy = cpu;
 
         // when:
         let cycles_used = cpu.execute(&mut 7, &mut mem);
-
 
         // then:
         assert_eq!(cycles_used, 7);
@@ -132,24 +126,23 @@ mod system_functions_tests {
         // when:
         let cycles_used = cpu.execute(&mut 7, &mut mem);
 
-
         // then:
         assert_eq!(cycles_used, 7);
-        dbg!(mem.Data[((x | old_sp ) - 0) as usize]);
-        assert_eq!(mem.Data[((x | old_sp ) - 0) as usize], 0xFF);
+        dbg!(mem.Data[((x | old_sp) - 0) as usize]);
+        assert_eq!(mem.Data[((x | old_sp) - 0) as usize], 0xFF);
         // https://www.c64-wiki.com/wiki/BRK
-        // Note that since BRK increments the program counter by 
-        // 2 instead of 1, it is advisable to use a NOP after it 
+        // Note that since BRK increments the program counter by
+        // 2 instead of 1, it is advisable to use a NOP after it
         // to avoid issues
-        assert_eq!(mem.Data[((x | old_sp ) - 1) as usize], 0x02);
-        assert_eq!(mem.Data[((x | old_sp ) - 2) as usize], cpu_copy.PS 
-                                                    | Flags::UnusedFlagBit as u8 
-                                                    | Flags::BreakFlagBit as u8);
+        assert_eq!(mem.Data[((x | old_sp) - 1) as usize], 0x02);
+        assert_eq!(
+            mem.Data[((x | old_sp) - 2) as usize],
+            cpu_copy.PS | Flags::UnusedFlagBit as u8 | Flags::BreakFlagBit as u8
+        );
         // https://wiki.nesdev.com/w/index.php/Status_flags
-        // Instruction	|Bits 5 and 4	| Side effects after pushing 
-        // BRK			|	11			| I is set to 1 
+        // Instruction	|Bits 5 and 4	| Side effects after pushing
+        // BRK			|	11			| I is set to 1
         assert_eq!(cpu.PS.get_bit(2), true);
-
     }
 
     #[test]
@@ -169,7 +162,6 @@ mod system_functions_tests {
         // when:
         let cycles_used_brk = cpu.execute(&mut 7, &mut mem);
         let cycles_used_rti = cpu.execute(&mut 6, &mut mem);
-
 
         // then:
         assert_eq!(cycles_used_brk, 7);

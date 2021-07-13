@@ -375,6 +375,26 @@ impl CPU {
         self.push_word_to_stack(cycles, memory, (self.PC + 1) as Word);
     }
 
+    // push the PC + 2 onto the stack
+    fn push_pc_to_stack_plus_two(&mut self, cycles: &mut isize, memory: &mut Mem) {
+        self.push_word_to_stack(cycles, memory, (self.PC + 2) as Word);
+    }
+
+    // Push Processor Status onto the stack
+    // Setting bits 4 & 5 on the  stack
+    fn push_ps_to_stack(&mut self, cycles: &mut isize, memory: &mut Mem) {
+        let ps_stack: Byte = self.PS | Flags::BreakFlagBit as u8 | Flags::UnusedFlagBit as u8; 
+        self.push_byte_to_stack(cycles, memory, ps_stack);
+    }
+
+    // Pop Processor Status from the stack
+    // Clearing bits 4 & 5 (Break & Unused)
+    fn pop_ps_from_stack(&mut self, cycles: &mut isize, memory: &mut Mem) {
+        self.PS = self.pop_byte_from_stack(cycles, memory);
+        self.PS.set_bit(4, false);    // B
+        self.PS.set_bit(5, false);    // U
+    }
+
     fn pop_word_from_stack(&mut self, cycles: &mut isize, memory: &mut Mem) -> Word {
         let sp_16_bit = self.sp_to_address();
 
@@ -663,6 +683,14 @@ impl CPU {
                     self.write_byte(self.X, cycles, zp_address as Word, memory);
                 }
 
+                0x96 => {
+                    println!("Instruction STX Zero Page Y ");
+                    let mut zp_address: Byte = self.fetch_byte(cycles, memory);
+                    zp_address = zp_address.wrapping_add(self.Y);
+                    *cycles -= 1;
+                    self.write_byte(self.X, cycles, zp_address as Word, memory);
+                }
+
                 0x84 => {
                     println!("Instruction STY Zero Page");
                     let zp_address: Byte = self.fetch_byte(cycles, memory);
@@ -792,23 +820,19 @@ impl CPU {
 
                 0x08 => {
                     println!("Instruction PHP");
-                    let ps_stack: Byte = self.PS | Flags::BreakFlagBit as u8 | Flags::UnusedFlagBit as u8; 
-                    self.push_byte_to_stack(cycles, memory, ps_stack);
+                    self.push_ps_to_stack(cycles, memory);
                 }
 
                 0x68 => {
-                    println!("Instructin PLA");
+                    println!("Instruction PLA");
                     self.A = self.pop_byte_from_stack(cycles, memory);
                     *cycles -= 1;
                     self.ld_register_set_status(self.A);
                 }
 
                 0x28 => {
-                    println!("Instructin PLP");
-                    let mut ps_from_stack: Byte = self.pop_byte_from_stack(cycles, memory);
-                    ps_from_stack &= !(Flags::UnusedFlagBit as u8 | Flags::BreakFlagBit as u8);
-                    self.PS = 0;
-                    self.PS |= ps_from_stack;
+                    println!("Instruction PLP");
+                    self.pop_ps_from_stack(cycles, memory);
                     *cycles -= 1;
                 }
 
@@ -1559,7 +1583,7 @@ impl CPU {
                 0x26 => {
                     println!("Instruction ROL ZP");
                     let zero_page_address: Byte = self.fetch_byte(cycles, memory);
-                    let mut value = self.read_byte(cycles, zero_page_address as Word, memory);
+                    let value = self.read_byte(cycles, zero_page_address as Word, memory);
                     let result: Byte = self.rotate_left(cycles, value);
                     self.write_byte(result, cycles, zero_page_address.into(), memory);
                     self.ld_register_set_status(result);
@@ -1570,7 +1594,7 @@ impl CPU {
                     let mut zero_page_address: Byte = self.fetch_byte(cycles, memory);
                     zero_page_address = zero_page_address.wrapping_add(self.X);
                     *cycles -= 1;
-                    let mut value = self.read_byte(cycles, zero_page_address as Word, memory);
+                    let value = self.read_byte(cycles, zero_page_address as Word, memory);
                     let result: Byte = self.rotate_left(cycles, value);
                     *cycles -= 1;
                     self.write_byte(result, cycles, zero_page_address.into(), memory);
@@ -1580,7 +1604,7 @@ impl CPU {
                 0x2E => {
                     println!("Instruction ROL ABS");
                     let abs_address: Word = self.fetch_word(cycles, memory);
-                    let mut value = self.read_byte(cycles, abs_address as Word, memory);
+                    let value = self.read_byte(cycles, abs_address as Word, memory);
                     let result: Byte = self.rotate_left(cycles, value);
                     *cycles -= 1;
                     self.write_byte(result, cycles, abs_address.into(), memory);
@@ -1591,7 +1615,7 @@ impl CPU {
                     println!("Instruction ROL ABSX");
                     let abs_address: Word = self.fetch_word(cycles, memory);
                     let abs_address_plus_x = abs_address.wrapping_add(self.X as Word);
-                    let mut value = self.read_byte(cycles, abs_address_plus_x, memory);
+                    let value = self.read_byte(cycles, abs_address_plus_x, memory);
                     let result: Byte = self.rotate_left(cycles, value);
                     *cycles -= 1;
                     self.write_byte(result, cycles, abs_address_plus_x.into(), memory);
@@ -1609,7 +1633,7 @@ impl CPU {
                 0x66 => {
                     println!("Instruction ROR ZP");
                     let zero_page_address: Byte = self.fetch_byte(cycles, memory);
-                    let mut value = self.read_byte(cycles, zero_page_address as Word, memory);
+                    let value = self.read_byte(cycles, zero_page_address as Word, memory);
                     let result: Byte = self.rotate_right(cycles, value);
                     self.write_byte(result, cycles, zero_page_address.into(), memory);
                     self.ld_register_set_status(result);
@@ -1620,7 +1644,7 @@ impl CPU {
                     let mut zero_page_address: Byte = self.fetch_byte(cycles, memory);
                     zero_page_address = zero_page_address.wrapping_add(self.X);
                     *cycles -= 1;
-                    let mut value = self.read_byte(cycles, zero_page_address as Word, memory);
+                    let value = self.read_byte(cycles, zero_page_address as Word, memory);
                     let result: Byte = self.rotate_right(cycles, value);
                     *cycles -= 1;
                     self.write_byte(result, cycles, zero_page_address.into(), memory);
@@ -1630,7 +1654,7 @@ impl CPU {
                 0x6E => {
                     println!("Instruction ROR ABS");
                     let abs_address: Word = self.fetch_word(cycles, memory);
-                    let mut value = self.read_byte(cycles, abs_address as Word, memory);
+                    let value = self.read_byte(cycles, abs_address as Word, memory);
                     let result: Byte = self.rotate_right(cycles, value);
                     *cycles -= 1;
                     self.write_byte(result, cycles, abs_address.into(), memory);
@@ -1641,7 +1665,7 @@ impl CPU {
                     println!("Instruction ROR ABSX");
                     let abs_address: Word = self.fetch_word(cycles, memory);
                     let abs_address_plus_x = abs_address.wrapping_add(self.X as Word);
-                    let mut value = self.read_byte(cycles, abs_address_plus_x, memory);
+                    let value = self.read_byte(cycles, abs_address_plus_x, memory);
                     let result: Byte = self.rotate_right(cycles, value);
                     *cycles -= 1;
                     self.write_byte(result, cycles, abs_address_plus_x.into(), memory);
@@ -1652,10 +1676,12 @@ impl CPU {
                 0x00 => {
                     println!("Instruction BRK");
                     self.push_pc_to_stack_plus_one(cycles, memory);
-                    self.push_byte_to_stack(cycles, memory, self.PS);
+                    // self.push_pc_to_stack_plus_two(cycles, memory);
+                    self.push_ps_to_stack(cycles, memory);
                     let interrupt_vector: Word = 0xFFFE;
                     self.PC = self.read_word(cycles, interrupt_vector, memory);
-                    self.PS.set_bit(4, true);
+                    self.PS.set_bit(4, true);    // B
+                    self.PS.set_bit(2, true);    // I
                 }
 
                 0xEA => {
@@ -1665,7 +1691,7 @@ impl CPU {
                 
                 0x40 => {
                     println!("Instruction RTI");
-                    self.PS = self.pop_byte_from_stack(cycles, memory);
+                    self.pop_ps_from_stack(cycles, memory);
                     self.PC = self.pop_word_from_stack(cycles, memory);
                 }
 

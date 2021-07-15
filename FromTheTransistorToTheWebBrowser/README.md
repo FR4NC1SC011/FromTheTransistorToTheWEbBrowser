@@ -1,28 +1,5 @@
-# Rust-6502Emulator 
-Learning how a CPU works by emulating one.
-
-This code was inspirated by this youtube video : https://youtu.be/qJgsuQoy9bc
-
-
-# 07/2021 NOTES / TODO
-
-* All 6502 legal opcodes emulated
-* Decimal mode is not handled
-* Snake6502 Program is used to test the cpu
-* Maybe we shuld use this? -> Test program [/Klaus2m5/6502_65C02_functional_tests](https://github.com/Klaus2m5/6502_65C02_functional_tests).
-* Counting cycles individually for each part of an instruction is cumbersome and probably should just deduct the   correct number at the end of the instruction.
-* There is no way to issue and interrupt to this virtual CPU
-* There are no hooks for debugging.
-* There is is no dissasembler or UI, this is just the CPU emulator & units test.
-* There are no asserts if you write memory outside of the bounds (it will overwrite memory)
-* Illegal opcodes are not implemented.
-
-# Issues
-
-* Does the BRK command break when interrupts are disabled? that needs testing.
-* PLP clears the break flag when executed? is this correct?
-* INS_JMP_ABS, see notes about bug in 6502 for correct emulation 
-
+# From The Transistor To The Web Browser
+Inspired by George Hotz -> [geohot/fromthetransistor](https://github.com/geohot/fromthetransistor).
 
 # What did we learn from this?
 

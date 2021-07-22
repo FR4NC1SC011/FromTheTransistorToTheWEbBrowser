@@ -4,8 +4,11 @@ Inspired by George Hotz -> [geohot/fromthetransistor](https://github.com/geohot/
 # What did we learn from this?
 
 * A program is just big array bytes
-* Writing a CPU emulator is time consuming
-* Some features are undocumented!
-* Emulating a CPU is harder you than you think, because you have emulate things you got for free in a real CPU (like the clock)
-* Writing Unit tests for the CPU was a good idea.
-* Big switch state works for small instruction set processors, probably not for bigger ones, like the 68000.
+* A CPU is just a lot of transistors
+* Writing a CPU emulator and a interpreter is time consuming
+* ASM is not that difficult
+* Writing a TCP stack is hard
+
+# TODO 07/2021
+* Build a filesystem. Maybe FAT?
+* Build user space programs.(cat, ls, rm, etc.)

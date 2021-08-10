@@ -4,24 +4,22 @@
 #![test_runner(simple_os::test_runner)]
 #![reexport_test_harness_main = "test_main"]
 
-use simple_os::println;
+use alloc::{boxed::Box, rc::Rc, vec, vec::Vec};
+use bootloader::{entry_point, BootInfo};
 use core::panic::PanicInfo;
-use bootloader::{BootInfo, entry_point};
-use alloc::{boxed::Box, vec, vec::Vec, rc::Rc};
-use simple_os::task::{Task, simple_executor::SimpleExecutor};
+use simple_os::println;
+use simple_os::task::executor::Executor;
 use simple_os::task::keyboard;
-use simple_os::task::executor::Executor; // new
+use simple_os::task::{simple_executor::SimpleExecutor, Task}; // new
 
 extern crate alloc;
 
-
 entry_point!(kernel_main);
 
-fn kernel_main (boot_info: &'static BootInfo) -> ! {
-    use simple_os::memory::{self, BootInfoFrameAllocator};
+fn kernel_main(boot_info: &'static BootInfo) -> ! {
     use simple_os::allocator;
+    use simple_os::memory::{self, BootInfoFrameAllocator};
     use x86_64::VirtAddr;
- 
 
     println!("Hello world{}", "!");
     simple_os::init();
@@ -30,8 +28,7 @@ fn kernel_main (boot_info: &'static BootInfo) -> ! {
     let mut mapper = unsafe { memory::init(phys_mem_offset) };
     let mut frame_allocator = unsafe { BootInfoFrameAllocator::init(&boot_info.memory_map) };
 
-    allocator::init_heap(&mut mapper, &mut frame_allocator)
-        .expect("heap_initialization failed");
+    allocator::init_heap(&mut mapper, &mut frame_allocator).expect("heap_initialization failed");
 
     /*
     let heap_value = Box::new(41);
@@ -68,11 +65,9 @@ fn kernel_main (boot_info: &'static BootInfo) -> ! {
     executor.spawn(Task::new(keyboard::print_keypresses())); // new
     executor.run();
 
-   // println!("It did not crash!");
-    //simple_os::hlt_loop(); 
+    // println!("It did not crash!");
+    //simple_os::hlt_loop();
 }
-
-
 
 async fn async_number() -> u32 {
     42
@@ -83,14 +78,12 @@ async fn example_task() {
     println!("async number: {}", number);
 }
 
-
 #[cfg(not(test))]
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
     println!("{}", info);
     simple_os::hlt_loop();
 }
-
 
 #[cfg(test)]
 #[panic_handler]

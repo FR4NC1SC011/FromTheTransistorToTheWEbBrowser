@@ -1,1 +1,0 @@
-{"rustc":457852275655460692,"features":"","target":0,"profile":0,"path":0,"deps":[[18306513882647413782,"build_script_build",false,3489068112010671268],[895737905236284,"build_script_build",false,2626297973100115252]],"local":[{"RerunIfChanged":{"output":"x86_64-specs_os/debug/build/x86_64-f77cb63660761634/output","paths":["build.rs"]}}],"rustflags":[],"metadata":0,"config":0}

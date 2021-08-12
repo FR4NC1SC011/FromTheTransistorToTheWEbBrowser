@@ -1,7 +1,0 @@
-cargo:rerun-if-changed=/home/fco/Desktop/FromTheTransistorToTheWEbBrowser/FromTheTransistorToTheWebBrowser/OS/rust_os/Cargo.toml
-cargo:rustc-link-search=native=/home/fco/Desktop/FromTheTransistorToTheWEbBrowser/FromTheTransistorToTheWebBrowser/OS/rust_os/target/bootimage/bootloader/x86_64-bootloader/release/build/bootloader-da0b9280e5196819/out
-cargo:rustc-link-lib=static=kernel_bin-should_panic-6b2ca46f6d5acfe8
-cargo:rerun-if-env-changed=KERNEL
-cargo:rerun-if-env-changed=KERNEL_MANIFEST
-cargo:rerun-if-changed=/home/fco/Desktop/FromTheTransistorToTheWEbBrowser/FromTheTransistorToTheWebBrowser/OS/rust_os/target/x86_64-specs_os/debug/deps/should_panic-6b2ca46f6d5acfe8
-cargo:rerun-if-changed=build.rs

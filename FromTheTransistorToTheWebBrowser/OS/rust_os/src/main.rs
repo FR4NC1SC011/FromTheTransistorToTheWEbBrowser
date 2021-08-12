@@ -1,5 +1,8 @@
 #![no_std] // don't link the Rust standard library
 #![no_main] // disable all Rust-level entry points
+#![feature(custom_test_frameworks)]
+#![test_runner(crate::test_runner)]
+#![reexport_test_harness_main = "test_main"]
 
 pub mod uart;
 pub mod vga_buffer;
@@ -45,8 +48,25 @@ pub extern "C" fn _start() -> ! {
     serial_println!("This is my operating system!");
     serial_println!("I'm so awesome. If you start typing, I'll show you what you typed!");
 
-    panic!("Some Panic Message");
+    #[cfg(test)]
+    test_main();
+
     loop {}
+}
+
+#[cfg(test)]
+fn test_runner(tests: &[&dyn Fn()]) {
+    println!("Running {} tests", tests.len());
+    for test in tests {
+        test();
+    }
+}
+
+#[test_case]
+fn trivial_assertion() {
+    print!("trivial assertion... ");
+    assert_eq!(1, 1);
+    println!("[ok]");
 }
 
 /// This function is called on panic.

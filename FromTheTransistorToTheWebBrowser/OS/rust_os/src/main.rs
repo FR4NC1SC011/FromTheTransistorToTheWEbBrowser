@@ -15,8 +15,9 @@ use rust_os::test_runner;
 pub extern "C" fn _start() -> ! {
     println!("Hello World {}", "!");
 
-    serial_println!("This is my operating system!");
-    serial_println!("I'm so awesome. If you start typing, I'll show you what you typed!");
+    rust_os::init();
+
+    x86_64::instructions::interrupts::int3(); // new
 
     #[cfg(test)]
     test_main();

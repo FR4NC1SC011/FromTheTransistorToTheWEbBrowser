@@ -38,6 +38,7 @@ dependencies = [
  "spin",
  "uart_16550",
  "volatile 0.2.7",
+ "x86_64",
 ]
 
 [[package]]

@@ -27,7 +27,7 @@
   jmp $                         ; keep jumping to here; neverending loop
 
   ;; Included Files
-  include 'print_string.asm'
+  include 'print_string.asm'    ; this should be print_string.inc ??? 
 
 ;; VARIABLES
 helloString: db 'HELLO WORLD', 0xA, 0xD, 0  ; 0/null to null terminate

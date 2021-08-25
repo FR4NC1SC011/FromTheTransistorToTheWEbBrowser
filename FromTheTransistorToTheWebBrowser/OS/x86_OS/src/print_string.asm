@@ -1,6 +1,7 @@
 ;; Prints  character strings in BX Register
 print_string:
   pusha                         ; store all reg values onto the stack
+  mov ah, 0x0e                  ; BIOS Teletype output
 
 print_char:
   mov al, [bx]                  ; move char val at address in bx into al

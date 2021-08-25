@@ -23,25 +23,15 @@
   mov bx, string2
   call print_string
 
-  jmp end_pgm
+  ;; End Pgm
+  jmp $                         ; keep jumping to here; neverending loop
 
-print_string:
-  mov al, [bx]                  ; move char val at address in bx into al
-  cmp al, 0
-  je end_print                  ; jmp if equal (al == 0) to halt label 
-  int 0x10                      ; print character in al
-  add bx, 1                     ; move 1 byte forward/ get next char
-  jmp print_string              ; loop
-
-end_print:
-  ret
+  ;; Included Files
+  include 'print_string.asm'
 
 ;; VARIABLES
 helloString: db 'HELLO WORLD', 0xA, 0xD, 0  ; 0/null to null terminate
 string2:     db 'OS in ASM', 0
-
-end_pgm:
-  jmp $                         ; keep jumping to here; neverending loop
 
   ;; Boot Sector Magic
   times 510-($-$$) db 0         ; pad file with 0s until 510th byte

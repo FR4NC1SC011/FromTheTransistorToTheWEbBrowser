@@ -1,40 +1,35 @@
 ;;;
-;;; Simple Boot sector that prints a character using BIOS int 0x10/ AH 0x0e 
+;;; Simple Boot loader that uses INT13, AH2 to read from disk into memory 
 ;;;
 
   org 0x7c00                    ; 'origin' of Boot code
 
-  ;; Set Video Mode
-  mov ah, 0x00                  ; int 0x10/ ah 0x00 = set video mode
-  mov al, 0x03                  ; 80x25 text mode
-  int 0x10
+  ;; set up ES/BX memory address/segment:offset to load sector(s) into
+  mov bx, 0x1000                ; load sector to memory address 0x1000
+  mov es, bx                    ; ES = 0X1000
+  mov bx, 0                     ; ES:BX = 0x1000:0
 
-  ;; Change color/Palette
-  mov ah, 0x0B
-  mov bh, 0x00
-  mov bl, 0x01
-  int 0x10
+  ;; set up disk read
+  mov dh, 0x0                   ; head 0
+  mov dl, 0x0                   ; drive 0
+  mov ch, 0x0                   ; cylinder 0
+  mov cl, 0x02                  ; starting sector to read from disk
 
-  ;; Tele-type output strings
-  mov bx, helloString           ; moving memory address at helloString into BX reg
-  call print_string
+read_disk:
+  mov ah, 0x02
+  mov al, 0x01
+  int 0x13
 
-  mov bx, string2
-  call print_string
+  jc read_disk
 
-  mov dx, 0x12AB
-  call print_hex
+  mov ax, 0x1000
+  mov ds, ax
+  mov es, ax
+  mov fs, ax
+  mov gs, ax
+  mov ss, ax
 
-  ;; End Pgm
-  jmp $                         ; keep jumping to here; neverending loop
-
-  ;; Included Files
-  include 'print_string.asm'    ; this should be print_string.inc ??? 
-  include 'print_hex.asm'
-
-;; VARIABLES
-helloString: db 'Char Test: Testing', 0xA, 0xD, 0  ; 0/null to null terminate
-string2:     db 'Hex Test: ', 0
+  jmp 0x1000:0x0
 
   ;; Boot Sector Magic
   times 510-($-$$) db 0         ; pad file with 0s until 510th byte

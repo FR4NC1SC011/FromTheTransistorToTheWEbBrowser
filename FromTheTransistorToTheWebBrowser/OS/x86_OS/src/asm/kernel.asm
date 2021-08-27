@@ -19,17 +19,17 @@
   hlt
 
 print_string:
-  mov ah, 0x0e
-  mov bh,  0x0
-  mov bl, 0x07
+  mov ah, 0x0e                  ; int 10h/ ah 0x0e BIOS teletype output
+  mov bh,  0x0                  ; page number
+  mov bl, 0x07                  ; color
 
 print_char:
-  mov al, [si]
-  cmp al, 0
-  je end_print
-  int 0x10
-  add si, 1
-  jmp print_char
+  mov al, [si]                  ; move char value at address in bx into al
+  cmp al, 0                     
+  je end_print                  ; jump if equal (al = 0) to halt label
+  int 0x10                      ; print char in al
+  add si, 1                     ; move 1 byte forward/ get next char  
+  jmp print_char                ; loop
 
 end_print:
   ret

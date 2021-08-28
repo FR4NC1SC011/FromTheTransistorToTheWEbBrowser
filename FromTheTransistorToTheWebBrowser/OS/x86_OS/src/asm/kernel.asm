@@ -13,9 +13,46 @@
   mov bl, 0x01
   int 0x10
 
-  mov si, testString
+  ;; Print Screen Heading and Menu Options
+  mov si, menuString
   call print_string
 
+  ;; Get User Input, print to screen and choose menu option or run command
+get_input:
+  mov di, cmdString
+
+keyloop:
+  mov ax, 0x00                  ; ax = 0x00, al = 0x00
+  int 0x16                      ; BIOS int get keystroke, char goes into al
+
+  mov ah, 0x0e
+  cmp al, 0xD                   ; did user press 'enter' key?
+  je run_command
+  int 0x10                      ; print input char to screen
+  mov [di], al
+  inc di
+  jmp keyloop                   ; loop for next char
+
+run_command:
+  mov byte [di], 0              ; null terminate cmdString from di
+  mov al, [cmdString]
+  cmp al, 'F'
+  jne not_found
+  cmp al, 'N'
+  je end_program
+  mov si, success
+  call print_string
+  jmp get_input
+  
+  
+not_found:
+  mov si, failure
+  call print_string
+  jmp get_input
+
+end_program:
+  ;; End Pgm
+  cli
   hlt
 
 print_string:
@@ -34,7 +71,14 @@ print_char:
 end_print:
   ret
 
-testString: db 'Kernel Booted, Welcome to my OS!', 0xA, 0xD, 0
+menuString: db '--------------------------------', 0xA, 0xD,\ 
+               'Kernel Booted, Welcome to my OS', 0xA, 0xD,\
+               '--------------------------------', 0xA, 0xD, 0xA, 0xD,\
+               'F) File & Program Browser', 0xA, 0xD, 0
+
+success: db 0xA, 0xD, 'Command ran successfully', 0xA, 0xD, 0
+failure: db 0xA, 0xD, 'Command not found :(', 0xA, 0xD, 0
+cmdString: db '', 0
 
   ;; Sector padding magic
   times 512-($-$$) db 0

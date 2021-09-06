@@ -7,16 +7,9 @@
 ;; Screen & Menu Set Up
 ;; ----------------------------------------------------------------------
 main_menu:
-  ;; Set Video Mode
-  mov ah, 0x00                  ; int 0x10/ ah 0x00 = set video mode
-  mov al, 0x03                  ; 80x25 text mode
-  int 0x10
+  ;; Reset Screen State
+  call resetTextScreen
 
-  ;; Change color/Palette
-  mov ah, 0x0B
-  mov bh, 0x00
-  mov bl, 0x01
-  int 0x10
   mov si, menuString
   call print_string
 
@@ -47,6 +40,8 @@ run_command:
   je reboot
   cmp al, 'P'                   ; print registers
   je registers_print
+  cmp al, 'G'                   ; graphics mode test
+  je graphics_test
   cmp al, 'N'                   ; end our current program
   je end_program
   mov si, failure               ; command not found, boo!
@@ -58,17 +53,7 @@ run_command:
 ;; -----------------------------------------------------------
 filebrowser:                    ; Menu F)  - File Browser
   ;; Reset Screen State
-  ;; ------------------
-  ;; Set Video Mode
-  mov ah, 0x00                  ; int 0x10/ ah 0x00 = set video mode
-  mov al, 0x03                  ; 80x25 text mode
-  int 0x10
-
-  ;; Change color/Palette
-  mov ah, 0x0B
-  mov bh, 0x00
-  mov bl, 0x01
-  int 0x10
+  call resetTextScreen
 
   mov si, fileTableHeading
   call print_string
@@ -132,17 +117,7 @@ reboot:                         ; Far jump to Reset Vector
 ;; -----------------------------------------------------------
 registers_print:
   ;; Reset Screen State
-  ;; ------------------
-  ;; Set Video Mode
-  mov ah, 0x00                  ; int 0x10/ ah 0x00 = set video mode
-  mov al, 0x03                  ; 80x25 text mode
-  int 0x10
-
-  ;; Change color/Palette
-  mov ah, 0x0B
-  mov bh, 0x00
-  mov bl, 0x01
-  int 0x10
+  call resetTextScreen
 
   mov si, printRegHeading
   call print_string
@@ -154,6 +129,41 @@ registers_print:
   mov ah, 0x00
   int 0x16                      ; get keystroke
   jmp main_menu                 ; go back to main menu
+
+
+;; -----------------------------------------------------------
+;; Menu G) - Graphics Mode Test 
+;; -----------------------------------------------------------
+graphics_test:
+  call resetGraphicsScreen
+
+  ;; Test Square
+  mov ah, 0x0C                  ; int 0x10 ah 0x0C - write gfx pixel
+  mov al, 0x01                  ; blue
+  mov bh, 0x00                  ; page #
+  
+  ;; Starting pixel of square
+  mov cx, 100                   ; column #
+  mov dx, 100                   ; row #
+  int 0x10
+
+  ;; Pixels for Columns
+squareColLoop:
+  inc cx
+  int 0x10
+  cmp cx, 150
+  jne squareColLoop
+
+  ;; Go down one row
+  inc dx
+  int 0x10
+  mov cx, 99
+  cmp dx, 150
+  jne squareColLoop
+
+  mov ah, 0x00
+  int 0x16
+  jmp main_menu
 
 ;; -----------------------------------------------------------
 ;; Menu N) - End Pgm
@@ -179,6 +189,8 @@ end_program:
   include "../print/print_string.asm"
   include "../print/print_registers.asm"
   include "../print/print_hex.asm"
+  include "../screen/resetTextScreen.asm"
+  include "../screen/resetGraphicsScreen.asm"
 
 ;; -----------------------------------------------------------
 ;; VARIABLES
@@ -188,6 +200,7 @@ menuString: db '--------------------------------', 0xA, 0xD,\
                '--------------------------------', 0xA, 0xD, 0xA, 0xD,\
                'F) File & Program Browser', 0xA, 0xD,\
                'R) Reboot', 0xA, 0xD,\ 
+               'G) Graphics Mode Test', 0xA, 0xD,\
                'P) Print Register Values', 0xA, 0xD, 0
 
 success: db 0xA, 0xD, 'Command ran successfully', 0xA, 0xD, 0

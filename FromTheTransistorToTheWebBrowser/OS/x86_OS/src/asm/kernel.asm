@@ -144,7 +144,11 @@ registers_print:
   mov bl, 0x01
   int 0x10
 
+  mov si, printRegHeading
+  call print_string
+
   call print_registers
+
   mov si, goBackMsg
   call print_string
   mov ah, 0x00
@@ -174,6 +178,7 @@ end_program:
 ;; -----------------------------------------------------------
   include "../print/print_string.asm"
   include "../print/print_registers.asm"
+  include "../print/print_hex.asm"
 
 ;; -----------------------------------------------------------
 ;; VARIABLES
@@ -193,6 +198,11 @@ goBackMsg: db 0xA, 0xD, 0xA, 0xD, 'Press any key to go back...', 0
 fileTableHeading: db '--------------     ----------',0xA, 0xD,\
                       'File/Program        Sector', 0xA, 0xD,\
                      '--------------     ----------', 0xA, 0xD, 0
+
+printRegHeading:  db '--------   ------------',0xA, 0xD,\
+                     'Register   Mem Location', 0xA, 0xD,\
+                     '--------   ------------',0xA, 0xD, 0
+
 
 cmdString: db '', 0
 

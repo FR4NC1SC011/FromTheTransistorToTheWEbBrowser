@@ -7,7 +7,7 @@
 
 print_hex:
   pusha             ;; Save all registers to the stack
-  mov cx, 0         ;; Initialize loop counter
+  xor cx, cx         ;; Initialize loop counter
 
 
 hex_loop:
@@ -35,9 +35,8 @@ move_intoBX:
   jmp hex_loop
 
 
-
 end_hexloop:
-  mov bx, hexString
+  mov si, hexString
   call print_string
 
   popa              ;; restore all registers from the stack

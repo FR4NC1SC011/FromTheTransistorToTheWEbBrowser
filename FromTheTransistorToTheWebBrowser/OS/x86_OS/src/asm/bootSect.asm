@@ -37,7 +37,7 @@ read_disk1:
 
 read_disk2:
   mov ah, 0x02                  ; BIOS int 13/ah = 2 read disk sectors
-  mov al, 0x02                  ; # of sectors to read
+  mov al, 0x03                  ; # of sectors to read
   int 0x13                      ; BIOS interrupts for disk functions
 
   jc read_disk2                 ; retry if disk read error (carry flag set)

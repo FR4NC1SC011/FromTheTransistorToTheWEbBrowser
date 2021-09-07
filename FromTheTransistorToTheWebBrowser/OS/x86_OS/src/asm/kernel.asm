@@ -46,7 +46,7 @@ run_command:
   je end_program
   mov si, failure               ; command not found, boo!
   call print_string
-  jmp get_input
+  jmp get_program_name
   
 ;; -----------------------------------------------------------
 ;; Menu F) - File/Program Browser & Loader 
@@ -69,7 +69,7 @@ fileTable_loop:
   inc bx
   mov al, [ES:BX]
   cmp al, '}'                   ; end of filetable?
-  je stop
+  je get_program_name
   cmp al, '-'                   ; at sector number of element?
   je sectorNumber_loop
   cmp al, ','                   ; between table elements?
@@ -98,10 +98,87 @@ next_element:
   int 0x10
   jmp fileTable_loop
 
-stop:
+;; After File table printed to screen, user can input program to load
+;;------------------------------------------------------------------------------------
+get_program_name:
+  mov ah, 0x0e                  ; print newline
+  mov al, 0xA       
+  int 0x10
+  mov al, 0xD
+  int 0x10
+  mov di, cmdString             ; di now pointing to cmdString
+  mov byte [cmdLength], 0       ; reset counter & length of user input
+
+pgm_name_loop:
+  mov ah, 0x00                  ; get keystroke 
+  int 0x16                      ; BIOS int get keystroke, char goes into al
+
+  mov ah, 0x0e
+  cmp al, 0xD                   ; did user press 'enter' key?
+  je start_search
+
+  inc byte [cmdLength]          ; if not, add to counter
+  mov [di], al                  ; store input char to command string
+  inc di
+  int 0x10                      ; print input character to screen
+  jmp pgm_name_loop             ; loop for next char
+
+start_search:
+  mov di, cmdString             ; reset di, point to start of command string
+  xor bx, bx                    ; reset ES:BX to point to beginning of file table
+
+check_next_char:
+  mov al, [ES:BX]               ; get file table char
+  cmp al, '}'                   ; at end of file table?
+  je pgm_not_found
+
+  cmp al, [di]                  ; does user input match file table char?
+  je start_compare
+
+  inc bx                        ; if not, get next char in filetable and recheck
+  jmp check_next_char  
+
+start_compare:
+  push bx                       ; save file table position
+  mov byte cl, [cmdLength]
+
+compare_loop:
+  mov al, [ES:BX]               ; get file table char
+  inc bx                        ; next byte in input/filetable
+  cmp al, [di]                  ; does input match filetable char?
+  jne restart_search 
+
+  dec cl                        ; if it does match, decrement length counter
+  jz found_program              ; counter = 0, input found in filetable
+  inc di                        ; else go to next byte of input
+  jmp compare_loop
+
+restart_search:
+  mov di, cmdString             ; else, reset to the start of the user input
+  pop bx                        ; get the saved file table position
+  inc bx                        ; go to next char in file table
+  jmp check_next_char           ; start checking again
+
+pgm_not_found:
+  mov si, notFoundString        ; did not find program name in file table
+  call print_string
+  mov ah, 0x00                  ; get keystroke
+  int 0x16
+  mov ah, 0x0e
+  int 0x10
+  cmp al, 'Y'
+  je filebrowser
+  jmp filetable_end
+
+found_program:
+  mov si, success
+  call print_string
+  mov ah, 0x00
+  int 0x16
+  
+filetable_end:
   mov si, goBackMsg
   call print_string
-
   mov ah, 0x00                  ; get keystroke
   int 0x16                      
   jmp main_menu                 ; go back to main menu
@@ -216,11 +293,14 @@ printRegHeading:  db '--------   ------------',0xA, 0xD,\
                      'Register   Mem Location', 0xA, 0xD,\
                      '--------   ------------',0xA, 0xD, 0
 
+cmdLength: db 0
+
+notFoundString: db 0xA, 0xD, 'Error: 404 Program not foud', 0xA, 0xD, 0
 
 cmdString: db '', 0
 
   ;; Sector padding magic
-  times 1024-($-$$) db 0
+  times 1536-($-$$) db 0
 
 
 

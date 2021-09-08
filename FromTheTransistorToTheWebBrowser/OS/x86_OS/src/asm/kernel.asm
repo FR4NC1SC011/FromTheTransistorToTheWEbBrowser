@@ -170,12 +170,75 @@ pgm_not_found:
   je filebrowser
   jmp filetable_end
 
+;; Get sector number after pgm name in file table
+;;-------------------------------------------------
 found_program:
-  mov si, success
+  inc bx
+  mov cl, 10                    ; use to get sector number
+  xor al, al                    ; reset al to 0
+
+next_sector_number:
+  mov dl, [ES:BX]               ; checking next byte of file table
+  inc bx
+  cmp dl, ','                    ; at end of sector number?
+  je load_program               ; if so, load program of that sector
+  cmp dl, 48                    ; else, check if al is '0' - '9' in ASCII
+  jl sector_not_found           ; before '0' not a number
+  cmp dl, 57
+  jg sector_not_found           ; after '9' not a number
+  sub dl, 48                    ; convert ASCII char to integer
+  mul cl                        ; al * cl (al * 10), result in AH/AL (AX)
+  add al, dl                    ; al = al + dl
+  jmp next_sector_number
+
+sector_not_found:
+  mov si, secNotFound           ; did not find program name in file table
   call print_string
   mov ah, 0x00
   int 0x16
-  
+  mov ah, 0x0e
+  int 0x10
+  cmp al, 'Y'
+  je filebrowser
+  jmp filetable_end
+
+;; Read disk sector of program to memory and execute it by far jumping
+;;---------------------------------------------------------------------
+load_program:
+  mov cl, al                   ; cl = sector # to start loading/reading at
+
+  mov ah, 0x00                 ; int 13h ah 0 = reset disk system
+  mov dl, 0x00
+  int 0x13
+
+  mov ax, 0x8000               ; memory location to load pgm to
+  mov es, ax
+  xor bx, bx                   ; ES:BX -> 0x8000:0x0000
+
+  mov ah, 0x02                 ; int 13h ah 02 = read disk sectors to memory
+  mov al, 0x01                 ; # of sectors to read
+  mov ch, 0x00                 ; track #
+  mov dh, 0x00                 ; head #
+  mov dl, 0x00                 ; drive #
+
+  int 0x13
+  jnc pgm_loaded               ; carry flag not set success
+
+  mov si, notLoaded            ; else error, program did not load correctly
+  call print_string
+  mov ah, 0x00
+  int 0x16
+  jmp filebrowser              ; reload file table
+
+pgm_loaded:
+  mov ax, 0x8000                ; program loaded, set segment registers to location
+  mov ds, ax
+  mov es, ax
+  mov fs, ax
+  mov gs, ax
+  mov ss, ax
+  jmp 0x8000:0x000              ; far jump to progam
+
 filetable_end:
   mov si, goBackMsg
   call print_string
@@ -280,8 +343,9 @@ menuString: db '--------------------------------', 0xA, 0xD,\
                'G) Graphics Mode Test', 0xA, 0xD,\
                'P) Print Register Values', 0xA, 0xD, 0
 
-success: db 0xA, 0xD, 'Command ran successfully', 0xA, 0xD, 0
-failure: db 0xA, 0xD, 'Command not found :(', 0xA, 0xD, 0
+success:   db 0xA, 0xD, 'Command ran successfully', 0xA, 0xD, 0
+failure:   db 0xA, 0xD, 'Command not found :(', 0xA, 0xD, 0
+notLoaded: db 0xA, 0xD, 'Error Program Not Loaded, Try Again', 0xA, 0xD, 0
 
 goBackMsg: db 0xA, 0xD, 0xA, 0xD, 'Press any key to go back...', 0
 
@@ -295,7 +359,8 @@ printRegHeading:  db '--------   ------------',0xA, 0xD,\
 
 cmdLength: db 0
 
-notFoundString: db 0xA, 0xD, 'Error: 404 Program not foud', 0xA, 0xD, 0
+notFoundString: db 0xA, 0xD, 'Error: 404 Program not foud, try again? (Y)', 0xA, 0xD, 0
+secNotFound: db 0xA, 0xD, 'Sector Not Found, try again? (Y)', 0xA, 0xD, 0
 
 cmdString: db '', 0
 

@@ -14,7 +14,7 @@
   mov dh, 0x0                   ; head 0
   mov dl, 0x0                   ; drive 0
   mov ch, 0x0                   ; cylinder 0
-  mov cl, 0x02                  ; starting sector to read from disk
+  mov cl, 0x05                  ; starting sector to read from disk
 
 read_disk1:
   mov ah, 0x02                  ; BIOS int 13/ah = 2 read disk sectors
@@ -24,7 +24,7 @@ read_disk1:
   jc read_disk1                  ; retry if disk read error (carry flag set)
 
   ;; READ KERNEL INTO MEMORY SECOND
-;; set up ES/BX memory address/segment:offset to load sector(s) into
+  ;; set up ES/BX memory address/segment:offset to load sector(s) into
   mov bx, 0x2000                ; load sector to memory address 0x2000
   mov es, bx                    ; ES = 0X1000
   mov bx, 0                     ; ES:BX = 0x1000:0
@@ -33,7 +33,7 @@ read_disk1:
   mov dh, 0x0                   ; head 0
   mov dl, 0x0                   ; drive 0
   mov ch, 0x0                   ; cylinder 0
-  mov cl, 0x03                  ; starting sector to read from disk
+  mov cl, 0x02                  ; starting sector to read from disk
 
 read_disk2:
   mov ah, 0x02                  ; BIOS int 13/ah = 2 read disk sectors

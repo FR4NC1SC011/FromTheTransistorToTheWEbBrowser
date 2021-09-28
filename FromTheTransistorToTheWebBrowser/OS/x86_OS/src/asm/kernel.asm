@@ -17,33 +17,46 @@ main_menu:
 ;; Get User Input, print to screen and choose menu option or run command
 ;; ----------------------------------------------------------------------
 get_input:
+  mov si, prompt
+  call print_string
+  xor cx, cx
   mov di, cmdString
 
 keyloop:
+  xor ax, ax
   mov ax, 0x00                  ; ax = 0x00, al = 0x00
   int 0x16                      ; BIOS int get keystroke, char goes into al
 
   mov ah, 0x0e
   cmp al, 0xD                   ; did user press 'enter' key?
   je run_command
+
   int 0x10                      ; print input char to screen
   mov [di], al
+  inc cx
   inc di
   jmp keyloop                   ; loop for next char
 
 run_command:
   mov byte [di], 0              ; null terminate cmdString from di
+  mov di, cmdString             ; reset di to point to start of the user input
+
+check_commands:
   mov al, [cmdString]
-  cmp al, 'F'                   ; File table command
+  cmp al, 'ls'                  ; File table command; list all files on disk
   je filebrowser
-  cmp al, 'R'                   ; Reboot
+  cmp al, 'reboot'              ; Reboot
   je reboot
-  cmp al, 'P'                   ; print registers
+  cmp al, 'prtreg'              ; print registers
   je registers_print
-  cmp al, 'G'                   ; graphics mode test
+  cmp al, 'gfxtst'              ; graphics mode test
   je graphics_test
-  cmp al, 'N'                   ; end our current program
+  cmp al, 'hlt'                   ; end our current program
   je end_program
+
+check_files:
+
+input_not_found:
   mov si, failure               ; command not found, boo!
   call print_string
   jmp get_input
@@ -369,9 +382,17 @@ menuString: db '--------------------------------', 0xA, 0xD,\
                'G) Graphics Mode Test', 0xA, 0xD,\
                'P) Print Register Values', 0xA, 0xD, 0
 
+prompt: db '>: ', 0
+
 success:   db 0xA, 0xD, 'Command ran successfully', 0xA, 0xD, 0
-failure:   db 0xA, 0xD, 'Command not found :(', 0xA, 0xD, 0
+failure:   db 0xA, 0xD, 'Command not found', 0xA, 0xD, 0
 notLoaded: db 0xA, 0xD, 'Error Program Not Loaded, Try Again', 0xA, 0xD, 0
+
+cmdLS:       db 'ls',     0
+cmdReboot:   db 'reboot', 0
+cmdPrtReg:   db 'prtreg', 0
+cmdGfxcTst:  db 'gfxtst', 0
+cmdHlt:      db 'hlt',    0
 
 goBackMsg: db 0xA, 0xD, 0xA, 0xD, 'Press any key to go back...', 0
 
